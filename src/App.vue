@@ -7,9 +7,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapState } from 'vuex'
 import Image from './components/Image.vue'
 import Search from './components/Search.vue'
-import { mapState } from 'vuex'
 
 export default defineComponent({
   name: 'App',
