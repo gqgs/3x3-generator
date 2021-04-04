@@ -35,6 +35,10 @@ export default defineComponent({
       'setImage'
     ]),
     searchAnime: function (anime: string) {
+      if (anime.length < 3) {
+        this.results = []
+        return
+      }
       fetch(`https://api.jikan.moe/v3/search/anime?q=${encodeURI(anime)}`)
         .then(resp => resp.json())
         .then(data => {
