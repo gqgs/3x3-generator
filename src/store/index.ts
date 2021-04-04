@@ -7,8 +7,8 @@ export default createStore({
     image_setter: (image: string) => { console.warn(`unexpected call: ${image}`) }
   },
   mutations: {
-    setSearch (state, show) {
-      state.show_search = show
+    setShowSearch (state, showSearch) {
+      state.show_search = showSearch
     },
     setSelectedID (state, id) {
       state.selected_id = id
@@ -22,12 +22,12 @@ export default createStore({
   },
   actions: {
     showSearch (context, { id, imageSetter }) {
-      context.commit('setSearch', true)
+      context.commit('setShowSearch', true)
       context.commit('setSelectedID', id)
       context.commit('setImageSetter', imageSetter)
     },
     hideSearch (context) {
-      context.commit('setSearch', false)
+      context.commit('setShowSearch', false)
       context.commit('setSelectedID', null)
     },
     setImage (context, image) {
