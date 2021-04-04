@@ -36,7 +36,8 @@ export default defineComponent({
           canvas.height = 200
           const ctx = canvas.getContext('2d')
           const { x, y, width, height } = res.topCrop
-          console.log(ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200))
+          /* eslint-disable-next-line no-unused-expressions */
+          ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200)
 
           this.$emit('newImage', this.id, canvas.toDataURL())
         })

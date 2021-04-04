@@ -49,7 +49,8 @@ export default defineComponent({
         } else if (id === 3 || id === 6 || id === 9) {
           x = 400
         }
-        console.log(ctx?.drawImage(img, x, y))
+        /* eslint-disable-next-line no-unused-expressions */
+        ctx?.drawImage(img, x, y)
       }
       img.src = image
     },
