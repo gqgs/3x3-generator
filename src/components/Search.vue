@@ -1,7 +1,7 @@
 <template>
     <div class="field" id="search">
     <div class="control">
-      <input class="input" autocomplete="off" @input="searchAnime($event.target.value)" type="text" id="name" name="name" ref="search">
+      <input class="input" placeholder="Search anime..." autocomplete="off" @input="searchAnime($event.target.value)" type="text" id="name" name="name" ref="search">
     </div>
     </div>
     <div id="results" v-if="results.length">
