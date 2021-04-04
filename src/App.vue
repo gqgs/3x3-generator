@@ -1,5 +1,5 @@
 <template>
-  <Search />
+  <Search v-if="show_search" />
   <div id="grid">
   <Image class="image" v-for="n in 9" :key="n" :id="n" />
   </div>
@@ -9,12 +9,18 @@
 import { defineComponent } from 'vue'
 import Image from './components/Image.vue'
 import Search from './components/Search.vue'
+import { mapState } from 'vuex'
 
 export default defineComponent({
   name: 'App',
   components: {
     Image,
     Search
+  },
+  computed: {
+    ...mapState([
+      'show_search'
+    ])
   }
 })
 </script>
@@ -32,6 +38,7 @@ export default defineComponent({
   border: 1px solid black;
   vertical-align: auto;
   line-height: 200px;
+  overflow: hidden;
 }
 
 #app {

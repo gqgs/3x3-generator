@@ -1,14 +1,18 @@
 <template>
-<a href="" @click.prevent="search">Select image</a>
+<a href="#" @click.prevent="showSearch({id, imageSetter: setImage})">
+  <img v-if="image" :src="image" />
+  <span v-else>Select image</span>
+</a>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapActions } from 'vuex'
 
 export default defineComponent({
   data () {
     return {
-
+      image: ''
     }
   },
   props: {
@@ -18,8 +22,11 @@ export default defineComponent({
     }
   },
   methods: {
-    search () {
-      console.log('search image', this.id)
+    ...mapActions([
+      'showSearch'
+    ]),
+    setImage (image: string) {
+      this.image = image
     }
   }
 })
