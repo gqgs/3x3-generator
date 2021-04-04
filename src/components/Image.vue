@@ -1,20 +1,26 @@
 <template>
-<a href="" @click.prevent="test">Select image</a>
+<a href="" @click.prevent="search">Select image</a>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 
 export default defineComponent({
-    data() {
-        return {
+  data () {
+    return {
 
-        };
-    },
-    methods: {
-        test() {
-            console.log("hello world");
-        }
     }
+  },
+  props: {
+    id: {
+      type: Number,
+      required: true
+    }
+  },
+  methods: {
+    search () {
+      console.log('search image', this.id)
+    }
+  }
 })
 </script>

@@ -1,25 +1,20 @@
 <template>
+  <Search />
   <div id="grid">
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
-  <Image class="image" />
+  <Image class="image" v-for="n in 9" :key="n" :id="n" />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 import Image from './components/Image.vue'
+import Search from './components/Search.vue'
 
 export default defineComponent({
   name: 'App',
   components: {
-    Image
+    Image,
+    Search
   }
 })
 </script>
