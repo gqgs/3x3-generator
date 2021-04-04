@@ -1,5 +1,9 @@
 # 3x3-generator
 
+Simple anime 3x3 generator using the [Jikan API](https://jikan.docs.apiary.io/#)
+
+![3x3gen](/src/assets/3x3gen.png)
+
 ## Project setup
 ```
 npm install
