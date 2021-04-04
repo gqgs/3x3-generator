@@ -56,7 +56,7 @@ export default defineComponent({
     download () {
       (this.$refs.canvas as HTMLCanvasElement).toBlob(blob => {
         if (blob == null) return
-        fileDownload(blob, '3x3_image.jpg')
+        fileDownload(blob, '3x3gen.jpg')
       })
     }
   }

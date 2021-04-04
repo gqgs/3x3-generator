@@ -1,4 +1,4 @@
-# 3x3
+# 3x3-generator
 
 ## Project setup
 ```
