@@ -44,7 +44,7 @@ export default defineComponent({
       }
       this.loading = true
 
-      fetch(`https://api.jikan.moe/v3/search/anime?limit=10&q=${encodeURI(anime)}`)
+      fetch(`https://api.jikan.moe/v3/search/anime?limit=15&q=${encodeURI(anime)}`)
         .then(resp => resp.json())
         .then(data => {
           this.results = (data.results ?? []).map((result: Result) => {
