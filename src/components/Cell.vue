@@ -1,7 +1,7 @@
 <template>
 <a href="#" @click.prevent="showSearch({id: id, imageSetter: setImage})">
   <canvas v-if="image" ref="canvas" />
-  <span class="is-size-1" v-else><ion-icon name="images-outline"></ion-icon></span>
+  <ion-icon v-else class="is-size-1" name="images-outline" />
 </a>
 </template>
 
@@ -38,7 +38,6 @@ export default defineComponent({
           const { x, y, width, height } = res.topCrop
           /* eslint-disable-next-line no-unused-expressions */
           ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200)
-
           this.$emit('newImage', this.id, canvas.toDataURL())
         })
       }

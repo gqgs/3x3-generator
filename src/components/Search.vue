@@ -55,10 +55,6 @@ export default defineComponent({
     },
     addImage (result: Result) {
       this.setImage(result.image_url)
-    },
-    reset () {
-      (this.$refs.search as HTMLInputElement).value = ''
-      this.results = []
     }
   }
 })
@@ -78,7 +74,7 @@ div#results {
   margin: 10px auto;
 }
 
-.result {
+img.result {
   padding: 1px;
   cursor: pointer;
 }
