@@ -1,11 +1,13 @@
 <template>
-    <div id="search">
-    <label for="name">Name:</label>
-    <input @input="searchAnime($event.target.value)" type="text" id="name" name="name" ref="search">
+    <div class="field" id="search">
+    <div class="control">
+      <input class="input" autocomplete="off" @input="searchAnime($event.target.value)" type="text" id="name" name="name" ref="search">
+    </div>
     </div>
     <div id="results" v-if="results.length">
       <img class="result" v-for="result in results" @click="addImage(result)" :title="result.title" :src="result.image_url" :key="result.mal_id" />
     </div>
+    <progress v-else-if="loading" class="progress is-small is-info" />
 </template>
 
 <script lang="ts">
@@ -24,7 +26,8 @@ interface Result {
 export default defineComponent({
   data () {
     return {
-      results: []
+      results: [],
+      loading: false
     }
   },
   created () {
@@ -39,12 +42,15 @@ export default defineComponent({
         this.results = []
         return
       }
+      this.loading = true
+
       fetch(`https://api.jikan.moe/v3/search/anime?limit=10&q=${encodeURI(anime)}`)
         .then(resp => resp.json())
         .then(data => {
           this.results = (data.results ?? []).map((result: Result) => {
             return { mal_id: result.mal_id, title: result.title, image_url: result.image_url }
           })
+          this.loading = false
         })
     },
     addImage (result: Result) {
@@ -60,7 +66,8 @@ export default defineComponent({
 
 <style scoped>
 div#search {
-    margin: 10px 0;
+    width: 400px;
+    margin: 10px auto;
 }
 
 div#results {

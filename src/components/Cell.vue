@@ -1,7 +1,7 @@
 <template>
 <a href="#" @click.prevent="showSearch({id: id, imageSetter: setImage})">
   <canvas v-if="image" ref="canvas" />
-  <span v-else>Select image</span>
+  <span class="is-size-1" v-else><ion-icon name="images-outline"></ion-icon></span>
 </a>
 </template>
 

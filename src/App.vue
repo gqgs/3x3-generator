@@ -4,7 +4,7 @@
   <Cell class="image" :class="[n == selected_id ? 'selected' : '']" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
   </div>
   <canvas id="output" ref="canvas" />
-  <input type="button" value="Download image" @click="download" />
+  <input class="button mb-4" type="button" value="Download image" @click="download" />
 </template>
 
 <script lang="ts">
@@ -65,6 +65,10 @@ export default defineComponent({
 </script>
 
 <style>
+html {
+  background: rgb(0, 0, 0, 5%);
+}
+
 #output {
   display: none;
 }
@@ -88,7 +92,8 @@ export default defineComponent({
 }
 
 .selected {
-  border: 6px solid darkcyan;
+  border: 5px dotted cadetblue;
+  border-radius: 5px;
 }
 
 #app {
