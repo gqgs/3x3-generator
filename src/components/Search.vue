@@ -1,7 +1,7 @@
 <template>
     <div id="search">
     <label for="name">Name:</label>
-    <input @input="searchAnime($event.target.value)" type="text" id="name" name="name">
+    <input @input="searchAnime($event.target.value)" type="text" id="name" name="name" ref="search">
     </div>
     <div id="results" v-if="results.length">
       <img class="result" v-for="result in results" @click="addImage(result)" :title="result.title" :src="result.image_url" :key="result.mal_id" />
@@ -45,6 +45,10 @@ export default defineComponent({
     },
     addImage (result: Result) {
       this.setImage(result.image_url)
+    },
+    reset () {
+      (this.$refs.search as HTMLInputElement).value = ''
+      this.results = []
     }
   }
 })

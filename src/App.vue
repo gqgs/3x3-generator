@@ -1,7 +1,7 @@
 <template>
   <Search v-if="show_search" />
   <div id="grid">
-  <Image class="image" v-for="n in 9" :key="n" :id="n" />
+  <Image class="image" :class="[n == selected_id ? 'selected' : '']" v-for="n in 9" :key="n" :id="n" />
   </div>
 </template>
 
@@ -19,7 +19,8 @@ export default defineComponent({
   },
   computed: {
     ...mapState([
-      'show_search'
+      'show_search',
+      'selected_id'
     ])
   }
 })
@@ -39,6 +40,10 @@ export default defineComponent({
   vertical-align: auto;
   line-height: 200px;
   overflow: hidden;
+}
+
+.selected {
+  border: 6px solid darkcyan;
 }
 
 #app {

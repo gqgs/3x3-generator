@@ -1,5 +1,5 @@
 <template>
-<a href="#" @click.prevent="showSearch({id, imageSetter: setImage})">
+<a href="#" @click.prevent="showSearch({id: id, imageSetter: setImage})">
   <img v-if="image" :src="image" />
   <span v-else>Select image</span>
 </a>

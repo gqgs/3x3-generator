@@ -3,15 +3,15 @@ import { createStore } from 'vuex'
 export default createStore({
   state: {
     show_search: false,
-    image_id: null,
+    selected_id: 0,
     image_setter: (image: string) => { console.warn(`unexpected call: ${image}`) }
   },
   mutations: {
     setSearch (state, show) {
       state.show_search = show
     },
-    setImageID (state, id) {
-      state.image_id = id
+    setSelectedID (state, id) {
+      state.selected_id = id
     },
     setImageSetter (state, imageSetter) {
       state.image_setter = imageSetter
@@ -22,13 +22,14 @@ export default createStore({
   },
   actions: {
     showSearch (context, { id, imageSetter }) {
+      console.log('id', id)
       context.commit('setSearch', true)
-      context.commit('setImageID', id)
+      context.commit('setSelectedID', id)
       context.commit('setImageSetter', imageSetter)
     },
     hideSearch (context) {
       context.commit('setSearch', false)
-      context.commit('setImageID', null)
+      context.commit('setSelectedID', null)
     },
     setImage (context, image) {
       context.commit('setImage', image)
