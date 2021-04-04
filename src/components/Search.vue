@@ -39,10 +39,10 @@ export default defineComponent({
         this.results = []
         return
       }
-      fetch(`https://api.jikan.moe/v3/search/anime?q=${encodeURI(anime)}`)
+      fetch(`https://api.jikan.moe/v3/search/anime?limit=10&q=${encodeURI(anime)}`)
         .then(resp => resp.json())
         .then(data => {
-          this.results = (data.results ?? []).slice(0, 10).map((result: Result) => {
+          this.results = (data.results ?? []).map((result: Result) => {
             return { mal_id: result.mal_id, title: result.title, image_url: result.image_url }
           })
         })
