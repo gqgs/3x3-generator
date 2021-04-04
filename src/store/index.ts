@@ -22,7 +22,6 @@ export default createStore({
   },
   actions: {
     showSearch (context, { id, imageSetter }) {
-      console.log('id', id)
       context.commit('setSearch', true)
       context.commit('setSelectedID', id)
       context.commit('setImageSetter', imageSetter)

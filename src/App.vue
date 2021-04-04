@@ -72,8 +72,8 @@ export default defineComponent({
   display: inline-grid;
   grid-template-columns: repeat(3, 200px);
   grid-template-rows: repeat(3, 200px);
-  column-gap: 5px;
-  row-gap: 5px;
+  column-gap: 2px;
+  row-gap: 2px;
   justify-content: center;
   width: 100%;
   padding: 10px;
