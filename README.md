@@ -1,8 +1,10 @@
 # 3x3-generator
 
-Simple anime 3x3 generator using the [Jikan API](https://jikan.docs.apiary.io/#)
+Simple anime 3x3 generator using the [Jikan API](https://jikan.docs.apiary.io/#).
 
-![3x3gen](/src/assets/3x3gen.png)
+<p align="center">
+<img src="/src/assets/3x3gen.png">
+</p>
 
 ## Project setup
 ```
