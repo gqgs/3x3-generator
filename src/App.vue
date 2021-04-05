@@ -1,6 +1,6 @@
 <template>
   <Search v-if="show_search" />
-  <div id="grid">
+  <div @click="hideForm" id="grid">
   <Cell class="image" :class="[n == selected_id ? 'selected' : '']" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
   </div>
   <canvas id="output" ref="canvas" />
@@ -9,7 +9,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import Cell from './components/Cell.vue'
 import Search from './components/Search.vue'
 import fileDownload from 'js-file-download'
@@ -32,6 +32,9 @@ export default defineComponent({
     ])
   },
   methods: {
+    ...mapActions([
+      'hideSearch'
+    ]),
     newImage (id: number, image: string) {
       const img = new Image()
       img.onload = () => {
@@ -59,6 +62,11 @@ export default defineComponent({
         if (blob == null) return
         fileDownload(blob, '3x3gen.jpg')
       })
+    },
+    hideForm (event: Event) {
+      if ((event.target as Element).id === 'grid') {
+        this.hideSearch()
+      }
     }
   }
 })

@@ -28,7 +28,7 @@ export default createStore({
     },
     hideSearch (context) {
       context.commit('setShowSearch', false)
-      context.commit('setSelectedID', null)
+      context.commit('setSelectedID', 0)
     },
     setImage (context, image) {
       context.commit('setImage', image)
