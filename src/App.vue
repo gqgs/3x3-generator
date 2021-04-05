@@ -40,18 +40,8 @@ export default defineComponent({
       img.onload = () => {
         const canvas = (this.$refs.canvas as HTMLCanvasElement)
         const ctx = canvas.getContext('2d')
-        // TODO: simplify this
-        let [x, y] = [0, 0]
-        if (id === 4 || id === 5 || id === 6) {
-          y = 200
-        } else if (id === 7 || id === 8 || id === 9) {
-          y = 400
-        }
-        if (id === 2 || id === 5 || id === 8) {
-          x = 200
-        } else if (id === 3 || id === 6 || id === 9) {
-          x = 400
-        }
+        const x = 200 * ((id + 2) % 3)
+        const y = 200 * Math.floor(id * 0.3)
         /* eslint-disable-next-line no-unused-expressions */
         ctx?.drawImage(img, x, y)
       }
