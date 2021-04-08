@@ -1,4 +1,5 @@
 <template>
+  <div id="background"></div>
   <Search v-if="show_search" />
   <div @click="hideForm" id="grid">
   <Cell class="image" :class="[n == selected_id ? 'selected' : '']" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
@@ -65,6 +66,17 @@ export default defineComponent({
 <style>
 html {
   background: rgb(0, 0, 0, 5%);
+}
+
+#background {
+  background-image: url("./assets/nyanpasu.png");
+  width: 582px;
+  height: 958px;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  opacity: 0.03;
+  z-index: -1;
 }
 
 #app {
