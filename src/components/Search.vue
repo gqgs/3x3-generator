@@ -35,7 +35,7 @@ export default defineComponent({
   },
   methods: {
     ...mapActions([
-      'setImage'
+      'updateCell'
     ]),
     searchAnime: function (anime: string) {
       if (anime.length < 3) {
@@ -54,7 +54,10 @@ export default defineComponent({
         })
     },
     addImage (result: Result) {
-      this.setImage(result.image_url)
+      this.updateCell({
+        image: result.image_url,
+        title: result.title
+      })
     }
   }
 })

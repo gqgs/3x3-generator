@@ -1,10 +1,11 @@
 import { createStore } from 'vuex'
+import { Update } from '../types'
 
 export default createStore({
   state: {
     show_search: false,
     selected_id: 0,
-    image_setter: (image: string) => { console.warn(`unexpected call: ${image}`) }
+    updater: (update: Update) => { console.warn(`unexpected call: ${update}`) }
   },
   mutations: {
     setShowSearch (state, showSearch) {
@@ -13,25 +14,25 @@ export default createStore({
     setSelectedID (state, id) {
       state.selected_id = id
     },
-    setImageSetter (state, imageSetter) {
-      state.image_setter = imageSetter
+    setUpdater (state, updater) {
+      state.updater = updater
     },
-    setImage (state, image) {
-      state.image_setter(image)
+    updateCell (state, update) {
+      state.updater(update)
     }
   },
   actions: {
-    showSearch (context, { id, imageSetter }) {
+    showSearch (context, { id, updater }) {
       context.commit('setShowSearch', true)
       context.commit('setSelectedID', id)
-      context.commit('setImageSetter', imageSetter)
+      context.commit('setUpdater', updater)
     },
     hideSearch (context) {
       context.commit('setShowSearch', false)
       context.commit('setSelectedID', 0)
     },
-    setImage (context, image) {
-      context.commit('setImage', image)
+    updateCell (context, update) {
+      context.commit('updateCell', update)
     }
   },
   modules: {

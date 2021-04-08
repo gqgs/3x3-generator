@@ -1,6 +1,6 @@
 <template>
-<a href="#" @click.prevent="showSearch({id: id, imageSetter: setImage})">
-  <canvas v-if="image" ref="canvas" />
+<a href="#" @click.prevent="showSearch({id: id, updater: update})">
+  <canvas v-if="image" ref="canvas" :title="title" />
   <ion-icon v-else class="is-size-1" name="images-outline" />
 </a>
 </template>
@@ -9,11 +9,13 @@
 import { defineComponent, nextTick } from 'vue'
 import { mapActions } from 'vuex'
 import smartcrop from 'smartcrop'
+import { Update } from '../types'
 
 export default defineComponent({
   data () {
     return {
-      image: ''
+      image: '',
+      title: ''
     }
   },
   props: {
@@ -26,6 +28,10 @@ export default defineComponent({
     ...mapActions([
       'showSearch'
     ]),
+    update ({ image, title }: Update) {
+      this.title = title
+      this.setImage(image)
+    },
     setImage (image: string) {
       const img = new Image()
       img.onload = () => {
