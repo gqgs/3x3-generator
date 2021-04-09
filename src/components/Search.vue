@@ -4,6 +4,7 @@
     <ul>
       <li :class="{'is-active': tab === 'anime'}"><a href="#" @click.prevent="updateTab('anime')">Anime</a></li>
       <li :class="{'is-active': tab === 'manga'}"><a href="#" @click.prevent="updateTab('manga')">Manga</a></li>
+      <li :class="{'is-active': tab === 'character'}"><a href="#" @click.prevent="updateTab('character')">Character</a></li>
     </ul>
     </div>
     <div class="control">
@@ -27,6 +28,7 @@ interface Result {
   mal_id: number
   title: string
   image_url: string
+  name: string
 }
 
 export default defineComponent({
@@ -62,7 +64,7 @@ export default defineComponent({
         .then(resp => resp.json())
         .then(data => {
           this.results = (data.results ?? []).map((result: Result) => {
-            return { mal_id: result.mal_id, title: result.title, image_url: result.image_url }
+            return { mal_id: result.mal_id, title: result.title || result.name, image_url: result.image_url }
           })
           this.loading = false
         })
