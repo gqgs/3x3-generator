@@ -1,6 +1,8 @@
 <template>
   <div id="background"></div>
-  <Search v-if="show_search" />
+  <transition name="fade">
+  <div v-if="show_search"><Search /></div>
+  </transition>
   <div @click="hideForm" id="grid">
   <Cell class="image" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
   </div>
@@ -113,5 +115,17 @@ html {
 .selected {
   border: 5px dotted cadetblue;
   border-radius: 5px;
+}
+
+.fade-enter-active {
+  transition: all .4s ease;
+}
+
+.fade-leave-active {
+  transition: all .1s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
