@@ -66,6 +66,8 @@ export default defineComponent({
           this.results = (data.results ?? []).map((result: Result) => {
             return { mal_id: result.mal_id, title: result.title || result.name, image_url: result.image_url }
           })
+        })
+        .finally(() => {
           this.loading = false
         })
     },
