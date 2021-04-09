@@ -1,13 +1,19 @@
 <template>
     <div class="field" id="search">
+    <div class="tabs">
+    <ul>
+      <li :class="{'is-active': tab === 'anime'}"><a href="#" @click.prevent="updateTab('anime')">Anime</a></li>
+      <li :class="{'is-active': tab === 'manga'}"><a href="#" @click.prevent="updateTab('manga')">Manga</a></li>
+    </ul>
+    </div>
     <div class="control">
-      <input class="input" placeholder="Search anime..." autocomplete="off" @input="searchAnime($event.target.value)" type="text" id="name" name="name" ref="search">
+      <input class="input" :placeholder="'Search ' + tab + '...'" autocomplete="off" @input="search($event.target.value)" type="text" id="name" name="name" ref="search">
     </div>
     </div>
-    <div id="results" v-if="results.length">
+    <progress v-if="loading" class="progress is-small is-info" />
+    <div id="results" v-else-if="results.length">
       <img class="result" v-for="result in results" @click="addImage(result)" :title="result.title" :src="result.image_url" :key="result.mal_id" />
     </div>
-    <progress v-else-if="loading" class="progress is-small is-info" />
 </template>
 
 <script lang="ts">
@@ -27,24 +33,32 @@ export default defineComponent({
   data () {
     return {
       results: [],
-      loading: false
+      loading: false,
+      tab: 'anime',
+      lastSearch: ''
     }
   },
   created () {
-    this.searchAnime = debounce(this.searchAnime, 500)
+    this.search = debounce(this.search, 500)
   },
   methods: {
     ...mapActions([
       'updateCell'
     ]),
-    searchAnime: function (anime: string) {
-      if (anime.length < 3) {
+    updateTab (tab: string) {
+      this.tab = tab
+      this.search(this.lastSearch)
+    },
+    search (query: string) {
+      this.lastSearch = query
+
+      if (query.length < 3) {
         this.results = []
         return
       }
       this.loading = true
 
-      fetch(`https://api.jikan.moe/v3/search/anime?limit=15&q=${encodeURI(anime)}`)
+      fetch(`https://api.jikan.moe/v3/search/${this.tab}?&limit=15&q=${encodeURI(query)}`)
         .then(resp => resp.json())
         .then(data => {
           this.results = (data.results ?? []).map((result: Result) => {

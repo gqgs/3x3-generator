@@ -2,7 +2,7 @@
   <div id="background"></div>
   <Search v-if="show_search" />
   <div @click="hideForm" id="grid">
-  <Cell class="image" :class="[n == selected_id ? 'selected' : '']" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
+  <Cell class="image" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
   </div>
   <canvas id="output" ref="canvas" />
   <input class="button mb-4" type="button" value="Download image" @click="download" />
@@ -75,7 +75,7 @@ html {
   position: fixed;
   bottom: 0;
   right: 0;
-  opacity: 0.03;
+  opacity: 0.04;
   z-index: -1;
 }
 
