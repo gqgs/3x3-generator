@@ -7,6 +7,9 @@
   <Cell class="image" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
   </div>
   <canvas id="output" ref="canvas" />
+  <a href="https://github.com/gqgs/3x3-generator" target="_blank">
+  <ion-icon id="github" name="logo-octocat"></ion-icon>
+  </a>
   <input class="button mb-4" type="button" value="Download image" @click="download" />
 </template>
 
@@ -127,5 +130,11 @@ html {
 
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+#github {
+  position: relative;
+  left: -180px;
+  top: 5px;
 }
 </style>
