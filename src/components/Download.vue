@@ -1,7 +1,7 @@
 <template>
-    <div class="dropdown is-hoverable">
+    <div :class="{'is-active': active}" class="dropdown">
     <div class="dropdown-trigger">
-      <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+      <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="toggle">
         <span>Download image</span>
         <span class="icon is-small">
           <ion-icon name="chevron-down-outline"></ion-icon>
@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import fileDownload from 'js-file-download'
 
 export default defineComponent({
@@ -28,12 +28,26 @@ export default defineComponent({
     this.canvas.width = 600
     this.canvas.height = 600
   },
+  data () {
+    return {
+      active: false
+    }
+  },
   computed: {
     ...mapState([
       'canvas'
     ])
   },
   methods: {
+    ...mapActions([
+      'hideSearch'
+    ]),
+    toggle () {
+      this.active = !this.active
+      if (this.active) {
+        this.hideSearch()
+      }
+    },
     download (mimeType: string) {
       (this.canvas as HTMLCanvasElement).toBlob(blob => {
         if (blob == null) return
@@ -49,6 +63,7 @@ export default defineComponent({
             filename = '3x3gen.jpg'
         }
         fileDownload(blob, filename)
+        this.active = false
       }, mimeType)
     }
   }
