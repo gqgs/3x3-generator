@@ -51,7 +51,7 @@ html {
 }
 
 #background {
-  background-image: url("./assets/nyanpasu.png");
+  background-image: url("./assets/nyanpasu.webp");
   width: 582px;
   height: 958px;
   position: fixed;
