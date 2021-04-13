@@ -4,13 +4,12 @@
   <div v-if="show_search"><Search /></div>
   </transition>
   <div @click="hideForm" id="grid">
-  <Cell class="image" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" @newImage="newImage" />
+  <Cell class="image" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" />
   </div>
-  <canvas id="output" ref="canvas" />
   <a href="https://github.com/gqgs/3x3-generator" target="_blank">
   <ion-icon id="github" name="logo-octocat"></ion-icon>
   </a>
-  <input class="button mb-4" type="button" value="Download image" @click="download" />
+  <Download />
 </template>
 
 <script lang="ts">
@@ -18,18 +17,14 @@ import { defineComponent } from 'vue'
 import { mapState, mapActions } from 'vuex'
 import Cell from './components/Cell.vue'
 import Search from './components/Search.vue'
-import fileDownload from 'js-file-download'
+import Download from './components/Download.vue'
 
 export default defineComponent({
   name: 'App',
   components: {
     Cell,
-    Search
-  },
-  mounted () {
-    const canvas = (this.$refs.canvas as HTMLCanvasElement)
-    canvas.width = 600
-    canvas.height = 600
+    Search,
+    Download
   },
   computed: {
     ...mapState([
@@ -41,24 +36,6 @@ export default defineComponent({
     ...mapActions([
       'hideSearch'
     ]),
-    newImage (id: number, image: string) {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = (this.$refs.canvas as HTMLCanvasElement)
-        const ctx = canvas.getContext('2d')
-        const x = 200 * ((id + 2) % 3)
-        const y = 200 * Math.floor(id * 0.3)
-        /* eslint-disable-next-line no-unused-expressions */
-        ctx?.drawImage(img, x, y)
-      }
-      img.src = image
-    },
-    download () {
-      (this.$refs.canvas as HTMLCanvasElement).toBlob(blob => {
-        if (blob == null) return
-        fileDownload(blob, '3x3gen.jpg')
-      })
-    },
     hideForm (event: Event) {
       if ((event.target as Element).id === 'grid') {
         this.hideSearch()
@@ -91,10 +68,6 @@ html {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
-}
-
-#output {
-  display: none;
 }
 
 #grid {

@@ -28,7 +28,8 @@ export default defineComponent({
   },
   methods: {
     ...mapActions([
-      'showSearch'
+      'showSearch',
+      'updateCanvas'
     ]),
     update ({ image, title }: Update) {
       this.title = title
@@ -50,7 +51,7 @@ export default defineComponent({
             const { x, y, width, height } = res.topCrop
             /* eslint-disable-next-line no-unused-expressions */
             ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200)
-            this.$emit('newImage', this.id, canvas.toDataURL())
+            this.updateCanvas({ id: this.id, image: canvas.toDataURL() })
           })
         })
       }
