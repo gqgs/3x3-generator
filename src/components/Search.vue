@@ -2,9 +2,9 @@
     <div class="field" id="search">
     <div class="tabs">
     <ul>
-      <li :class="{'is-active': tab === 'anime'}"><a href="#" @click.prevent="updateTab('anime')">Anime</a></li>
-      <li :class="{'is-active': tab === 'manga'}"><a href="#" @click.prevent="updateTab('manga')">Manga</a></li>
-      <li :class="{'is-active': tab === 'character'}"><a href="#" @click.prevent="updateTab('character')">Character</a></li>
+      <li v-for="t in ['anime','manga','character']" :key=t :class="{'is-active': tab === t}">
+        <a class="is-capitalized" href="#" @click.prevent="update(t)">{{t}}</a>
+      </li>
     </ul>
     </div>
     <div class="control">
@@ -19,7 +19,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { mapActions } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import debounce from 'lodash.debounce'
 
 /* eslint camelcase: ["error", {allow: ["image_url", "mal_id"]}] */
@@ -36,19 +36,24 @@ export default defineComponent({
     return {
       results: [],
       loading: false,
-      tab: 'anime',
       lastSearch: ''
     }
   },
   created () {
     this.search = debounce(this.search, 500)
   },
+  computed: {
+    ...mapState([
+      'tab'
+    ])
+  },
   methods: {
     ...mapActions([
-      'updateCell'
+      'updateCell',
+      'updateTab'
     ]),
-    updateTab (tab: string) {
-      this.tab = tab
+    update (tab: string) {
+      this.updateTab(tab)
       this.search(this.lastSearch)
     },
     search (query: string) {
