@@ -13,13 +13,14 @@
     </div>
     <progress v-if="loading" class="progress is-small is-info" />
     <div id="results" v-else-if="results.length">
-      <img class="result" v-for="result in results" @click="addImage(result)" :title="result.title" :src="result.image_url" :key="result.mal_id" />
+      <Cropper v-for="result in results" :key="result.mal_id" :result='result' />
     </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapState, mapActions } from 'vuex'
+import Cropper from './Cropper.vue'
 import debounce from 'lodash.debounce'
 
 /* eslint camelcase: ["error", {allow: ["image_url", "mal_id"]}] */
@@ -32,6 +33,9 @@ interface Result {
 }
 
 export default defineComponent({
+  components: {
+    Cropper
+  },
   data () {
     return {
       results: [],
@@ -49,7 +53,6 @@ export default defineComponent({
   },
   methods: {
     ...mapActions([
-      'updateCell',
       'updateTab'
     ]),
     update (tab: string) {
@@ -75,12 +78,6 @@ export default defineComponent({
         .finally(() => {
           this.loading = false
         })
-    },
-    addImage (result: Result) {
-      this.updateCell({
-        image: result.image_url,
-        title: result.title
-      })
     }
   }
 })
