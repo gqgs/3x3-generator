@@ -40,7 +40,6 @@ export default defineComponent({
           canvas.width = 200
           canvas.height = 200
           const ctx = canvas.getContext('2d')
-          /* eslint-disable-next-line no-unused-expressions */
           ctx?.drawImage(img, 0, 0, img.width, img.height, 0, 0, 200, 200)
           this.updateCanvas({ id: this.id, image: canvas.toDataURL() })
         })

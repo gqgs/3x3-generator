@@ -49,7 +49,6 @@ export default createStore({
         const ctx = canvas.getContext('2d')
         const x = 200 * ((id + 2) % 3)
         const y = 200 * Math.floor(id * 0.3)
-        /* eslint-disable-next-line no-unused-expressions */
         ctx?.drawImage(img, x, y)
         context.commit('updateCanvas', canvas)
       }

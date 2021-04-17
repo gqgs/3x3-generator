@@ -26,7 +26,6 @@ export default defineComponent({
       'updateCell'
     ]),
     ready () {
-      /* eslint-disable-next-line no-unused-expressions */
       (this.$refs.cropper as VueCropperMethods)?.zoomTo(0.5)
     },
     cropend () {
@@ -37,7 +36,6 @@ export default defineComponent({
         canvas.width = 200
         canvas.height = 200
         const ctx = canvas.getContext('2d')
-        /* eslint-disable-next-line no-unused-expressions */
         ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200)
         this.updateCell({
           image: canvas.toDataURL('image/png'),
@@ -49,7 +47,6 @@ export default defineComponent({
     }
   },
   unmounted () {
-    /* eslint-disable-next-line no-unused-expressions */
     (this.$refs.cropper as VueCropperMethods)?.destroy()
   }
 })
