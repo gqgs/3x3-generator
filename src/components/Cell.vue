@@ -41,11 +41,11 @@ export default defineComponent({
           canvas.height = 200
           const ctx = canvas.getContext('2d')
           ctx?.drawImage(img, 0, 0, img.width, img.height, 0, 0, 200, 200)
-          this.updateCanvas({ id: this.id, image: canvas.toDataURL() })
         })
       }
       img.src = image
       this.image = image
+      this.updateCanvas({ id: this.id, image })
     }
   }
 })
