@@ -7,8 +7,8 @@
 
 <script lang="ts">
 import 'cropperjs/dist/cropper.css'
-import { defineComponent } from 'vue'
-import { mapActions } from 'vuex'
+import { ref, onUnmounted, defineComponent } from 'vue'
+import { useStore } from 'vuex'
 import VueCropper, { VueCropperMethods } from 'vue-cropperjs'
 
 export default defineComponent({
@@ -21,15 +21,14 @@ export default defineComponent({
       type: Object
     }
   },
-  methods: {
-    ...mapActions([
-      'updateCell'
-    ]),
-    ready () {
-      (this.$refs.cropper as VueCropperMethods)?.zoomTo(0.5)
-    },
-    cropend () {
-      const { x, y, width, height } = (this.$refs.cropper as VueCropperMethods).getData()
+  setup (props) {
+    const cropper = ref<VueCropperMethods|null>(null)
+    const store = useStore()
+
+    onUnmounted(() => (cropper.value as VueCropperMethods)?.destroy())
+    const ready = () => (cropper.value as VueCropperMethods)?.zoomTo(0.5)
+    const cropend = () => {
+      const { x, y, width, height } = (cropper.value as VueCropperMethods)?.getData()
       const img = new Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')
@@ -37,17 +36,16 @@ export default defineComponent({
         canvas.height = 200
         const ctx = canvas.getContext('2d')
         ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200)
-        this.updateCell({
+        store.dispatch('updateCell', {
           image: canvas.toDataURL('image/png'),
-          title: this.result.title
+          title: props.result.title
         })
       }
       img.crossOrigin = 'Anonymous'
-      img.src = this.result.image_url
+      img.src = props.result.image_url
     }
-  },
-  unmounted () {
-    (this.$refs.cropper as VueCropperMethods)?.destroy()
+
+    return { cropper, ready, cropend }
   }
 })
 </script>

@@ -19,37 +19,28 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapState, mapActions } from 'vuex'
+import { ref, defineComponent } from 'vue'
+import { useStore } from 'vuex'
 import fileDownload from 'js-file-download'
 
 export default defineComponent({
-  mounted () {
-    this.canvas.width = 600
-    this.canvas.height = 600
-  },
-  data () {
-    return {
-      active: false
-    }
-  },
-  computed: {
-    ...mapState([
-      'canvas'
-    ])
-  },
-  methods: {
-    ...mapActions([
-      'hideSearch'
-    ]),
-    toggle () {
-      this.active = !this.active
-      if (this.active) {
-        this.hideSearch()
+  setup () {
+    const store = useStore()
+    const canvas = store.state.canvas
+    const active = ref(false)
+
+    canvas.width = 600
+    canvas.height = 600
+
+    const toggle = () => {
+      active.value = !active.value
+      if (active.value) {
+        store.dispatch('hideSearch')
       }
-    },
-    download (mimeType: string) {
-      (this.canvas as HTMLCanvasElement).toBlob(blob => {
+    }
+
+    const download = (mimeType: string) => {
+      (canvas as HTMLCanvasElement).toBlob(blob => {
         if (blob == null) return
         let filename: string
         switch (mimeType) {
@@ -63,9 +54,11 @@ export default defineComponent({
             filename = '3x3gen.jpg'
         }
         fileDownload(blob, filename)
-        this.active = false
+        active.value = false
       }, mimeType)
     }
+
+    return { active, toggle, download }
   }
 })
 </script>

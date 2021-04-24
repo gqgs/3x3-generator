@@ -2,13 +2,13 @@
     <div class="field" id="search">
     <div class="tabs">
     <ul>
-      <li v-for="t in ['anime','manga','character']" :key=t :class="{'is-active': tab === t}">
-        <a class="is-capitalized" href="#" @click.prevent="update(t)">{{t}}</a>
+      <li v-for="tab in ['anime','manga','character']" :key=tab :class="{'is-active': currentTab === tab}">
+        <a class="is-capitalized" href="#" @click.prevent="changeTab(tab)">{{tab}}</a>
       </li>
     </ul>
     </div>
     <div class="control">
-      <input class="input" :placeholder="'Search ' + tab + '...'" autocomplete="off" @input="search($event.target.value)" type="text" id="name" name="name" ref="search">
+      <input class="input" :placeholder="'Search ' + currentTab + '...'" autocomplete="off" @input="search($event.target.value)" type="text" id="name" name="name">
     </div>
     </div>
     <progress v-if="loading" class="progress is-small is-info" />
@@ -18,8 +18,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapState, mapActions } from 'vuex'
+import { ref, defineComponent } from 'vue'
 import Cropper from './Cropper.vue'
 import debounce from 'lodash.debounce'
 
@@ -36,49 +35,40 @@ export default defineComponent({
   components: {
     Cropper
   },
-  data () {
-    return {
-      results: [],
-      loading: false,
-      lastSearch: ''
-    }
-  },
-  created () {
-    this.search = debounce(this.search, 500)
-  },
-  computed: {
-    ...mapState([
-      'tab'
-    ])
-  },
-  methods: {
-    ...mapActions([
-      'updateTab'
-    ]),
-    update (tab: string) {
-      this.updateTab(tab)
-      this.search(this.lastSearch)
-    },
-    search (query: string) {
-      this.lastSearch = query
+  setup () {
+    const results = ref([])
+    const loading = ref(false)
+    const currentTab = ref('anime')
+
+    let lastQuery = ''
+
+    const search = debounce((query: string) => {
+      lastQuery = query
 
       if (query.length < 3) {
-        this.results = []
+        results.value = []
         return
       }
-      this.loading = true
+      loading.value = true
 
-      fetch(`https://api.jikan.moe/v3/search/${this.tab}?&limit=15&q=${encodeURI(query)}`)
+      fetch(`https://api.jikan.moe/v3/search/${currentTab.value}?&limit=15&q=${encodeURI(query)}`)
         .then(resp => resp.json())
         .then(data => {
-          this.results = (data.results ?? []).map((result: Result) => {
+          results.value = (data.results ?? []).map((result: Result) => {
             return { mal_id: result.mal_id, title: result.title || result.name, image_url: result.image_url }
           })
         })
         .finally(() => {
-          this.loading = false
+          loading.value = false
         })
+    }, 500)
+
+    const changeTab = (newtab: string) => {
+      currentTab.value = newtab
+      search(lastQuery)
     }
+
+    return { results, loading, changeTab, currentTab, search }
   }
 })
 </script>

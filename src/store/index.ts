@@ -6,8 +6,7 @@ export default createStore({
     show_search: false,
     selected_id: 0,
     updater: (update: Update) => { console.warn(`unexpected call: ${update}`) },
-    canvas: document.createElement('canvas'),
-    tab: 'anime'
+    canvas: document.createElement('canvas')
   },
   mutations: {
     setShowSearch (state, showSearch) {
@@ -24,9 +23,6 @@ export default createStore({
     },
     updateCanvas (state, canvas) {
       state.canvas = canvas
-    },
-    updateTab (state, tab) {
-      state.tab = tab
     }
   },
   actions: {
@@ -53,11 +49,6 @@ export default createStore({
         context.commit('updateCanvas', canvas)
       }
       img.src = image
-    },
-    updateTab (context, tab) {
-      context.commit('updateTab', tab)
     }
-  },
-  modules: {
   }
 })
