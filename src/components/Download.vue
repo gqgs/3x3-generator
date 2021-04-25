@@ -1,5 +1,5 @@
 <template>
-    <div :class="{'is-active': active}" class="dropdown">
+    <div :class="{'is-active': active}" class="dropdown is-up">
     <div class="dropdown-trigger">
       <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="toggle">
         <span>Download image</span>
@@ -34,9 +34,6 @@ export default defineComponent({
 
     const toggle = () => {
       active.value = !active.value
-      if (active.value) {
-        store.dispatch('hideSearch')
-      }
     }
 
     const download = (mimeType: string) => {

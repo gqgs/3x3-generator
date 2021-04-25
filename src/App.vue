@@ -83,7 +83,6 @@ html {
 
 .image {
   border: 1px solid black;
-  vertical-align: auto;
   line-height: 200px;
   overflow: hidden;
 }

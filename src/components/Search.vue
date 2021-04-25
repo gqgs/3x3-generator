@@ -80,7 +80,7 @@ div#search {
 }
 
 div#results {
-  height: 225px;
+  height: 220px;
   overflow-x: auto;
   display: flex;
   max-width: 80%;
@@ -90,5 +90,7 @@ div#results {
 img.result {
   padding: 1px;
   cursor: pointer;
+  display: block;
+  max-width: 100%;
 }
 </style>

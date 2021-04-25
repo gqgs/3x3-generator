@@ -1,7 +1,8 @@
 <template>
-    <VueCropper @cropend="cropend" @ready="ready" ref="cropper"
+    <img v-if="!clicked" @click="clicked=true" @ready="ready" :src="result.image_url" />
+    <VueCropper :class="{'hidden': !clicked}" @ready="ready" @cropend="cropend" ref="cropper"
       :title="result.title" :src="result.image_url"
-      rotatable=false scalable=false zoomable=false viewMode=2 aspectRatio=1 minCropBoxWidth=200 minCropBoxHeight=200
+      rotatable=false scalable=false zoomable=false viewMode=1 aspectRatio=1 minCropBoxWidth=200 minCropBoxHeight=200
     />
 </template>
 
@@ -24,9 +25,11 @@ export default defineComponent({
   setup (props) {
     const cropper = ref<VueCropperMethods|null>(null)
     const store = useStore()
+    const clicked = ref(false)
 
     onUnmounted(() => (cropper.value as VueCropperMethods)?.destroy())
     const ready = () => (cropper.value as VueCropperMethods)?.zoomTo(0.5)
+
     const cropend = () => {
       const { x, y, width, height } = (cropper.value as VueCropperMethods)?.getData()
       const img = new Image()
@@ -45,7 +48,14 @@ export default defineComponent({
       img.src = props.result.image_url
     }
 
-    return { cropper, ready, cropend }
+    return { cropper, ready, cropend, clicked }
   }
 })
 </script>
+
+<style scoped>
+.hidden {
+  visibility: hidden;
+  width: 0;
+}
+</style>
