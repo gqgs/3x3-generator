@@ -1,5 +1,5 @@
 <template>
-    <img v-if="!clicked" @click="clicked=true" @ready="ready" :src="result.image_url" />
+    <img v-if="!clicked" @click="clicked=true" @ready="ready" :src="result.image_url" :title="result.title" />
     <VueCropper :class="{'hidden': !clicked}" @ready="ready" @cropend="cropend" ref="cropper"
       :title="result.title" :src="result.image_url"
       rotatable=false scalable=false zoomable=false viewMode=1 aspectRatio=1 minCropBoxWidth=200 minCropBoxHeight=200
