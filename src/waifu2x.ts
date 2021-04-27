@@ -20,8 +20,8 @@ const MODEL_INFO: {[key: string] : ModelInfo} = {
 
 const defaultModel = MODEL_INFO['UpConv-7']
 
-async function enlarge (original_image: HTMLImageElement,
-  output_canvas_ctx: CanvasRenderingContext2D,
+async function enlarge (original_image: HTMLImageElement | ImageData,
+  output_canvas_ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   model: tf.GraphModel,
   model_info: ModelInfo = defaultModel
 ): Promise<void> {

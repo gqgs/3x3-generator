@@ -24,8 +24,8 @@
 import { ref, defineComponent } from 'vue'
 import { useStore } from 'vuex'
 import fileDownload from 'js-file-download'
-import waifu2x from '../waifu2x'
-import * as tf from '@tensorflow/tfjs'
+
+import Worker from 'worker-loader!./../waifu2x.worker'
 
 export default defineComponent({
   setup () {
@@ -41,24 +41,39 @@ export default defineComponent({
       active.value = !active.value
     }
 
-    let model: tf.GraphModel | null = null
-
     const upscale = () : Promise<HTMLCanvasElement> => {
       return new Promise(resolve => {
         upscaling.value = true
+        active.value = false
+        const worker = new Worker()
+        worker.onmessage = (event: MessageEvent) => {
+          worker.terminate()
+          const img = new Image()
+          img.onload = () => {
+            const c = document.createElement('canvas')
+            c.width = img.width
+            c.height = img.height
+            const ctx = c.getContext('2d')
+            ctx?.drawImage(img, 0, 0, img.width, img.height)
+            URL.revokeObjectURL(img.src)
+            upscaling.value = false
+            resolve(c)
+          }
+          img.src = URL.createObjectURL(event.data.blob)
+        }
+
         const img = new Image()
         img.onload = async () => {
-          if (model === null) {
-            model = await waifu2x.loadModel()
-          }
-          const upscale_canvas = document.createElement('canvas')
-          upscale_canvas.width = img.width * 2
-          upscale_canvas.height = img.height * 2
-          const ctx = upscale_canvas.getContext('2d')
-          if (ctx == null) return
-          await waifu2x.enlarge(img, ctx, model)
-          upscaling.value = false
-          resolve(upscale_canvas)
+          const c = document.createElement('canvas')
+          c.width = img.width
+          c.height = img.height
+          const ctx = c.getContext('2d')
+          ctx?.drawImage(img, 0, 0, img.width, img.height)
+          worker.postMessage({
+            image_data: ctx?.getImageData(0, 0, img.width, img.height),
+            width: img.width,
+            height: img.height
+          })
         }
         img.src = (canvas as HTMLCanvasElement).toDataURL()
       })
