@@ -22,8 +22,6 @@ import { ref, defineComponent } from 'vue'
 import Cropper from './Cropper.vue'
 import debounce from 'lodash.debounce'
 
-/* eslint camelcase: ["error", {allow: ["image_url", "mal_id"]}] */
-
 interface Result {
   mal_id: number
   title: string
