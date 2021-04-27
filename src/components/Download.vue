@@ -44,7 +44,7 @@ export default defineComponent({
     let model: tf.GraphModel | null = null
 
     const upscale = () : Promise<HTMLCanvasElement> => {
-      return new Promise(async resolve => {
+      return new Promise(resolve => {
         upscaling.value = true
         const img = new Image()
         img.onload = async () => {
