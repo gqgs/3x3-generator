@@ -1,4 +1,8 @@
 <template>
+    <label class="checkbox pr-4 py-2">
+      <input type="checkbox" v-model="should_upscale">
+      Upscale
+    </label>
     <div :class="{'is-active': active}" class="dropdown is-up">
     <div class="dropdown-trigger">
       <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="toggle">
@@ -33,6 +37,7 @@ export default defineComponent({
     const canvas = store.state.canvas
     const active = ref(false)
     const upscaling = ref(false)
+    const should_upscale = ref(true)
 
     canvas.width = 600
     canvas.height = 600
@@ -80,7 +85,8 @@ export default defineComponent({
     }
 
     const download = async (mimeType: string) => {
-      (await upscale()).toBlob(blob => {
+      const source = should_upscale.value ? (await upscale()) : (canvas as HTMLCanvasElement)
+      source.toBlob(blob => {
         if (blob == null) return
         let filename: string
         switch (mimeType) {
@@ -98,7 +104,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    return { active, toggle, download, upscaling }
+    return { active, toggle, download, upscaling, should_upscale }
   }
 })
 </script>
