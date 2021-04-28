@@ -1,22 +1,30 @@
 import waifu2x from './waifu2x'
-import * as tf from '@tensorflow/tfjs'
+import { GraphModel } from '@tensorflow/tfjs'
 
-let model: tf.GraphModel | null = null
+let model: GraphModel | null = null
 
 // eslint-disable-next-line
-const cctx: Worker = self as any
+const ctx: Worker = self as any
 
 onmessage = async (event: MessageEvent) => {
   const width = event.data.width * 2
   const height = event.data.height * 2
   const image_data = event.data.image_data
 
+  const progress = (value: number) => {
+    ctx.postMessage({
+      type: 'progress',
+      value
+    })
+  }
+
   if (model === null) {
     model = await waifu2x.loadModel()
   }
 
-  const result = await waifu2x.enlarge(image_data, model)
-  cctx.postMessage({
+  const result = await waifu2x.enlarge(image_data, model, progress)
+  ctx.postMessage({
+    type: 'done',
     result,
     width,
     height

@@ -6,9 +6,15 @@ import { UpscaleImage } from './types'
 import { GraphModel } from '@tensorflow/tfjs'
 
 export const upscaling = ref(false)
+export const progress = ref(0)
+
 const has_offscreen_canvas_support = typeof document.createElement('canvas').transferControlToOffscreen === 'function'
 
 let model: GraphModel | null = null
+
+const updateProgress = (value: number) => {
+  progress.value = value
+}
 
 const processResult = (result: UpscaleImage[], width: number, height: number) : Promise<HTMLCanvasElement> => {
   return new Promise(resolve => {
@@ -20,6 +26,7 @@ const processResult = (result: UpscaleImage[], width: number, height: number) : 
       ctx?.putImageData(image, x, y)
     })
     upscaling.value = false
+    progress.value = 0
     resolve(canvas)
   })
 }
@@ -40,7 +47,7 @@ const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement>
       if (model === null) {
         model = await waifu2x.loadModel()
       }
-      const result = await waifu2x.enlarge(image_data, model)
+      const result = await waifu2x.enlarge(image_data, model, updateProgress)
 
       resolve(await processResult(result, img.width * 2, img.height * 2))
     }
@@ -58,6 +65,10 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
   return new Promise(resolve => {
     const worker = new Worker()
     worker.onmessage = async (event: MessageEvent) => {
+      if (event.data.type === 'progress') {
+        updateProgress(event.data.value)
+        return
+      }
       worker.terminate()
       const { result, width, height } = event.data
       resolve(await processResult(result, width, height))
@@ -82,5 +93,6 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
 
 export default {
   upscaling,
-  upscale
+  upscale,
+  progress
 }

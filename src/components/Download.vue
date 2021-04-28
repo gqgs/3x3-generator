@@ -21,14 +21,14 @@
       </div>
     </div>
   </div>
-  <progress v-if="upscaling" class="progress is-small is-primary my-4" />
+  <progress v-if="upscaling" class="progress is-small is-primary my-4" :value="progress" max="100" />
 </template>
 
 <script lang="ts">
 import { ref, defineComponent, watch } from 'vue'
 import { useStore } from 'vuex'
 import fileDownload from 'js-file-download'
-import { upscaling, upscale } from '../upscale'
+import { upscaling, upscale, progress } from '../upscale'
 
 export default defineComponent({
   setup () {
@@ -68,7 +68,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    return { active, toggle, download, upscaling, should_upscale }
+    return { active, toggle, download, upscaling, should_upscale, progress }
   }
 })
 </script>

@@ -12,7 +12,7 @@ interface ModelInfo {
 const MODEL_INFO: {[key: string] : ModelInfo} = {
   'UpConv-7': {
     dir_name: 'waifu2x_upconv_7_noise1_scale2.0x_same_padding_model',
-    patch_size: 128,
+    patch_size: 120,
     margin_size: 6,
     padding_method: 'SAME',
     upscale_first: false
@@ -23,6 +23,7 @@ const defaultModel = MODEL_INFO['UpConv-7']
 
 function enlarge (original_image: HTMLImageElement | ImageData,
   model: tf.GraphModel,
+  progress: (value: number) => void,
   model_info: ModelInfo = defaultModel
 ): Promise<UpscaleImage[]> {
   return new Promise(async resolve => {
@@ -114,6 +115,8 @@ function enlarge (original_image: HTMLImageElement | ImageData,
           x: 2 * j * patch_size,
           y: 2 * i * patch_size
         })
+
+        progress(100 * (upscaled.length / 25))
       }
     }
 
