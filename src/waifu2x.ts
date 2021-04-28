@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
+import { UpscaleImage } from './types'
 
 interface ModelInfo {
   dir_name: string
@@ -16,12 +17,6 @@ const MODEL_INFO: {[key: string] : ModelInfo} = {
     padding_method: 'SAME',
     upscale_first: false
   }
-}
-
-interface UpscaleImage {
-  image: ImageData
-  x: number
-  y: number
 }
 
 const defaultModel = MODEL_INFO['UpConv-7']
