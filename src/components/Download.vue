@@ -1,5 +1,5 @@
 <template>
-    <label v-if='has_offscreen_canvas_support' class="checkbox pr-4 py-2">
+    <label class="checkbox pr-4 py-2">
       <input type="checkbox" v-model="should_upscale">
       Upscale
     </label>
@@ -30,6 +30,13 @@ import { useStore } from 'vuex'
 import fileDownload from 'js-file-download'
 
 import Worker from 'worker-loader!./../waifu2x.worker'
+import waifu2x from '../waifu2x'
+
+interface UpscaleImage {
+  image: ImageData
+  x: number
+  y: number
+}
 
 export default defineComponent({
   setup () {
@@ -51,25 +58,56 @@ export default defineComponent({
       localStorage.setItem('should_upscale', JSON.stringify(should_upscale))
     })
 
-    const upscale = () : Promise<HTMLCanvasElement> => {
+    const processResult = (result: UpscaleImage[], width: number, height: number) : Promise<HTMLCanvasElement> => {
       return new Promise(resolve => {
-        upscaling.value = true
-        active.value = false
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        result.forEach(({ image, x, y }: UpscaleImage) => {
+          ctx?.putImageData(image, x, y)
+        })
+        upscaling.value = false
+        resolve(canvas)
+      })
+    }
+
+    const upscalefallback = () : Promise<HTMLCanvasElement> => {
+      return new Promise(resolve => {
+        const img = new Image()
+        img.onload = async () => {
+          const c = document.createElement('canvas')
+          c.width = img.width
+          c.height = img.height
+          const ctx = c.getContext('2d')
+          ctx?.drawImage(img, 0, 0, img.width, img.height)
+
+          const image_data = ctx?.getImageData(0, 0, img.width, img.height)
+          if (image_data === undefined) return
+
+          const model = await waifu2x.loadModel()
+          const result = await waifu2x.enlarge(image_data, model)
+
+          resolve(await processResult(result, img.width * 2, img.height * 2))
+        }
+        img.src = (canvas as HTMLCanvasElement).toDataURL()
+      })
+    }
+
+    const upscale = () : Promise<HTMLCanvasElement> => {
+      upscaling.value = true
+      active.value = false
+
+      if (!has_offscreen_canvas_support) {
+        return upscalefallback()
+      }
+
+      return new Promise(resolve => {
         const worker = new Worker()
-        worker.onmessage = (event: MessageEvent) => {
+        worker.onmessage = async (event: MessageEvent) => {
           worker.terminate()
-          const img = new Image()
-          img.onload = () => {
-            const c = document.createElement('canvas')
-            c.width = img.width
-            c.height = img.height
-            const ctx = c.getContext('2d')
-            ctx?.drawImage(img, 0, 0, img.width, img.height)
-            URL.revokeObjectURL(img.src)
-            upscaling.value = false
-            resolve(c)
-          }
-          img.src = URL.createObjectURL(event.data.blob)
+          const { result, width, height } = event.data
+          resolve(await processResult(result, width, height))
         }
 
         const img = new Image()
@@ -81,8 +119,8 @@ export default defineComponent({
           ctx?.drawImage(img, 0, 0, img.width, img.height)
           worker.postMessage({
             image_data: ctx?.getImageData(0, 0, img.width, img.height),
-            width: img.width,
-            height: img.height
+            width: c.width,
+            height: c.height
           })
         }
         img.src = (canvas as HTMLCanvasElement).toDataURL()
@@ -90,7 +128,8 @@ export default defineComponent({
     }
 
     const download = async (mimeType: string) => {
-      const source = has_offscreen_canvas_support && should_upscale.value ? (await upscale()) : (canvas as HTMLCanvasElement)
+      active.value = false
+      const source = should_upscale.value ? (await upscale()) : (canvas as HTMLCanvasElement)
       source.toBlob(blob => {
         if (blob == null) return
         let filename: string
@@ -105,11 +144,10 @@ export default defineComponent({
             filename = '3x3gen.jpg'
         }
         fileDownload(blob, filename)
-        active.value = false
       }, mimeType)
     }
 
-    return { active, toggle, download, upscaling, should_upscale, has_offscreen_canvas_support }
+    return { active, toggle, download, upscaling, should_upscale }
   }
 })
 </script>
