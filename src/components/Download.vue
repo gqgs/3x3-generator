@@ -1,5 +1,5 @@
 <template>
-    <label class="checkbox pr-4 py-2">
+    <label v-if='has_offscreen_canvas_support' class="checkbox pr-4 py-2">
       <input type="checkbox" v-model="should_upscale">
       Upscale
     </label>
@@ -38,6 +38,7 @@ export default defineComponent({
     const active = ref(false)
     const upscaling = ref(false)
     const should_upscale = ref(true)
+    const has_offscreen_canvas_support = typeof document.createElement('canvas').transferControlToOffscreen === 'function'
 
     canvas.width = 600
     canvas.height = 600
@@ -85,7 +86,7 @@ export default defineComponent({
     }
 
     const download = async (mimeType: string) => {
-      const source = should_upscale.value ? (await upscale()) : (canvas as HTMLCanvasElement)
+      const source = has_offscreen_canvas_support && should_upscale.value ? (await upscale()) : (canvas as HTMLCanvasElement)
       source.toBlob(blob => {
         if (blob == null) return
         let filename: string
@@ -104,7 +105,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    return { active, toggle, download, upscaling, should_upscale }
+    return { active, toggle, download, upscaling, should_upscale, has_offscreen_canvas_support }
   }
 })
 </script>
