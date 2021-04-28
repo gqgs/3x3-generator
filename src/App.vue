@@ -106,7 +106,7 @@ html {
 
 #github {
   position: relative;
-  left: -180px;
+  left: -140px;
   top: 5px;
 }
 </style>
