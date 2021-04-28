@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent } from 'vue'
+import { ref, defineComponent, watch } from 'vue'
 import { useStore } from 'vuex'
 import fileDownload from 'js-file-download'
 
@@ -37,7 +37,7 @@ export default defineComponent({
     const canvas = store.state.canvas
     const active = ref(false)
     const upscaling = ref(false)
-    const should_upscale = ref(true)
+    const should_upscale = ref(JSON.parse(localStorage.getItem('should_upscale') || 'true'))
     const has_offscreen_canvas_support = typeof document.createElement('canvas').transferControlToOffscreen === 'function'
 
     canvas.width = 600
@@ -46,6 +46,10 @@ export default defineComponent({
     const toggle = () => {
       active.value = !active.value
     }
+
+    watch(should_upscale, (should_upscale) => {
+      localStorage.setItem('should_upscale', JSON.stringify(should_upscale))
+    })
 
     const upscale = () : Promise<HTMLCanvasElement> => {
       return new Promise(resolve => {
