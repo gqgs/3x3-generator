@@ -1,9 +1,9 @@
 <template>
-    <img v-if="!clicked" @click="showCropper" @ready="ready" :src="result.image_url" :title="result.title" class="image-result" />
-    <VueCropper :class="{'hidden': !clicked}" @ready="ready" @cropend="cropend" ref="cropper"
-      :title="result.title" :src="result.image_url"
-      :rotatable="false" :scalable="false" :zoomable="false" :viewMode="1" :aspectRatio="1" :minCropBoxWidth="200" :minCropBoxHeight="200"
-    />
+  <img v-if="!clicked" @click="showCropper" :src="result.image_url" :title="result.title" class="image-result" />
+  <VueCropper :class="{'hidden': !clicked}" @ready="ready" @cropend="cropend" ref="cropper"
+    :title="result.title" :src="result.image_url"
+    :rotatable="false" :scalable="false" :zoomable="false" :viewMode="1" :aspectRatio="1" :minCropBoxWidth="200" :minCropBoxHeight="200"
+  />
 </template>
 
 <script lang="ts">
@@ -22,7 +22,8 @@ export default defineComponent({
       type: Object
     }
   },
-  setup (props) {
+  emits: ['selected'],
+  setup (props, { emit }) {
     const cropper = ref<VueCropperMethods|null>(null)
     const store = useStore()
     const clicked = ref(false)
@@ -51,6 +52,7 @@ export default defineComponent({
     const showCropper = () => {
       clicked.value = true
       cropend()
+      emit('selected', props.result)
     }
 
     return { cropper, ready, cropend, clicked, showCropper }

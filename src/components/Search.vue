@@ -8,65 +8,45 @@
     </ul>
     </div>
     <div class="control">
-      <input class="input" :placeholder="'Search ' + currentTab + '...'" autocomplete="off" @input="search($event.target.value)" type="text" id="name" name="name">
+      <input class="input" :placeholder="'Search ' + currentTab + '...'" autocomplete="off" @input="onInput($event.target.value)" type="text" id="name" name="name">
     </div>
     </div>
     <progress v-if="loading" class="progress is-small is-info" />
     <div id="results" v-else-if="results.length">
-      <Cropper v-for="result in results" :key="result.mal_id" :result='result' />
+      <Cropper @selected='selected = result' v-for="result in results" :key="result.mal_id" :result='result' />
     </div>
+    <a v-if='showing_more' href="#" @click.prevent="goBack"><ion-icon size="large" name="arrow-undo-outline"></ion-icon></a>
+    <a v-else-if='selected && !showing_more' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
 </template>
 
 <script lang="ts">
 import { ref, defineComponent } from 'vue'
 import Cropper from './Cropper.vue'
-import debounce from 'lodash.debounce'
-
-interface Result {
-  mal_id: number
-  title: string
-  image_url: string
-  name: string
-}
+import Api from '../api'
 
 export default defineComponent({
   components: {
     Cropper
   },
   setup () {
-    const results = ref([])
-    const loading = ref(false)
     const currentTab = ref('anime')
-
     let lastQuery = ''
-
-    const search = debounce((query: string) => {
-      lastQuery = query
-
-      if (query.length < 3) {
-        results.value = []
-        return
-      }
-      loading.value = true
-
-      fetch(`https://api.jikan.moe/v3/search/${currentTab.value}?&limit=15&q=${encodeURI(query)}`)
-        .then(resp => resp.json())
-        .then(data => {
-          results.value = (data.results ?? []).map((result: Result) => {
-            return { mal_id: result.mal_id, title: result.title || result.name, image_url: result.image_url }
-          })
-        })
-        .finally(() => {
-          loading.value = false
-        })
-    }, 500)
 
     const changeTab = (newtab: string) => {
       currentTab.value = newtab
-      search(lastQuery)
+      Api.search(lastQuery, newtab)
     }
 
-    return { results, loading, changeTab, currentTab, search }
+    const goBack = () => {
+      Api.search(lastQuery, currentTab.value)
+    }
+
+    const onInput = (input: string) => {
+      lastQuery = input
+      Api.search(input, currentTab.value)
+    }
+
+    return { currentTab, changeTab, onInput, goBack, ...Api }
   }
 })
 </script>
