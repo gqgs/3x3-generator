@@ -31,25 +31,15 @@ const processResult = (result: UpscaleImage[], width: number, height: number) : 
 }
 
 const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = async () => {
-      const c = document.createElement('canvas')
-      c.width = img.width
-      c.height = img.height
-      const ctx = c.getContext('2d')
-      ctx?.drawImage(img, 0, 0, img.width, img.height)
-
-      const image_data = ctx?.getImageData(0, 0, img.width, img.height)
-      if (image_data === undefined) {
-        reject(new Error('image_data undefined'))
-        return
-      }
-
-      const result = await waifu2x.enlarge(image_data, updateProgress)
-      resolve(await processResult(result, img.width * 2, img.height * 2))
+  return new Promise(async (resolve, reject) => {
+    const ctx = canvas.getContext('2d')
+    const image_data = ctx?.getImageData(0, 0, canvas.width, canvas.height)
+    if (image_data === undefined) {
+      reject(new Error('image_data undefined'))
+      return
     }
-    img.src = canvas.toDataURL()
+    const result = await waifu2x.enlarge(image_data, updateProgress)
+    resolve(await processResult(result, canvas.width * 2, canvas.height * 2))
   })
 }
 
@@ -73,20 +63,12 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
       resolve(await processResult(result, width, height))
     }
 
-    const img = new Image()
-    img.onload = async () => {
-      const c = document.createElement('canvas')
-      c.width = img.width
-      c.height = img.height
-      const ctx = c.getContext('2d')
-      ctx?.drawImage(img, 0, 0, img.width, img.height)
-      upscaleWorker?.postMessage({
-        image_data: ctx?.getImageData(0, 0, img.width, img.height),
-        width: c.width,
-        height: c.height
-      })
-    }
-    img.src = canvas.toDataURL()
+    const ctx = canvas.getContext('2d')
+    upscaleWorker.postMessage({
+      image_data: ctx?.getImageData(0, 0, canvas.width, canvas.height),
+      width: canvas.width,
+      height: canvas.height
+    })
   })
 }
 
