@@ -15,12 +15,12 @@ const updateProgress = (value: number) => {
   progress.value = value
 }
 
-const processResult = (result: UpscaleImage[], width: number, height: number) : HTMLCanvasElement => {
+const mergeEnlarged = (enlarged: UpscaleImage[], width: number, height: number) : HTMLCanvasElement => {
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
   const ctx = canvas.getContext('2d')
-  result.forEach(({ image, x, y }: UpscaleImage) => {
+  enlarged.forEach(({ image, x, y }: UpscaleImage) => {
     ctx?.putImageData(image, x, y)
   })
   upscaling.value = false
@@ -37,7 +37,7 @@ const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement>
       return
     }
     const result = await waifu2x.enlarge(image_data, updateProgress)
-    resolve(processResult(result, canvas.width * 2, canvas.height * 2))
+    resolve(mergeEnlarged(result, canvas.width * 2, canvas.height * 2))
   })
 }
 
@@ -58,7 +58,7 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
         return
       }
       const { result, width, height } = event.data
-      resolve(processResult(result, width, height))
+      resolve(mergeEnlarged(result, width, height))
     }
 
     const ctx = canvas.getContext('2d')
