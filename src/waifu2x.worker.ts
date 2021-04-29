@@ -1,7 +1,4 @@
 import waifu2x from './waifu2x'
-import { GraphModel } from '@tensorflow/tfjs'
-
-let model: GraphModel | null = null
 
 // eslint-disable-next-line
 const ctx: Worker = self as any
@@ -18,11 +15,7 @@ onmessage = async (event: MessageEvent) => {
     })
   }
 
-  if (model === null) {
-    model = await waifu2x.loadModel()
-  }
-
-  const result = await waifu2x.enlarge(image_data, model, progress)
+  const result = await waifu2x.enlarge(image_data, progress)
   ctx.postMessage({
     type: 'done',
     result,

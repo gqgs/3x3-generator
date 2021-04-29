@@ -3,14 +3,13 @@ import Worker from 'worker-loader!./waifu2x.worker'
 import waifu2x from './waifu2x'
 import { ref } from 'vue'
 import { UpscaleImage } from './types'
-import { GraphModel } from '@tensorflow/tfjs'
 
 export const upscaling = ref(false)
 export const progress = ref(0)
 
-const has_offscreen_canvas_support = typeof document.createElement('canvas').transferControlToOffscreen === 'function'
+let upscaleWorker: Worker | null = null
 
-let model: GraphModel | null = null
+const has_offscreen_canvas_support = typeof document.createElement('canvas').transferControlToOffscreen === 'function'
 
 const updateProgress = (value: number) => {
   progress.value = value
@@ -32,7 +31,7 @@ const processResult = (result: UpscaleImage[], width: number, height: number) : 
 }
 
 const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> => {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = async () => {
       const c = document.createElement('canvas')
@@ -42,13 +41,12 @@ const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement>
       ctx?.drawImage(img, 0, 0, img.width, img.height)
 
       const image_data = ctx?.getImageData(0, 0, img.width, img.height)
-      if (image_data === undefined) return
-
-      if (model === null) {
-        model = await waifu2x.loadModel()
+      if (image_data === undefined) {
+        reject(new Error('image_data undefined'))
+        return
       }
-      const result = await waifu2x.enlarge(image_data, model, updateProgress)
 
+      const result = await waifu2x.enlarge(image_data, updateProgress)
       resolve(await processResult(result, img.width * 2, img.height * 2))
     }
     img.src = canvas.toDataURL()
@@ -63,13 +61,14 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
   }
 
   return new Promise(resolve => {
-    const worker = new Worker()
-    worker.onmessage = async (event: MessageEvent) => {
+    if (upscaleWorker === null) {
+      upscaleWorker = new Worker()
+    }
+    upscaleWorker.onmessage = async (event: MessageEvent) => {
       if (event.data.type === 'progress') {
         updateProgress(event.data.value)
         return
       }
-      worker.terminate()
       const { result, width, height } = event.data
       resolve(await processResult(result, width, height))
     }
@@ -81,7 +80,7 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
       c.height = img.height
       const ctx = c.getContext('2d')
       ctx?.drawImage(img, 0, 0, img.width, img.height)
-      worker.postMessage({
+      upscaleWorker?.postMessage({
         image_data: ctx?.getImageData(0, 0, img.width, img.height),
         width: c.width,
         height: c.height

@@ -20,15 +20,28 @@ const MODEL_INFO: {[key: string] : ModelInfo} = {
 }
 
 const defaultModel = MODEL_INFO['UpConv-7']
+let model: tf.GraphModel | null = null
+
+function loadModel ({ dir_name }: ModelInfo = defaultModel): Promise<tf.GraphModel> {
+  const modelPath = `${process.env.BASE_URL}tfjs_models/${dir_name}/model.json`
+  return tf.loadGraphModel(modelPath)
+}
 
 function enlarge (original_image: HTMLImageElement | ImageData,
-  model: tf.GraphModel,
-  progress: (value: number) => void,
-  model_info: ModelInfo = defaultModel
+  progress: (value: number) => void
 ): Promise<UpscaleImage[]> {
   return new Promise(async resolve => {
   /* eslint-disable no-console */
-    console.log(`memory used before processing: ${tf.memory().numBytes / 1024} KiB`)
+    console.debug(`memory used before processing: ${tf.memory().numBytes / 1024} KiB`)
+    const start = performance.now()
+
+    const model_info: ModelInfo = defaultModel
+
+    if (model === null) {
+      /* eslint-disable no-console */
+      console.debug('initializing model')
+      model = await loadModel(model_info)
+    }
 
     const margin_size = model_info.margin_size
     const patch_size = model_info.patch_size
@@ -79,7 +92,7 @@ function enlarge (original_image: HTMLImageElement | ImageData,
       for (let j = 0; j < row.length; j++) {
         const overlapped_patch = row[j]
         const enlarged_patch_pixels = tf.tidy(() => {
-          const enlarged_overlapped_patch_pixels = (model.predict(overlapped_patch) as tf.Tensor).squeeze()
+          const enlarged_overlapped_patch_pixels = (model?.predict(overlapped_patch) as tf.Tensor).squeeze()
           const [eop_h, eop_w, eop_c] = enlarged_overlapped_patch_pixels.shape
           switch (padding_method) {
             case 'VALID':
@@ -126,13 +139,11 @@ function enlarge (original_image: HTMLImageElement | ImageData,
     resolve(upscaled)
 
     /* eslint-disable no-console */
-    console.log(`memory used after processing: ${tf.memory().numBytes / 1024} KiB`)
+    console.debug(`memory used after processing: ${tf.memory().numBytes / 1024} KiB`)
+    /* eslint-disable no-console */
+    console.debug(`time elapsed: ${performance.now() - start}`)
   })
 }
 export default {
-  enlarge,
-  async loadModel ({ dir_name }: ModelInfo = defaultModel): Promise<tf.GraphModel> {
-    const modelPath = `${process.env.BASE_URL}tfjs_models/${dir_name}/model.json`
-    return await tf.loadGraphModel(modelPath)
-  }
+  enlarge
 }
