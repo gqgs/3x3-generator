@@ -15,19 +15,17 @@ const updateProgress = (value: number) => {
   progress.value = value
 }
 
-const processResult = (result: UpscaleImage[], width: number, height: number) : Promise<HTMLCanvasElement> => {
-  return new Promise(resolve => {
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    result.forEach(({ image, x, y }: UpscaleImage) => {
-      ctx?.putImageData(image, x, y)
-    })
-    upscaling.value = false
-    progress.value = 0
-    resolve(canvas)
+const processResult = (result: UpscaleImage[], width: number, height: number) : HTMLCanvasElement => {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  result.forEach(({ image, x, y }: UpscaleImage) => {
+    ctx?.putImageData(image, x, y)
   })
+  upscaling.value = false
+  progress.value = 0
+  return canvas
 }
 
 const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> => {
@@ -39,7 +37,7 @@ const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement>
       return
     }
     const result = await waifu2x.enlarge(image_data, updateProgress)
-    resolve(await processResult(result, canvas.width * 2, canvas.height * 2))
+    resolve(processResult(result, canvas.width * 2, canvas.height * 2))
   })
 }
 
@@ -54,13 +52,13 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
     if (upscaleWorker === null) {
       upscaleWorker = new Worker()
     }
-    upscaleWorker.onmessage = async (event: MessageEvent) => {
+    upscaleWorker.onmessage = (event: MessageEvent) => {
       if (event.data.type === 'progress') {
         updateProgress(event.data.value)
         return
       }
       const { result, width, height } = event.data
-      resolve(await processResult(result, width, height))
+      resolve(processResult(result, width, height))
     }
 
     const ctx = canvas.getContext('2d')
