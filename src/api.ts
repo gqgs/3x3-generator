@@ -60,11 +60,19 @@ export const showMore = (tab: string): void => {
     })
 }
 
+export const reset = (): void => {
+  results.value = []
+  selected.value = null
+  showing_more.value = false
+  loading.value = false
+}
+
 export default {
   results,
   loading,
   selected,
   showing_more,
   search,
-  showMore
+  showMore,
+  reset
 }

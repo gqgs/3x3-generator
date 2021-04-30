@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent } from 'vue'
+import { ref, defineComponent, onUnmounted } from 'vue'
 import Cropper from './Cropper.vue'
 import Api from '../api'
 
@@ -45,6 +45,8 @@ export default defineComponent({
       lastQuery = input
       Api.search(input, currentTab.value)
     }
+
+    onUnmounted(() => Api.reset())
 
     return { currentTab, changeTab, onInput, goBack, ...Api }
   }
