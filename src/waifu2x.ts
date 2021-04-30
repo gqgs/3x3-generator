@@ -1,5 +1,5 @@
-import * as tf from '@tensorflow/tfjs'
-import { UpscaleImage } from './types'
+import * as tf from "@tensorflow/tfjs"
+import { UpscaleImage } from "./types"
 
 interface ModelInfo {
   dir_name: string
@@ -10,16 +10,16 @@ interface ModelInfo {
 }
 
 const MODEL_INFO: {[key: string] : ModelInfo} = {
-  'UpConv-7': {
-    dir_name: 'waifu2x_upconv_7_noise1_scale2.0x_same_padding_model',
+  "UpConv-7": {
+    dir_name: "waifu2x_upconv_7_noise1_scale2.0x_same_padding_model",
     patch_size: 120,
     margin_size: 6,
-    padding_method: 'SAME',
+    padding_method: "SAME",
     upscale_first: false
   }
 }
 
-const defaultModel = MODEL_INFO['UpConv-7']
+const defaultModel = MODEL_INFO["UpConv-7"]
 let model: tf.GraphModel | null = null
 
 function loadModel ({ dir_name }: ModelInfo = defaultModel): Promise<tf.GraphModel> {
@@ -39,7 +39,7 @@ function enlarge (original_image: HTMLImageElement | ImageData,
 
     if (model === null) {
       /* eslint-disable no-console */
-      console.debug('initializing model')
+      console.debug("initializing model")
       model = await loadModel(model_info)
     }
 
@@ -52,7 +52,7 @@ function enlarge (original_image: HTMLImageElement | ImageData,
     const input = tf.tidy(
       () => tf.browser.fromPixels(original_image) // int32, 3 channels
         .expandDims()
-        .asType('float32')
+        .asType("float32")
         .div(255.0)
     )
 
@@ -95,7 +95,7 @@ function enlarge (original_image: HTMLImageElement | ImageData,
           const enlarged_overlapped_patch_pixels = (model?.predict(overlapped_patch) as tf.Tensor).squeeze()
           const [eop_h, eop_w, eop_c] = enlarged_overlapped_patch_pixels.shape
           switch (padding_method) {
-            case 'VALID':
+            case "VALID":
               if (upscale_first) {
                 return enlarged_overlapped_patch_pixels
                   .slice([margin_size, margin_size, 0],
@@ -105,14 +105,14 @@ function enlarge (original_image: HTMLImageElement | ImageData,
                   .slice([0, 0, 0],
                     [eop_h, eop_w, eop_c])
               }
-            case 'SAME':
+            case "SAME":
               return enlarged_overlapped_patch_pixels
                 .slice([2 * margin_size, 2 * margin_size, 0],
                   [eop_h - 4 * margin_size, eop_w - 4 * margin_size, eop_c])
           }
         })
         if (enlarged_patch_pixels === undefined) {
-          throw new Error('`enlarged_patch_pixels` undefined')
+          throw new Error("`enlarged_patch_pixels` undefined")
         }
         const [enlarged_patch_h, enlarged_patch_w] = enlarged_patch_pixels.shape
         const enlarged_patch_bytes = await tf.browser.toPixels(enlarged_patch_pixels as tf.Tensor2D)

@@ -1,5 +1,5 @@
-import debounce from 'lodash.debounce'
-import { ref } from 'vue'
+import debounce from "lodash.debounce"
+import { ref } from "vue"
 
 interface Result {
     mal_id: number

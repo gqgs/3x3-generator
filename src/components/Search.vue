@@ -20,17 +20,17 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, onUnmounted } from 'vue'
-import Cropper from './Cropper.vue'
-import Api from '../api'
+import { ref, defineComponent, onUnmounted } from "vue"
+import Cropper from "./Cropper.vue"
+import Api from "../api"
 
 export default defineComponent({
   components: {
     Cropper
   },
   setup () {
-    const currentTab = ref('anime')
-    let lastQuery = ''
+    const currentTab = ref("anime")
+    let lastQuery = ""
 
     const changeTab = (newtab: string) => {
       currentTab.value = newtab

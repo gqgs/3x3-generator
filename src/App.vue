@@ -13,14 +13,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapState, mapActions } from 'vuex'
-import Cell from './components/Cell.vue'
-import Search from './components/Search.vue'
-import Download from './components/Download.vue'
+import { defineComponent } from "vue"
+import { mapState, mapActions } from "vuex"
+import Cell from "./components/Cell.vue"
+import Search from "./components/Search.vue"
+import Download from "./components/Download.vue"
 
 export default defineComponent({
-  name: 'App',
+  name: "App",
   components: {
     Cell,
     Search,
@@ -28,16 +28,16 @@ export default defineComponent({
   },
   computed: {
     ...mapState([
-      'show_search',
-      'selected_id'
+      "show_search",
+      "selected_id"
     ])
   },
   methods: {
     ...mapActions([
-      'hideSearch'
+      "hideSearch"
     ]),
     hideForm (event: Event) {
-      if ((event.target as Element).id === 'grid') {
+      if ((event.target as Element).id === "grid") {
         this.hideSearch()
       }
     }

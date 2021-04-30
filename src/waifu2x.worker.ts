@@ -1,4 +1,4 @@
-import waifu2x from './waifu2x'
+import waifu2x from "./waifu2x"
 
 // eslint-disable-next-line
 const ctx: Worker = self as any
@@ -10,14 +10,14 @@ onmessage = async (event: MessageEvent) => {
 
   const progress = (value: number) => {
     ctx.postMessage({
-      type: 'progress',
+      type: "progress",
       value
     })
   }
 
   const result = await waifu2x.enlarge(image_data, progress)
   ctx.postMessage({
-    type: 'done',
+    type: "done",
     result,
     width,
     height

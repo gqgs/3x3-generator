@@ -25,17 +25,17 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, watch } from 'vue'
-import { useStore } from 'vuex'
-import fileDownload from 'js-file-download'
-import { upscaling, upscale, progress } from '../upscale'
+import { ref, defineComponent, watch } from "vue"
+import { useStore } from "vuex"
+import fileDownload from "js-file-download"
+import { upscaling, upscale, progress } from "../upscale"
 
 export default defineComponent({
   setup () {
     const store = useStore()
     const canvas = store.state.canvas
     const active = ref(false)
-    const should_upscale = ref(JSON.parse(localStorage.getItem('should_upscale') || 'true'))
+    const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
 
     canvas.width = 600
     canvas.height = 600
@@ -45,7 +45,7 @@ export default defineComponent({
     }
 
     watch(should_upscale, (should_upscale) => {
-      localStorage.setItem('should_upscale', JSON.stringify(should_upscale))
+      localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
     })
 
     const download = async (mimeType: string) => {
@@ -55,14 +55,14 @@ export default defineComponent({
         if (blob == null) return
         let filename: string
         switch (mimeType) {
-          case 'image/png':
-            filename = '3x3gen.png'
+          case "image/png":
+            filename = "3x3gen.png"
             break
-          case 'image/webp':
-            filename = '3x3gen.webp'
+          case "image/webp":
+            filename = "3x3gen.webp"
             break
           default:
-            filename = '3x3gen.jpg'
+            filename = "3x3gen.jpg"
         }
         fileDownload(blob, filename)
       }, mimeType)

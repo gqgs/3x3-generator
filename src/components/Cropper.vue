@@ -7,10 +7,10 @@
 </template>
 
 <script lang="ts">
-import 'cropperjs/dist/cropper.css'
-import { ref, onUnmounted, defineComponent } from 'vue'
-import { useStore } from 'vuex'
-import VueCropper, { VueCropperMethods } from 'vue-cropperjs'
+import "cropperjs/dist/cropper.css"
+import { ref, onUnmounted, defineComponent } from "vue"
+import { useStore } from "vuex"
+import VueCropper, { VueCropperMethods } from "vue-cropperjs"
 
 export default defineComponent({
   components: {
@@ -22,7 +22,7 @@ export default defineComponent({
       type: Object
     }
   },
-  emits: ['selected'],
+  emits: ["selected"],
   setup (props, { emit }) {
     const cropper = ref<VueCropperMethods|null>(null)
     const store = useStore()
@@ -35,24 +35,24 @@ export default defineComponent({
       const { x, y, width, height } = (cropper.value as VueCropperMethods)?.getData()
       const img = new Image()
       img.onload = () => {
-        const canvas = document.createElement('canvas')
+        const canvas = document.createElement("canvas")
         canvas.width = 200
         canvas.height = 200
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext("2d")
         ctx?.drawImage(img, x, y, width, height, 0, 0, 200, 200)
-        store.dispatch('updateCell', {
-          image: canvas.toDataURL('image/png'),
+        store.dispatch("updateCell", {
+          image: canvas.toDataURL("image/png"),
           title: props.result.title
         })
       }
-      img.crossOrigin = 'Anonymous'
+      img.crossOrigin = "Anonymous"
       img.src = props.result.image_url
     }
 
     const showCropper = () => {
       clicked.value = true
       cropend()
-      emit('selected', props.result)
+      emit("selected", props.result)
     }
 
     return { cropper, ready, cropend, clicked, showCropper }

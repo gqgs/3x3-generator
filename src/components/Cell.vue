@@ -6,9 +6,9 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, nextTick } from 'vue'
-import { useStore } from 'vuex'
-import { Update } from '../types'
+import { ref, defineComponent, nextTick } from "vue"
+import { useStore } from "vuex"
+import { Update } from "../types"
 
 export default defineComponent({
   props: {
@@ -19,8 +19,8 @@ export default defineComponent({
   },
   setup (props) {
     const store = useStore()
-    const image = ref('')
-    const title = ref('')
+    const image = ref("")
+    const title = ref("")
     const canvas = ref<HTMLCanvasElement|null>(null)
 
     const update = (update: Update) => {
@@ -31,16 +31,16 @@ export default defineComponent({
           const c = (canvas.value as HTMLCanvasElement)
           c.width = 200
           c.height = 200
-          const ctx = c.getContext('2d')
+          const ctx = c.getContext("2d")
           ctx?.drawImage(img, 0, 0, img.width, img.height, 0, 0, 200, 200)
         })
       }
       img.src = update.image
       image.value = update.image
-      store.dispatch('updateCanvas', { id: props.id, image: update.image })
+      store.dispatch("updateCanvas", { id: props.id, image: update.image })
     }
 
-    const showSearch = () => store.dispatch('showSearch', { id: props.id, updater: update })
+    const showSearch = () => store.dispatch("showSearch", { id: props.id, updater: update })
 
     return { image, title, canvas, showSearch }
   }
