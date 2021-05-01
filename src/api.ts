@@ -18,6 +18,8 @@ export const loading = ref(false)
 export const selected = ref<Result|null>(null)
 export const showing_more = ref(false)
 
+let last_id = 0
+
 export const search = debounce((query: string, tab: string) => {
   showing_more.value = false
   selected.value = null
@@ -26,10 +28,12 @@ export const search = debounce((query: string, tab: string) => {
     results.value = []
     return
   }
+  const id = ++last_id
   loading.value = true
   fetch(`https://api.jikan.moe/v3/search/${tab}?&limit=15&q=${encodeURI(query)}`)
     .then(resp => resp.json())
     .then(data => {
+      if (last_id > id) return
       results.value = (data.results ?? []).map((result: Result) => {
         return { mal_id: result.mal_id, title: result.title || result.name, image_url: result.image_url }
       })
@@ -42,9 +46,11 @@ export const search = debounce((query: string, tab: string) => {
 export const showMore = (tab: string): void => {
   showing_more.value = true
   loading.value = true
+  const id = ++last_id
   fetch(`https://api.jikan.moe/v3/${tab}/${selected.value?.mal_id}/pictures`)
     .then(resp => resp.json())
     .then(data => {
+      if (last_id > id) return
       const image_set = new Set()
       const fetch_result: Result[] = (data.pictures ?? []).map((picture: Picture) => {
         return { title: selected.value?.title, image_url: picture.large }
