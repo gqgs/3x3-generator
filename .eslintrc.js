@@ -17,6 +17,8 @@ module.exports = {
     camelcase: "off",
     "import/no-webpack-loader-syntax": "off",
     "no-async-promise-executor": "off",
-    quotes: [2, "double", { avoidEscape: true }]
+    quotes: [2, "double", { avoidEscape: true }],
+    indent: "off",
+    "@typescript-eslint/indent": ["error", 2]
   }
 }

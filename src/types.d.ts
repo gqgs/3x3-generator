@@ -1,10 +1,10 @@
 export interface Update {
-    image: string;
-    title: string;
+  image: string;
+  title: string;
 }
 
 export interface UpscaleImage {
-    image: ImageData
-    x: number
-    y: number
+  image: ImageData
+  x: number
+  y: number
 }

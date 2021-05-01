@@ -31,7 +31,7 @@ function enlarge (original_image: HTMLImageElement | ImageData,
   progress: (value: number) => void
 ): Promise<UpscaleImage[]> {
   return new Promise(async resolve => {
-  /* eslint-disable no-console */
+    /* eslint-disable no-console */
     console.debug(`memory used before processing: ${tf.memory().numBytes / 1024} KiB`)
     const start = performance.now()
 
@@ -87,6 +87,8 @@ function enlarge (original_image: HTMLImageElement | ImageData,
               j < row.length - 1 ? overlapped_patch_size : padded_w - j * patch_size,
               c])))
 
+    const areas = overlapped_patches.reduce((acc, row) => acc + row.length, 0)
+
     for (let i = 0; i < overlapped_patches.length; i++) {
       const row = overlapped_patches[i]
       for (let j = 0; j < row.length; j++) {
@@ -129,7 +131,7 @@ function enlarge (original_image: HTMLImageElement | ImageData,
           y: 2 * i * patch_size
         })
 
-        progress(100 * (upscaled.length / 25))
+        progress(100 * (upscaled.length / areas))
       }
     }
 

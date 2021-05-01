@@ -2,15 +2,15 @@ import debounce from "lodash.debounce"
 import { ref } from "vue"
 
 interface Result {
-    mal_id: number
-    title: string
-    image_url: string
-    name: string
+  mal_id: number
+  title: string
+  image_url: string
+  name: string
 }
 
 interface Picture {
-    large: string
-    small: string
+  large: string
+  small: string
 }
 
 export const results = ref<Result[]>([])
