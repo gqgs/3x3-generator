@@ -8,9 +8,10 @@
 
 <script lang="ts">
 import "cropperjs/dist/cropper.css"
-import { ref, onUnmounted, defineComponent } from "vue"
+import { ref, onUnmounted, defineComponent, PropType } from "vue"
 import { useStore } from "vuex"
 import VueCropper, { VueCropperMethods } from "vue-cropperjs"
+import { SearchResult } from "../api"
 
 export default defineComponent({
   components: {
@@ -19,7 +20,7 @@ export default defineComponent({
   props: {
     result: {
       required: true,
-      type: Object
+      type: Object as PropType<SearchResult>
     }
   },
   emits: ["selected"],

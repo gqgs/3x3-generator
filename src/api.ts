@@ -1,7 +1,7 @@
 import debounce from "lodash.debounce"
 import { watch, ref } from "vue"
 
-interface Result {
+export interface SearchResult {
   mal_id: number
   title: string
   image_url: string
@@ -14,9 +14,9 @@ interface Picture {
 }
 
 export const currentTab = ref("anime")
-export const results = ref<Result[]>([])
+export const results = ref<SearchResult[]>([])
 export const loading = ref(false)
-export const selected = ref<Result|null>(null)
+export const selected = ref<SearchResult|null>(null)
 export const showing_more = ref(false)
 export const query = ref("")
 
@@ -51,7 +51,7 @@ const search = debounce((query: string, tab: string) => {
     .then(resp => resp.json())
     .then(data => {
       if (last_id > id) return
-      results.value = (data.results ?? []).map((result: Result) => {
+      results.value = (data.results ?? []).map((result: SearchResult) => {
         return { mal_id: result.mal_id, title: result.title || result.name, image_url: result.image_url }
       })
     })
@@ -69,9 +69,9 @@ export const showMore = (tab: string): void => {
     .then(data => {
       if (last_id > id) return
       const image_set = new Set()
-      const fetch_result: Result[] = (data.pictures ?? []).map((picture: Picture) => {
+      const fetch_result: SearchResult[] = (data.pictures ?? []).map((picture: Picture) => {
         return { title: selected.value?.title, image_url: picture.large }
-      }).filter((result: Result) => {
+      }).filter((result: SearchResult) => {
         const is_duplicated = image_set.has(result.image_url)
         image_set.add(result.image_url)
         return is_duplicated
