@@ -1,5 +1,5 @@
 import debounce from "lodash.debounce"
-import { ref } from "vue"
+import { watch, ref } from "vue"
 
 interface Result {
   mal_id: number
@@ -13,14 +13,31 @@ interface Picture {
   small: string
 }
 
+export const currentTab = ref("anime")
 export const results = ref<Result[]>([])
 export const loading = ref(false)
 export const selected = ref<Result|null>(null)
 export const showing_more = ref(false)
+export const query = ref("")
 
 let last_id = 0
+let lastQuery = ""
 
-export const search = debounce((query: string, tab: string) => {
+export const changeTab = (newtab: string): void => {
+  currentTab.value = newtab
+  search(lastQuery, newtab)
+}
+
+export const goBack = (): void => {
+  search(lastQuery, currentTab.value)
+}
+
+watch(query, (query) => {
+  lastQuery = query
+  search(query, currentTab.value)
+})
+
+const search = debounce((query: string, tab: string) => {
   showing_more.value = false
   selected.value = null
 
@@ -66,19 +83,14 @@ export const showMore = (tab: string): void => {
     })
 }
 
-export const reset = (): void => {
-  results.value = []
-  selected.value = null
-  showing_more.value = false
-  loading.value = false
-}
-
 export default {
   results,
   loading,
   selected,
   showing_more,
-  search,
   showMore,
-  reset
+  query,
+  currentTab,
+  changeTab,
+  goBack
 }

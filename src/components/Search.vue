@@ -8,7 +8,7 @@
     </ul>
     </div>
     <div class="control">
-      <input class="input" :placeholder="'Search ' + currentTab + '...'" autocomplete="off" @input="onInput($event.target.value)" type="text" id="name" name="name">
+      <input class="input" :placeholder="'Search ' + currentTab + '...'" autocomplete="off" v-model="query" type="text" id="name" name="name">
     </div>
     </div>
     <progress v-if="loading" class="progress is-small is-info" />
@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent, onUnmounted } from "vue"
+import { defineComponent } from "vue"
 import Cropper from "./Cropper.vue"
 import Api from "../api"
 
@@ -29,26 +29,7 @@ export default defineComponent({
     Cropper
   },
   setup () {
-    const currentTab = ref("anime")
-    let lastQuery = ""
-
-    const changeTab = (newtab: string) => {
-      currentTab.value = newtab
-      Api.search(lastQuery, newtab)
-    }
-
-    const goBack = () => {
-      Api.search(lastQuery, currentTab.value)
-    }
-
-    const onInput = (input: string) => {
-      lastQuery = input
-      Api.search(input, currentTab.value)
-    }
-
-    onUnmounted(() => Api.reset())
-
-    return { currentTab, changeTab, onInput, goBack, ...Api }
+    return { ...Api }
   }
 })
 </script>
