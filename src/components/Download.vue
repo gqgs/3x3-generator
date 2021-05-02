@@ -56,13 +56,13 @@ export default defineComponent({
         let filename: string
         switch (mimeType) {
           case "image/png":
-            filename = "3x3gen.png"
+            filename = "3x3.png"
             break
           case "image/webp":
-            filename = "3x3gen.webp"
+            filename = "3x3.webp"
             break
           default:
-            filename = "3x3gen.jpg"
+            filename = "3x3.jpg"
         }
         fileDownload(blob, filename)
       }, mimeType)
