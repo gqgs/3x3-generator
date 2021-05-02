@@ -15,7 +15,7 @@ onmessage = async (event: MessageEvent) => {
     })
   }
 
-  const result = await waifu2x.enlarge(image_data, progress)
+  const result = await waifu2x.upscale(image_data, progress)
   ctx.postMessage({
     type: "done",
     result,

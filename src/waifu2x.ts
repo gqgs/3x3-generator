@@ -27,7 +27,7 @@ function loadModel ({ dir_name }: ModelInfo = defaultModel): Promise<tf.GraphMod
   return tf.loadGraphModel(modelPath)
 }
 
-function enlarge (original_image: HTMLImageElement | ImageData,
+function upscale (original_image: HTMLImageElement | ImageData,
   progress: (value: number) => void
 ): Promise<UpscaleImage[]> {
   return new Promise(async resolve => {
@@ -147,5 +147,5 @@ function enlarge (original_image: HTMLImageElement | ImageData,
   })
 }
 export default {
-  enlarge
+  upscale
 }
