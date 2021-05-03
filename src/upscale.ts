@@ -1,10 +1,11 @@
-
-import Worker from "worker-loader!./waifu2x.worker"
-import Waifu2x, { Model } from "./waifu2x"
+import { Model } from "./waifu2x"
 import { ref } from "vue"
 export const upscaling = ref(false)
 export const progress = ref(0)
 export const progress_msg = ref("Starting...")
+
+const Waifu2x = () => import("./waifu2x")
+const Waifu2xWorker = () => import("worker-loader!./waifu2x.worker")
 
 let upscaleWorker: Worker | null = null
 
@@ -34,7 +35,8 @@ const canvasFromUpscaled = (upscaled: ImageBitmap) : HTMLCanvasElement => {
 const upscalefallback = (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model) : Promise<HTMLCanvasElement> => {
   return new Promise(async (resolve) => {
     const bitmap = await createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)
-    const worker = new Waifu2x()
+    const Worker = (await Waifu2x()).default
+    const worker = new Worker()
     worker.progress(denoiseModel, updateProgress("Denoising image..."))
     worker.progress(upscaleModel, updateProgress("Upscaling image..."))
     const denoised = await worker.predict(denoiseModel, bitmap)
@@ -52,6 +54,7 @@ export const upscale = (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleM
 
   return new Promise(async resolve => {
     if (upscaleWorker === null) {
+      const Worker = (await Waifu2xWorker()).default
       upscaleWorker = new Worker()
     }
     upscaleWorker.onmessage = (event: MessageEvent) => {
