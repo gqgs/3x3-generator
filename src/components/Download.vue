@@ -1,19 +1,38 @@
 <template>
-    <label class="checkbox pr-4 py-2">
+    <label class="checkbox pr-4 py-2 is-size-7">
       <input type="checkbox" v-model="should_upscale">
-      Upscale
+      Upscale + {{denoise}}
     </label>
-    <div :class="{'is-active': active}" class="dropdown is-up">
+
+    <div :class="{'is-active': activeDenoise}" class="dropdown is-up">
     <div class="dropdown-trigger">
-      <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="toggle">
-        <span v-if='upscaling'>Upscaling image...</span>
+      <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="toggleDenoise">
+        <span>Denoise</span>
+        <span class="icon is-small">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </span>
+      </button>
+    </div>
+    <div class="dropdown-menu" id="denoise-dropdown-menu" role="menu">
+      <div class="dropdown-content">
+        <a href="#" :key='model' v-for="model in ['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @click.prevent="denoise = model; activeDenoise = false" class="dropdown-item">
+          {{model}}
+        </a>
+      </div>
+    </div>
+  </div>
+
+    <div :class="{'is-active': activeDownload}" class="dropdown is-up">
+    <div class="dropdown-trigger">
+      <button class="button" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="toggleDownload">
+        <span v-if='upscaling'>{{progress_msg}}</span>
         <span v-else>Download image</span>
         <span class="icon is-small">
           <ion-icon name="chevron-down-outline"></ion-icon>
         </span>
       </button>
     </div>
-    <div class="dropdown-menu" id="dropdown-menu" role="menu">
+    <div class="dropdown-menu" id="download-dropdown-menu" role="menu">
       <div class="dropdown-content">
         <a href="#" :key='mime' v-for="mime in ['image/jpeg', 'image/png', 'image/webp']" @click.prevent="download(mime)" class="dropdown-item">
           Download ({{mime}})
@@ -28,29 +47,41 @@
 import { ref, defineComponent, watch } from "vue"
 import { useStore } from "vuex"
 import fileDownload from "js-file-download"
-import { upscaling, upscale, progress } from "../upscale"
+import { upscaling, upscale, progress, progress_msg } from "../upscale"
+import { Model } from "@/waifu2x"
 
 export default defineComponent({
   setup () {
     const store = useStore()
     const canvas = store.state.canvas
-    const active = ref(false)
+    const activeDownload = ref(false)
+    const activeDenoise = ref(false)
     const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
+    const denoise = ref(localStorage.getItem("denoise") || "denoise3_model")
 
     canvas.width = 600
     canvas.height = 600
 
-    const toggle = () => {
-      active.value = !active.value
+    const toggleDenoise = () => {
+      activeDenoise.value = !activeDenoise.value
     }
+
+    const toggleDownload = () => {
+      activeDownload.value = !activeDownload.value
+    }
+
+    watch(denoise, (denoise) => {
+      localStorage.setItem("denoise", denoise)
+    })
 
     watch(should_upscale, (should_upscale) => {
       localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
     })
 
     const download = async (mimeType: string) => {
-      active.value = false
-      const source = should_upscale.value ? (await upscale(canvas)) : (canvas as HTMLCanvasElement)
+      const denoiseModel = `${denoise.value}.json` as Model
+      activeDownload.value = false
+      const source = should_upscale.value ? (await upscale(canvas, denoiseModel)) : (canvas as HTMLCanvasElement)
       source.toBlob(blob => {
         if (blob == null) return
         let filename: string
@@ -68,7 +99,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    return { active, toggle, download, upscaling, should_upscale, progress }
+    return { activeDownload, toggleDownload, activeDenoise, toggleDenoise, download, upscaling, should_upscale, progress, progress_msg, denoise }
   }
 })
 </script>
