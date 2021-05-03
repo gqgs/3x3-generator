@@ -1,71 +1,72 @@
 
 import Worker from "worker-loader!./waifu2x.worker"
-import waifu2x from "./waifu2x"
+import Waifu2x, { Model } from "./waifu2x"
 import { ref } from "vue"
-import { UpscaleImage } from "./types"
-
 export const upscaling = ref(false)
 export const progress = ref(0)
+export const progress_msg = ref("Starting...")
 
 let upscaleWorker: Worker | null = null
 
 const has_offscreen_canvas_support = typeof document.createElement("canvas").transferControlToOffscreen === "function"
 
-const updateProgress = (value: number) => {
+const updateProgress = (msg: string) => (value: number) => {
   progress.value = value
+  progress_msg.value = msg
 }
 
-const mergeUpscaled = (enlarged: UpscaleImage[], width: number, height: number) : HTMLCanvasElement => {
+const canvasFromUpscaled = (upscaled: ImageBitmap) : HTMLCanvasElement => {
   const canvas = document.createElement("canvas")
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext("2d")
-  enlarged.forEach(({ image, x, y }: UpscaleImage) => {
-    ctx?.putImageData(image, x, y)
-  })
+  canvas.width = upscaled.width
+  canvas.height = upscaled.height
+
+  const ctx = canvas.getContext("bitmaprenderer")
+  if (ctx) {
+    ctx.transferFromImageBitmap(upscaled)
+  } else {
+    canvas.getContext("2d")?.drawImage(upscaled, 0, 0)
+  }
   upscaling.value = false
   progress.value = 0
   return canvas
 }
 
-const upscalefallback = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> => {
-  return new Promise(async (resolve, reject) => {
-    const ctx = canvas.getContext("2d")
-    const image_data = ctx?.getImageData(0, 0, canvas.width, canvas.height)
-    if (image_data === undefined) {
-      reject(new Error("image_data undefined"))
-      return
-    }
-    const result = await waifu2x.upscale(image_data, updateProgress)
-    resolve(mergeUpscaled(result, canvas.width * 2, canvas.height * 2))
+const upscalefallback = (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model) : Promise<HTMLCanvasElement> => {
+  return new Promise(async (resolve) => {
+    const bitmap = await createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)
+    const worker = new Waifu2x()
+    worker.progress(denoiseModel, updateProgress("Denoising image..."))
+    worker.progress(upscaleModel, updateProgress("Upscaling image..."))
+    const denoised = await worker.predict(denoiseModel, bitmap)
+    const upscaled = await worker.predict(upscaleModel, denoised)
+    resolve(canvasFromUpscaled(upscaled))
   })
 }
 
-export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> => {
+export const upscale = (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model = "scale2.0x_model.json") : Promise<HTMLCanvasElement> => {
   upscaling.value = true
 
   if (!has_offscreen_canvas_support) {
-    return upscalefallback(canvas)
+    return upscalefallback(canvas, denoiseModel, upscaleModel)
   }
 
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     if (upscaleWorker === null) {
       upscaleWorker = new Worker()
     }
     upscaleWorker.onmessage = (event: MessageEvent) => {
       if (event.data.type === "progress") {
-        updateProgress(event.data.value)
+        updateProgress(event.data.msg)(event.data.value)
         return
       }
-      const { result, width, height } = event.data
-      resolve(mergeUpscaled(result, width, height))
+      const { upscaled } = event.data
+      resolve(canvasFromUpscaled(upscaled))
     }
 
-    const ctx = canvas.getContext("2d")
     upscaleWorker.postMessage({
-      image_data: ctx?.getImageData(0, 0, canvas.width, canvas.height),
-      width: canvas.width,
-      height: canvas.height
+      bitmap: await createImageBitmap(canvas, 0, 0, canvas.width, canvas.height),
+      denoiseModel,
+      upscaleModel
     })
   })
 }
@@ -73,5 +74,6 @@ export const upscale = (canvas: HTMLCanvasElement) : Promise<HTMLCanvasElement> 
 export default {
   upscaling,
   upscale,
-  progress
+  progress,
+  progress_msg
 }
