@@ -57,7 +57,7 @@ export default defineComponent({
     const activeDownload = ref(false)
     const activeDenoise = ref(false)
     const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
-    const denoise = ref(localStorage.getItem("denoise") || "denoise3_model")
+    const denoise = ref(localStorage.getItem("denoise") || "denoise2_model")
 
     canvas.width = 600
     canvas.height = 600
