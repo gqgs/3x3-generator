@@ -9,13 +9,14 @@
   },
   "dependencies": {
     "@tensorflow/tfjs": "^3.5.0",
+    "ci": "^2.1.0",
     "core-js": "^3.6.5",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
     "vue": "^3.0.0",
     "vue-cropperjs": "^5.0.0",
     "vuex": "^4.0.0-0",
-    "waifu2x-tfjs": "^1.0.3"
+    "waifu2x-tfjs": "github:gqgs/waifu2x-tfjs"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.6",
