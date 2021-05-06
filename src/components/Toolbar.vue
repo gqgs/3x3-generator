@@ -4,7 +4,7 @@
     <div class="container is-max-desktop" id="bottom">
       <div class="columns">
         <div class="column is-one-third">
-          <label class="checkbox pr-4 py-2 is-size-7">
+          <label class="checkbox is-size-7">
             <input type="checkbox" v-model="should_upscale">
             Upscale + {{denoise}}
           </label>
