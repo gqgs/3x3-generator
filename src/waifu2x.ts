@@ -20,12 +20,12 @@ export default class Waifu2x {
     return cached
   }
 
-  public async predict (model: Model, image: ImageBitmap): Promise<ImageBitmap> {
+  public predict (model: Model, image: ImageBitmap): Promise<ImageBitmap> {
     let predictor = this.models[model]
     if (predictor === undefined) {
       predictor = this.start_model(model)
     }
-    return await predictor.predict(image, model.startsWith("denoise"))
+    return predictor.predict(image, model.startsWith("denoise"))
   }
 
   public progress (model: Model, listener: (ratio: number) => void): void {
