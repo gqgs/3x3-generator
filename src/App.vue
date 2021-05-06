@@ -77,7 +77,6 @@ html {
 .image {
   border: 1px solid black;
   aspect-ratio: 1 / 1;
-  line-height: 200px;
   overflow: hidden;
 }
 

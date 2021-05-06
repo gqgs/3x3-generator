@@ -1,11 +1,17 @@
 <template>
 <a href="#" @click.prevent="showSearch">
   <img v-if="image" :src="image" :title="title" />
-  <span v-else class="icon is-medium">
+  <span v-else class="icon-img icon is-medium">
     <ion-icon class="is-size-1" name="images-outline" />
   </span>
 </a>
 </template>
+
+<style scoped>
+span.icon-img {
+  height: 100%;
+}
+</style>
 
 <script lang="ts">
 import { ref, defineComponent } from "vue"
