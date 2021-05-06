@@ -8,10 +8,7 @@
     <Cell class="image column is-one-third p-0" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" />
     </div>
   </div>
-  <a href="https://github.com/gqgs/3x3-generator" target="_blank">
-  <ion-icon id="github" name="logo-octocat"></ion-icon>
-  </a>
-  <Download />
+  <Toolbar />
 </template>
 
 <script lang="ts">
@@ -19,14 +16,14 @@ import { defineComponent } from "vue"
 import { mapState, mapActions } from "vuex"
 import Cell from "./components/Cell.vue"
 import Search from "./components/Search.vue"
-import Download from "./components/Download.vue"
+import Toolbar from "./components/Toolbar.vue"
 
 export default defineComponent({
   name: "App",
   components: {
     Cell,
     Search,
-    Download
+    Toolbar
   },
   computed: {
     ...mapState([
@@ -99,11 +96,5 @@ html {
 
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
-}
-
-#github {
-  position: relative;
-  left: -35px;
-  top: 5px;
 }
 </style>
