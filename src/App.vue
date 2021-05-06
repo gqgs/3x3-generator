@@ -3,8 +3,10 @@
   <transition name="fade">
   <div v-if="show_search"><Search /></div>
   </transition>
-  <div @click="hideForm" id="grid">
-  <Cell class="image" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" />
+  <div id="grid" class="container is-max-desktop py-5" @click="hideForm">
+    <div id="columns" class="columns is-inline-flex is-multiline is-mobile">
+    <Cell class="image column is-one-third p-0" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" />
+    </div>
   </div>
   <a href="https://github.com/gqgs/3x3-generator" target="_blank">
   <ion-icon id="github" name="logo-octocat"></ion-icon>
@@ -70,19 +72,14 @@ html {
   margin-top: 60px;
 }
 
-#grid {
-  display: inline-grid;
-  grid-template-columns: repeat(3, 200px);
-  grid-template-rows: repeat(3, 200px);
-  column-gap: 2px;
-  row-gap: 2px;
-  justify-content: center;
+#columns {
   width: 100%;
-  padding: 10px;
+  max-width: 600px;
 }
 
 .image {
   border: 1px solid black;
+  aspect-ratio: 1 / 1;
   line-height: 200px;
   overflow: hidden;
 }
