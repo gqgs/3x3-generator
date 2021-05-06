@@ -15,8 +15,8 @@
     <div id="results" v-else-if="results.length">
       <Cropper @selected='selected = result' v-for="result in results" :key="result.mal_id" :result='result' />
     </div>
-    <a v-if='showing_more' href="#" @click.prevent="goBack"><ion-icon size="large" name="arrow-undo-outline"></ion-icon></a>
-    <a v-else-if='selected && !showing_more' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
+    <a v-show='showing_more' href="#" @click.prevent="goBack"><ion-icon size="large" name="arrow-undo-outline"></ion-icon></a>
+    <a v-if='!showing_more && selected && !showing_more' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
 </template>
 
 <script lang="ts">
