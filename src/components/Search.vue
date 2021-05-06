@@ -48,6 +48,12 @@ div#results {
   margin: 10px auto;
 }
 
+@media (max-width: 600px) {
+  div#results {
+    padding-bottom: 1.5rem
+  }
+}
+
 img.result {
   padding: 1px;
   cursor: pointer;
