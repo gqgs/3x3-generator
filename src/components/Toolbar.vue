@@ -11,7 +11,7 @@
         <div class="column">
               <div :class="{'is-active': activeDenoise}" class="dropdown is-up">
                 <div class="dropdown-trigger">
-                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeDenoise = !activeDenoise">
+                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" :disabled="!should_upscale" @click="activeDenoise = !activeDenoise">
                     <span>{{humanize(denoise)}}</span>
                     <span class="icon is-small">
                       <ion-icon name="chevron-down-outline"></ion-icon>
