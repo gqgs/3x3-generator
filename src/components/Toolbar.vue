@@ -5,14 +5,14 @@
         <div class="column">
           <label class="checkbox is-size-7">
             <input type="checkbox" v-model="should_upscale">
-            Upscale + {{denoise}}
+            Upscale
           </label>
         </div>
         <div class="column">
               <div :class="{'is-active': activeDenoise}" class="dropdown is-up">
                 <div class="dropdown-trigger">
                   <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeDenoise = !activeDenoise">
-                    <span>Denoise</span>
+                    <span>{{humanize(denoise)}}</span>
                     <span class="icon is-small">
                       <ion-icon name="chevron-down-outline"></ion-icon>
                     </span>
@@ -21,7 +21,7 @@
                 <div class="dropdown-menu" id="denoise-dropdown-menu" role="menu">
                   <div class="dropdown-content">
                     <a href="#" :key='model' v-for="model in ['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @click.prevent="denoise = model; activeDenoise = false" class="dropdown-item">
-                      {{model}}
+                      {{humanize(model)}}
                     </a>
                   </div>
                 </div>
@@ -148,6 +148,20 @@ export default defineComponent({
       }, mimeType)
     }
 
+    const humanize = (text: string): string => {
+      switch (text) {
+        case "denoise0_model":
+          return "low denoise"
+        case "denoise1_model":
+          return "medium denoise"
+        case "denoise2_model":
+          return "high denoise"
+        case "denoise3_model":
+          return "highest denoise"
+      }
+      return ""
+    }
+
     return {
       activeDownload,
       activeDenoise,
@@ -158,7 +172,8 @@ export default defineComponent({
       progress,
       progress_msg,
       denoise,
-      updateSize
+      updateSize,
+      humanize
     }
   },
   computed: {
