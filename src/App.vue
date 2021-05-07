@@ -5,7 +5,8 @@
   </transition>
   <div id="grid" class="container is-max-desktop py-5" @click="hideForm">
     <div id="columns" class="columns is-inline-flex is-multiline is-mobile">
-    <Cell class="image column is-one-third p-0" :class="{'selected': n === selected_id}" v-for="n in 9" :key="n" :id="n" />
+    <Cell class="image column p-0" :class="{'selected': n === selected_id, 'is-one-third': tiles === 9, 'is-one-quarter': tiles === 16, 'is-one-fifth': tiles === 25}"
+      v-for="n in tiles" :key="n" :id="n" />
     </div>
   </div>
   <Toolbar />
@@ -13,7 +14,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import { mapState, mapActions } from "vuex"
+import { mapState, mapActions, mapGetters } from "vuex"
 import Cell from "./components/Cell.vue"
 import Search from "./components/Search.vue"
 import Toolbar from "./components/Toolbar.vue"
@@ -29,6 +30,9 @@ export default defineComponent({
     ...mapState([
       "show_search",
       "selected_id"
+    ]),
+    ...mapGetters([
+      "tiles"
     ])
   },
   methods: {

@@ -33,7 +33,7 @@ export default defineComponent({
     const update = (update: Update) => {
       title.value = update.title
       image.value = update.image
-      store.dispatch("updateCanvas", { id: props.id, image: update.image })
+      store.dispatch("updateImages", { id: props.id, image: update.image, bitmap: update.bitmap })
     }
 
     const showSearch = () => store.dispatch("showSearch", { id: props.id, updater: update })

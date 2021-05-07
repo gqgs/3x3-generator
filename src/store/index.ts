@@ -6,7 +6,8 @@ export default createStore({
     show_search: false,
     selected_id: 0,
     updater: (update: Update) => { console.warn(`unexpected call: ${update}`) },
-    canvas: document.createElement("canvas")
+    images: {},
+    size: 3
   },
   mutations: {
     setShowSearch (state, showSearch) {
@@ -21,8 +22,19 @@ export default createStore({
     updateCell (state, update) {
       state.updater(update)
     },
-    updateCanvas (state, canvas) {
-      state.canvas = canvas
+    updateSize (state, size) {
+      // remove outdated images
+      const images: { [key: string]: ImageBitmap } = {}
+      Object.keys(state.images).forEach(id => {
+        if (parseInt(id) <= size * size) {
+          images[id] = (state.images as { [key: string]: ImageBitmap })[id]
+        }
+      })
+      state.images = images
+      state.size = size
+    },
+    updateImages (state, { id, bitmap }) {
+      (state.images as { [key: string]: ImageBitmap })[id] = bitmap
     }
   },
   actions: {
@@ -38,17 +50,16 @@ export default createStore({
     updateCell (context, update) {
       context.commit("updateCell", update)
     },
-    updateCanvas (context, { id, image }) {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = context.state.canvas
-        const ctx = canvas.getContext("2d")
-        const x = 200 * ((id + 2) % 3)
-        const y = 200 * Math.floor(id * 0.3)
-        ctx?.drawImage(img, x, y)
-        context.commit("updateCanvas", canvas)
-      }
-      img.src = image
+    updateImages (context, update) {
+      context.commit("updateImages", update)
+    },
+    updateSize (context, size) {
+      context.commit("updateSize", size)
+    }
+  },
+  getters: {
+    tiles (state) {
+      return state.size * state.size
     }
   }
 })

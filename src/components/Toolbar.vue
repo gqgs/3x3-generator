@@ -1,18 +1,17 @@
 <template>
     <progress v-if="upscaling" class="progress is-small is-primary my-4" :value="progress" max="100" />
-
     <div class="container is-max-desktop" id="bottom">
       <div class="columns">
-        <div class="column is-one-third">
+        <div class="column">
           <label class="checkbox is-size-7">
             <input type="checkbox" v-model="should_upscale">
             Upscale + {{denoise}}
           </label>
         </div>
-        <div class="column is-one-fifth">
+        <div class="column">
               <div :class="{'is-active': activeDenoise}" class="dropdown is-up">
                 <div class="dropdown-trigger">
-                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="toggleDenoise">
+                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeDenoise = !activeDenoise">
                     <span>Denoise</span>
                     <span class="icon is-small">
                       <ion-icon name="chevron-down-outline"></ion-icon>
@@ -28,10 +27,10 @@
                 </div>
             </div>
         </div>
-        <div class="column is-one-quarter">
+        <div class="column">
             <div :class="{'is-active': activeDownload}" class="dropdown is-up">
             <div class="dropdown-trigger">
-              <button class="button mb-2" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="toggleDownload">
+              <button class="button mb-2" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="activeDownload = !activeDownload">
                 <span v-if='upscaling'>{{progress_msg}}</span>
                 <span v-else>Download image</span>
                 <span class="icon is-small">
@@ -48,7 +47,26 @@
             </div>
           </div>
         </div>
-        <div class="column is-one-quarter">
+        <div class="column">
+          <div :class="{'is-active': activeSize}" class="dropdown is-up">
+            <div class="dropdown-trigger">
+              <button class="button mb-2" aria-haspopup="true" aria-controls="size-dropdown-menu" @click="activeSize = !activeSize">
+                <span >{{size}}x{{size}}</span>
+                <span class="icon is-small">
+                  <ion-icon name="chevron-down-outline"></ion-icon>
+                </span>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="size-dropdown-menu" role="menu">
+              <div class="dropdown-content">
+                <a href="#" :key='n' v-for="n in [3, 4, 5]" @click.prevent="updateSize(n); activeSize = false" class="dropdown-item">
+                  {{n}}x{{n}}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
           <a href="https://github.com/gqgs/3x3-generator" target="_blank">
           <ion-icon class="pt-4" id="github" name="logo-octocat"></ion-icon>
           </a>
@@ -61,11 +79,12 @@
 #bottom {
   max-width: 600px;
 }
+
 </style>
 
 <script lang="ts">
 import { ref, defineComponent, watch } from "vue"
-import { useStore } from "vuex"
+import { mapState, useStore } from "vuex"
 import fileDownload from "js-file-download"
 import { upscaling, upscale, progress, progress_msg } from "../upscale"
 import { Model } from "@/waifu2x"
@@ -73,22 +92,12 @@ import { Model } from "@/waifu2x"
 export default defineComponent({
   setup () {
     const store = useStore()
-    const canvas = store.state.canvas
     const activeDownload = ref(false)
     const activeDenoise = ref(false)
+    const activeSize = ref(false)
     const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
     const denoise = ref(localStorage.getItem("denoise") || "denoise2_model")
-
-    canvas.width = 600
-    canvas.height = 600
-
-    const toggleDenoise = () => {
-      activeDenoise.value = !activeDenoise.value
-    }
-
-    const toggleDownload = () => {
-      activeDownload.value = !activeDownload.value
-    }
+    const updateSize = (size: number) => store.dispatch("updateSize", size)
 
     watch(denoise, (denoise) => {
       localStorage.setItem("denoise", denoise)
@@ -98,28 +107,65 @@ export default defineComponent({
       localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
     })
 
+    const drawImages = async (): Promise<HTMLCanvasElement> => {
+      const imageSize = 200
+      const size = store.state.size
+      const images = store.state.images
+      const canvas = document.createElement("canvas")
+      canvas.width = size * imageSize
+      canvas.height = size * imageSize
+      const ctx = canvas.getContext("2d")
+      for (let x = 0, i = 1; x < size; x++) {
+        for (let y = 0; y < size; y++, i++) {
+          if (i in images) {
+            ctx?.drawImage(images[i], 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+          }
+        }
+      }
+      return canvas
+    }
+
     const download = async (mimeType: string) => {
       const denoiseModel = `${denoise.value}.json` as Model
+      const size = store.state.size
       activeDownload.value = false
-      const source = should_upscale.value ? (await upscale(canvas, denoiseModel)) : (canvas as HTMLCanvasElement)
+      const canvas = await drawImages()
+      const source = should_upscale.value ? (await upscale(canvas, denoiseModel)) : canvas
       source.toBlob(blob => {
         if (blob == null) return
-        let filename: string
+        let filename = `${size}x${size}`
         switch (mimeType) {
           case "image/png":
-            filename = "3x3.png"
+            filename = `${filename}.png`
             break
           case "image/webp":
-            filename = "3x3.webp"
+            filename = `${filename}.webp`
             break
           default:
-            filename = "3x3.jpg"
+            filename = `${filename}.jpg`
         }
         fileDownload(blob, filename)
       }, mimeType)
     }
 
-    return { activeDownload, toggleDownload, activeDenoise, toggleDenoise, download, upscaling, should_upscale, progress, progress_msg, denoise }
+    return {
+      activeDownload,
+      activeDenoise,
+      activeSize,
+      download,
+      upscaling,
+      should_upscale,
+      progress,
+      progress_msg,
+      denoise,
+      updateSize
+    }
+  },
+  computed: {
+    ...mapState([
+      "size",
+      "images"
+    ])
   }
 })
 </script>
