@@ -3,7 +3,7 @@
     <div class="container is-max-desktop" id="bottom">
       <div class="columns">
         <div class="column">
-          <label class="checkbox is-size-7">
+          <label class="checkbox pt-2 is-size-7">
             <input type="checkbox" v-model="should_upscale">
             Upscale
           </label>
@@ -68,7 +68,7 @@
         </div>
         <div class="column">
           <a href="https://github.com/gqgs/3x3-generator" target="_blank">
-          <ion-icon class="pt-4" id="github" name="logo-octocat"></ion-icon>
+          <ion-icon class="pt-3" id="github" name="logo-octocat"></ion-icon>
           </a>
         </div>
       </div>

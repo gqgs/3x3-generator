@@ -1,4 +1,4 @@
-import * as waifu2x from "waifu2x-tfjs"
+import { Predictor } from "waifu2x-tfjs"
 
 export type Model =
     "denoise0_model.json" |
@@ -8,12 +8,12 @@ export type Model =
     "scale2.0x_model.json"
 
 export default class Waifu2x {
-  private models: { [model in Model]?: waifu2x.Predictor } = {}
-  private start_model (model: Model): waifu2x.Predictor {
+  private models: { [model in Model]?: Predictor } = {}
+  private start_model (model: Model): Predictor {
     const cached = this.models[model]
     if (cached === undefined) {
       const path = `${process.env.BASE_URL}tfjs_models/${model}`
-      const predictor = new waifu2x.Predictor(path)
+      const predictor = new Predictor(path)
       this.models[model] = predictor
       return predictor
     }
