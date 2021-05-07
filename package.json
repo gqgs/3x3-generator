@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@tensorflow/tfjs": "^3.5.0",
-    "ci": "^2.1.0",
     "core-js": "^3.6.5",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
