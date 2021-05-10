@@ -16,7 +16,6 @@ module.exports = {
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
     camelcase: "off",
     "import/no-webpack-loader-syntax": "off",
-    "no-async-promise-executor": "off",
     quotes: [2, "double", { avoidEscape: true }],
     indent: "off",
     "@typescript-eslint/indent": ["error", 2]

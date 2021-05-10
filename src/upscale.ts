@@ -33,8 +33,7 @@ const canvasFromUpscaled = (upscaled: ImageBitmap) : HTMLCanvasElement => {
 }
 
 const upscalefallback = async (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model) : Promise<HTMLCanvasElement> => {
-  const bitmap = await createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)
-  const worker = await loadWorker as Waifu2x
+  const [worker, bitmap] = await Promise.all([loadWorker as Promise<Waifu2x>, createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)])
   worker.progress(denoiseModel, updateProgress("Denoising image..."))
   worker.progress(upscaleModel, updateProgress("Upscaling image..."))
   const denoised = await worker.predict(denoiseModel, bitmap)
@@ -42,15 +41,15 @@ const upscalefallback = async (canvas: HTMLCanvasElement, denoiseModel: Model, u
   return canvasFromUpscaled(upscaled)
 }
 
-export const upscale = (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model = "scale2.0x_model.json") : Promise<HTMLCanvasElement> => {
+export const upscale = async (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model = "scale2.0x_model.json") : Promise<HTMLCanvasElement> => {
   upscaling.value = true
 
   if (!has_offscreen_canvas_support) {
     return upscalefallback(canvas, denoiseModel, upscaleModel)
   }
 
-  return new Promise(async resolve => {
-    const worker = await loadWorker as Worker
+  const [worker, bitmap] = await Promise.all([loadWorker as Promise<Worker>, createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)])
+  return new Promise(resolve => {
     worker.onmessage = (event: MessageEvent) => {
       if (event.data.type === "progress") {
         updateProgress(event.data.msg)(event.data.value)
@@ -61,7 +60,7 @@ export const upscale = (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleM
     }
 
     worker.postMessage({
-      bitmap: await createImageBitmap(canvas, 0, 0, canvas.width, canvas.height),
+      bitmap,
       denoiseModel,
       upscaleModel
     })
