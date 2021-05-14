@@ -5,7 +5,7 @@
   </transition>
   <div id="grid" class="container is-max-desktop py-5" @click="hideForm">
     <div id="columns" class="columns is-inline-flex is-multiline is-mobile">
-    <Cell class="image column p-0" :class="{'selected': n === selected_id, 'is-one-third': tiles === 9, 'is-one-quarter': tiles === 16, 'is-one-fifth': tiles === 25}"
+    <Cell class="image column p-0" :class="{'selected': n === selected_id, 'is-half': tiles === 4, 'is-one-third': tiles === 9, 'is-one-quarter': tiles === 16, 'is-one-fifth': tiles === 25}"
       v-for="n in tiles" :key="n" :id="n" />
     </div>
   </div>

@@ -59,7 +59,7 @@
             </div>
             <div class="dropdown-menu" id="size-dropdown-menu" role="menu">
               <div class="dropdown-content">
-                <a href="#" :key='n' v-for="n in [3, 4, 5]" @click.prevent="updateSize(n); activeSize = false" class="dropdown-item">
+                <a href="#" :key='n' v-for="n in [2, 3, 4, 5]" @click.prevent="updateSize(n); activeSize = false" class="dropdown-item">
                   {{n}}x{{n}}
                 </a>
               </div>
