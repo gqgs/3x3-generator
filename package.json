@@ -10,6 +10,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^3.5.0",
     "core-js": "^3.6.5",
+    "downscale": "^1.0.6",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
     "vue": "^3.0.0",
@@ -18,6 +19,7 @@
     "waifu2x-tfjs": "1.0.4"
   },
   "devDependencies": {
+    "@types/downscale": "^1.0.0",
     "@types/lodash.debounce": "^4.0.6",
     "@types/tracking": "^1.1.29",
     "@types/vue-cropperjs": "^4.1.1",

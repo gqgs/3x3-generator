@@ -1,8 +1,15 @@
 <template>
     <div class="field" id="search">
-    <div class="tabs">
+    <div class="tabs is-small">
     <ul>
-      <li v-for="tab in ['anime','manga','character']" :key=tab :class="{'is-active': currentTab === tab}">
+      <li v-for="api in apis" :key=api :class="{'is-active': currentApi === api}">
+        <a class="is-capitalized" href="#" @click.prevent="changeApi(api)">{{api}}</a>
+      </li>
+    </ul>
+    </div>
+    <div class="tabs is-small">
+    <ul>
+      <li v-for="tab in tabs" :key=tab :class="{'is-active': currentTab === tab}">
         <a class="is-capitalized" href="#" @click.prevent="changeTab(tab)">{{tab}}</a>
       </li>
     </ul>
@@ -16,13 +23,14 @@
       <Cropper @selected='selected = result' v-for="result in results" :key="result.mal_id" :result='result' />
     </div>
     <a v-show='showing_more' href="#" @click.prevent="goBack"><ion-icon size="large" name="arrow-undo-outline"></ion-icon></a>
-    <a v-if='!showing_more && selected && !showing_more' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
+    <span v-if='!hasShowMore && selected'>{{selected.title}}</span>
+    <a v-else-if='!showing_more && selected && !showing_more' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue"
 import Cropper from "./Cropper.vue"
-import Api from "../api"
+import Api from "../api/api"
 
 export default defineComponent({
   components: {
