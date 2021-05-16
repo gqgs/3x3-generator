@@ -2,7 +2,7 @@
   <img v-if="!clicked" @click="showCropper" :src="result.image_url" :title="result.title" class="image-result" />
   <VueCropper :class="{'hidden': !clicked}" @ready="ready" @cropend="cropend" ref="cropper"
     :title="result.title" :src="result.image_url"
-    :rotatable="false" :scalable="false" :zoomable="false" :viewMode="1" :aspectRatio="1" :minCropBoxWidth="200" :minCropBoxHeight="200"
+    :rotatable="false" :scalable="false" :zoomable="false" :viewMode="1" :aspectRatio="1" :minCropBoxWidth="200" :minCropBoxHeight="200" :checkCrossOrigin="false"
   />
 </template>
 
@@ -11,7 +11,8 @@ import "cropperjs/dist/cropper.css"
 import { ref, onUnmounted, defineComponent, PropType } from "vue"
 import { useStore } from "vuex"
 import VueCropper, { VueCropperMethods } from "vue-cropperjs"
-import { SearchResult } from "../api"
+import { SearchResult } from "../types"
+import downscale from "downscale"
 
 export default defineComponent({
   components: {
@@ -35,18 +36,23 @@ export default defineComponent({
     const cropend = () => {
       const { x, y, width, height } = (cropper.value as VueCropperMethods)?.getData()
       const img = new Image()
-      img.onload = async () => {
-        const imageSize = 200
+      img.onload = () => {
         const canvas = document.createElement("canvas")
-        canvas.width = imageSize
-        canvas.height = imageSize
+        canvas.width = width
+        canvas.height = height
         const ctx = canvas.getContext("2d")
-        ctx?.drawImage(img, x, y, width, height, 0, 0, imageSize, imageSize)
-        store.dispatch("updateCell", {
-          image: canvas.toDataURL("image/png"),
-          title: props.result.title,
-          bitmap: await createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)
-        })
+        ctx?.drawImage(img, x, y, width, height, 0, 0, width, height)
+        const cropped = new Image()
+        cropped.onload = async () => {
+          const imageSize = 200
+          const downscale_canvas = await downscale(cropped, imageSize, imageSize, { imageType: "png", returnCanvas: true })
+          store.dispatch("updateCell", {
+            image: downscale_canvas.toDataURL("image/png"),
+            title: props.result.title,
+            bitmap: await createImageBitmap(downscale_canvas, 0, 0, downscale_canvas.width, downscale_canvas.height)
+          })
+        }
+        cropped.src = canvas.toDataURL("image/png")
       }
       img.crossOrigin = "Anonymous"
       img.src = props.result.image_url
