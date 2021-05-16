@@ -1,6 +1,6 @@
 # 3x3-generator
 
-Anime/manga 3x3 generator using the [Jikan API](https://jikan.docs.apiary.io/#).
+Anime/manga 3x3 generator.
 
 <p align="center">
 <img src="/src/assets/3x3gen.png">
