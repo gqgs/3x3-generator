@@ -96,7 +96,7 @@ export default defineComponent({
     const activeDenoise = ref(false)
     const activeSize = ref(false)
     const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
-    const denoise = ref(localStorage.getItem("denoise") || "denoise2_model")
+    const denoise = ref(localStorage.getItem("denoise") || "denoise1_model")
     const updateSize = (size: number) => store.dispatch("updateSize", size)
 
     watch(denoise, (denoise) => {
