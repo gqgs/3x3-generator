@@ -1,4 +1,3 @@
-import { ref } from "vue"
 import { SearchResult } from "../types"
 
 interface Picture {
@@ -7,13 +6,11 @@ interface Picture {
 }
 
 export const tabs = ["anime", "manga", "character"]
-export const showing_more = ref(false)
 export const hasShowMore = true
 
 let last_id = 0
 
 export const search = async (query: string, tab: string): Promise<SearchResult[]> => {
-  showing_more.value = false
   if (query.length < 3) {
     return []
   }
@@ -52,7 +49,6 @@ export const showMore = async (tab: string, selected: SearchResult): Promise<Sea
 export default {
   tabs,
   search,
-  showing_more,
   hasShowMore,
   showMore
 }
