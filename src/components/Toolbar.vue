@@ -84,7 +84,8 @@
 
 <script lang="ts">
 import { ref, defineComponent, watch } from "vue"
-import { mapState, useStore } from "vuex"
+import { mapState } from "vuex"
+import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { upscaling, upscale, progress, progress_msg } from "../upscale"
 import { Model } from "@/waifu2x"
@@ -100,10 +101,12 @@ export default defineComponent({
     const updateSize = (size: number) => store.dispatch("updateSize", size)
 
     watch(denoise, (denoise) => {
+      store.state.cached_source = null
       localStorage.setItem("denoise", denoise)
     })
 
     watch(should_upscale, (should_upscale) => {
+      store.state.cached_source = null
       localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
     })
 
@@ -126,12 +129,14 @@ export default defineComponent({
     }
 
     const download = async (mimeType: string) => {
-      const denoiseModel = `${denoise.value}.json` as Model
-      const size = store.state.size
       activeDownload.value = false
-      const canvas = await drawImages()
-      const source = should_upscale.value ? (await upscale(canvas, denoiseModel)) : canvas
-      source.toBlob(blob => {
+      if (!store.state.cached_source) {
+        const denoiseModel = `${denoise.value}.json` as Model
+        const canvas = await drawImages()
+        store.state.cached_source = should_upscale.value ? (await upscale(canvas, denoiseModel)) : canvas
+      }
+      const size = store.state.size
+      store.state.cached_source.toBlob(blob => {
         if (blob == null) return
         let filename = `${size}x${size}`
         switch (mimeType) {

@@ -9,7 +9,7 @@
 <script lang="ts">
 import "cropperjs/dist/cropper.css"
 import { ref, onUnmounted, defineComponent, PropType } from "vue"
-import { useStore } from "vuex"
+import { useStore } from "../store"
 import VueCropper, { VueCropperMethods } from "vue-cropperjs"
 import { SearchResult } from "../types"
 import downscale from "downscale"

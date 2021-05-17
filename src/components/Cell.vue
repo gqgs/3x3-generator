@@ -15,7 +15,7 @@ span.icon-img {
 
 <script lang="ts">
 import { ref, defineComponent } from "vue"
-import { useStore } from "vuex"
+import { useStore } from "../store"
 import { Update } from "../types"
 
 export default defineComponent({
