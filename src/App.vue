@@ -87,7 +87,7 @@ html {
 }
 
 .selected {
-  border: 5px dotted cadetblue;
+  border: 5px dotted cadetblue !important;
   border-radius: 5px;
 }
 
