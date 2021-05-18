@@ -6,7 +6,7 @@
   <div id="grid" class="container is-max-desktop py-5" @click="hideForm">
     <div id="columns" class="columns is-inline-flex is-multiline is-mobile">
     <Cell class="image column p-0" :class="{'selected': n === selected_id, 'is-half': tiles === 4, 'is-one-third': tiles === 9, 'is-one-quarter': tiles === 16, 'is-one-fifth': tiles === 25}"
-      v-for="n in tiles" :key="n" :id="n" :style="{ borderColor: color }" />
+      v-for="n in tiles" :key="n" :id="n" :style="{ borderColor: n === selected_id ? comp_color : color }" />
     </div>
   </div>
   <Toolbar />
@@ -33,7 +33,8 @@ export default defineComponent({
       "color"
     ]),
     ...mapGetters([
-      "tiles"
+      "tiles",
+      "comp_color"
     ])
   },
   methods: {
@@ -87,7 +88,8 @@ html {
 }
 
 .selected {
-  border: 5px dotted cadetblue !important;
+  border-width: 5px;
+  border-style: dotted;
   border-radius: 5px;
 }
 

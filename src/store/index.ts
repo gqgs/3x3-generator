@@ -1,6 +1,7 @@
 import { createStore, useStore as baseUseStore, Store } from "vuex"
 import { Update } from "../types"
 import { InjectionKey } from "vue"
+import Color from "color"
 
 export interface State {
   show_search: boolean
@@ -89,6 +90,9 @@ export default createStore<State>({
   getters: {
     tiles (state) {
       return state.size * state.size
+    },
+    comp_color (state) {
+      return new Color(state.color).mix(Color("darkblue")).hex()
     }
   }
 })
