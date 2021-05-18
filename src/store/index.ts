@@ -8,7 +8,8 @@ export interface State {
   updater: (update: Update) => void
   images: { [key: string]: ImageBitmap }
   size: number
-  cached_source: HTMLCanvasElement | null
+  cached_source: HTMLCanvasElement | null,
+  color: string
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -24,7 +25,8 @@ export default createStore<State>({
     updater: (update: Update) => { console.warn(`unexpected call: ${update}`) },
     images: {},
     size: 3,
-    cached_source: null
+    cached_source: null,
+    color: localStorage.getItem("color") || "#ffffff"
   },
   mutations: {
     setShowSearch (state, showSearch) {
@@ -54,6 +56,11 @@ export default createStore<State>({
     },
     updateImages (state, { id, bitmap }) {
       state.images[id] = bitmap
+    },
+    updateColor (state, color) {
+      state.cached_source = null
+      state.color = color
+      localStorage.setItem("color", color)
     }
   },
   actions: {
@@ -74,6 +81,9 @@ export default createStore<State>({
     },
     updateSize (context, size) {
       context.commit("updateSize", size)
+    },
+    updateColor (context, color) {
+      context.commit("updateColor", color)
     }
   },
   getters: {

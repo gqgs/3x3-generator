@@ -3,7 +3,7 @@
     <div class="container is-max-desktop" id="bottom">
       <div class="columns">
         <div class="column">
-          <label class="checkbox pt-2 is-size-7">
+          <label class="checkbox pt-3 is-size-7">
             <input type="checkbox" v-model="should_upscale">
             Upscale
           </label>
@@ -30,7 +30,7 @@
         <div class="column">
             <div :class="{'is-active': activeDownload}" class="dropdown is-up">
             <div class="dropdown-trigger">
-              <button class="button mb-2" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="activeDownload = !activeDownload">
+              <button class="button" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="activeDownload = !activeDownload">
                 <span v-if='upscaling'>{{progress_msg}}</span>
                 <span v-else>Download image</span>
                 <span class="icon is-small">
@@ -50,7 +50,7 @@
         <div class="column">
           <div :class="{'is-active': activeSize}" class="dropdown is-up">
             <div class="dropdown-trigger">
-              <button class="button mb-2" aria-haspopup="true" aria-controls="size-dropdown-menu" @click="activeSize = !activeSize">
+              <button class="button" aria-haspopup="true" aria-controls="size-dropdown-menu" @click="activeSize = !activeSize">
                 <span >{{size}}x{{size}}</span>
                 <span class="icon is-small">
                   <ion-icon name="chevron-down-outline"></ion-icon>
@@ -67,6 +67,9 @@
           </div>
         </div>
         <div class="column">
+          <input class="button" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
+        </div>
+        <div class="column">
           <a href="https://github.com/gqgs/3x3-generator" target="_blank">
           <ion-icon class="pt-3" id="github" name="logo-octocat"></ion-icon>
           </a>
@@ -78,6 +81,24 @@
 <style scoped>
 #bottom {
   max-width: 600px;
+}
+
+#color {
+  width: 100%
+}
+
+.column {
+  padding: 10px 2px;
+}
+
+@media (max-width: 768px) {
+  #color {
+    width: 150px;
+  }
+
+  .column {
+    padding: 5px;
+  }
 }
 
 </style>
@@ -99,6 +120,7 @@ export default defineComponent({
     const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
     const denoise = ref(localStorage.getItem("denoise") || "denoise1_model")
     const updateSize = (size: number) => store.dispatch("updateSize", size)
+    const updateColor = (color: string) => store.dispatch("updateColor", color)
 
     watch(denoise, (denoise) => {
       store.state.cached_source = null
@@ -119,7 +141,7 @@ export default defineComponent({
       canvas.height = size * imageSize
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("could not get canvas context")
-      ctx.strokeStyle = "white"
+      ctx.strokeStyle = store.state.color
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
           if (i in images) {
@@ -181,13 +203,15 @@ export default defineComponent({
       progress_msg,
       denoise,
       updateSize,
-      humanize
+      humanize,
+      updateColor
     }
   },
   computed: {
     ...mapState([
       "size",
-      "images"
+      "images",
+      "color"
     ])
   }
 })
