@@ -118,10 +118,13 @@ export default defineComponent({
       canvas.width = size * imageSize
       canvas.height = size * imageSize
       const ctx = canvas.getContext("2d")
+      if (!ctx) throw new Error("could not get canvas context")
+      ctx.strokeStyle = "white"
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
           if (i in images) {
-            ctx?.drawImage(images[i], 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+            ctx.drawImage(images[i], 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+            ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
           }
         }
       }
