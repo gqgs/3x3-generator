@@ -108,9 +108,8 @@ import { ref, defineComponent, watch } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { upscale } from "../upscale"
 import { Model } from "@/waifu2x"
-import { downscaleImage } from "../image"
+import { scaleImage } from "../image"
 
 export default defineComponent({
   setup () {
@@ -136,23 +135,6 @@ export default defineComponent({
       localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
     })
 
-    const processImage = async (image: ImageBitmap, targetSize: number, denoiseModel: Model): Promise<ImageBitmap> => {
-      const min = Math.min(image.width, image.height)
-      if (min > targetSize) {
-        return downscaleImage(image, targetSize)
-      }
-      if (min < targetSize) {
-        const canvas = document.createElement("canvas")
-        canvas.width = image.width
-        canvas.height = image.height
-        canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height)
-        const upscaled = await upscale(canvas, denoiseModel)
-        return downscaleImage(upscaled, targetSize)
-      }
-      // min === targetSize
-      return Promise.resolve(image)
-    }
-
     const drawImages = async (denoiseModel: Model): Promise<HTMLCanvasElement> => {
       const imageSize = should_upscale.value ? 400 : 200
       const size = store.state.size
@@ -166,7 +148,7 @@ export default defineComponent({
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
           if (i in images) {
-            ctx.drawImage(await processImage(images[i], imageSize, denoiseModel), 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+            ctx.drawImage(await scaleImage(images[i], imageSize, denoiseModel), 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
             ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
           }
           progress.value = (i + 1) / (size * size) * 100
