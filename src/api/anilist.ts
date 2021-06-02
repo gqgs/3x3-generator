@@ -66,7 +66,7 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
     return {
       mal_id: result.id,
       title: result.title.romaji,
-      image_url: result.coverImage.extraLarge
+      image_url: result.coverImage.extraLarge.replace("https://", "https://cdn.statically.io/img/")
     }
   })
 }
