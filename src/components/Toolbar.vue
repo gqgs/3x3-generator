@@ -1,5 +1,5 @@
 <template>
-    <progress v-if="upscaling" class="progress is-small is-primary my-4" :value="progress" max="100" />
+    <progress v-if="processing" class="progress is-small is-primary my-4" :value="progress" max="100" />
     <div class="container is-max-desktop" id="bottom">
       <div class="columns">
         <div class="column">
@@ -31,7 +31,7 @@
             <div :class="{'is-active': activeDownload}" class="dropdown is-up">
             <div class="dropdown-trigger">
               <button class="button" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="activeDownload = !activeDownload">
-                <span v-if='upscaling'>{{progress_msg}}</span>
+                <span v-if='processing'>{{progress_msg}}</span>
                 <span v-else>Download image</span>
                 <span class="icon is-small">
                   <ion-icon name="chevron-down-outline"></ion-icon>
@@ -108,8 +108,9 @@ import { ref, defineComponent, watch } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { upscaling, upscale, progress, progress_msg } from "../upscale"
+import { upscale } from "../upscale"
 import { Model } from "@/waifu2x"
+import downscale from "downscale"
 
 export default defineComponent({
   setup () {
@@ -121,6 +122,9 @@ export default defineComponent({
     const denoise = ref(localStorage.getItem("denoise") || "denoise1_model")
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (color: string) => store.dispatch("updateColor", color)
+    const progress = ref(0)
+    const progress_msg = "Creating image..."
+    const processing = ref(false)
 
     watch(denoise, (denoise) => {
       store.state.cached_source = null
@@ -132,8 +136,36 @@ export default defineComponent({
       localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
     })
 
-    const drawImages = async (): Promise<HTMLCanvasElement> => {
-      const imageSize = 200
+    const processImage = async (image: ImageBitmap, targetSize: number, denoiseModel: Model): Promise<ImageBitmap> => {
+      return new Promise(resolve => {
+        const min = Math.min(image.width, image.height)
+        if (min === targetSize) return resolve(image)
+        if (min > targetSize) {
+          const canvas = document.createElement("canvas")
+          canvas.width = image.width
+          canvas.height = image.height
+          canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, image.width, image.height)
+          const img = new Image()
+          img.onload = async () => {
+            const downscaled = await downscale(img, targetSize, targetSize, { imageType: "png", returnCanvas: true })
+            resolve(await createImageBitmap(downscaled, 0, 0, targetSize, targetSize))
+          }
+          img.src = canvas.toDataURL("image/png")
+          return
+        }
+        // min < targetSize
+        const canvas = document.createElement("canvas")
+        canvas.width = targetSize / 2
+        canvas.height = targetSize / 2
+        canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, targetSize / 2, targetSize / 2)
+        upscale(canvas, denoiseModel).then(upscaled => {
+          resolve(upscaled)
+        })
+      })
+    }
+
+    const drawImages = async (denoiseModel: Model): Promise<HTMLCanvasElement> => {
+      const imageSize = should_upscale.value ? 400 : 200
       const size = store.state.size
       const images = store.state.images
       const canvas = document.createElement("canvas")
@@ -145,9 +177,10 @@ export default defineComponent({
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
           if (i in images) {
-            ctx.drawImage(images[i], 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+            ctx.drawImage(await processImage(images[i], imageSize, denoiseModel), 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
             ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
           }
+          progress.value = (i + 1) / (size * size) * 100
         }
       }
       return canvas
@@ -156,9 +189,11 @@ export default defineComponent({
     const download = async (mimeType: string) => {
       activeDownload.value = false
       if (!store.state.cached_source) {
+        progress.value = 0
+        processing.value = true
         const denoiseModel = `${denoise.value}.json` as Model
-        const canvas = await drawImages()
-        store.state.cached_source = should_upscale.value ? (await upscale(canvas, denoiseModel)) : canvas
+        store.state.cached_source = await drawImages(denoiseModel)
+        processing.value = false
       }
       const size = store.state.size
       store.state.cached_source.toBlob(blob => {
@@ -197,14 +232,14 @@ export default defineComponent({
       activeDenoise,
       activeSize,
       download,
-      upscaling,
       should_upscale,
       progress,
       progress_msg,
       denoise,
       updateSize,
       humanize,
-      updateColor
+      updateColor,
+      processing
     }
   },
   computed: {

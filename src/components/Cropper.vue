@@ -49,7 +49,7 @@ export default defineComponent({
           store.dispatch("updateCell", {
             image: downscale_canvas.toDataURL("image/png"),
             title: props.result.title,
-            bitmap: await createImageBitmap(downscale_canvas, 0, 0, downscale_canvas.width, downscale_canvas.height)
+            bitmap: await createImageBitmap(canvas, 0, 0, width, height)
           })
         }
         cropped.src = canvas.toDataURL("image/png")
