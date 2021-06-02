@@ -31,7 +31,7 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
     return {
       mal_id: result.id,
       title: result.attributes.titles.en_jp,
-      image_url: result.attributes.posterImage.large.replace("https://", "https://cdn.statically.io/img/")
+      image_url: (result.attributes.posterImage.original || result.attributes.posterImage.large).replace("https://", "https://cdn.statically.io/img/")
     }
   })
 }
