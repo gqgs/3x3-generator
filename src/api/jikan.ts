@@ -5,6 +5,13 @@ interface Picture {
   small: string
 }
 
+interface APIResult {
+  mal_id: number
+  title: string
+  image_url: string
+  name: string // for characters
+}
+
 export const tabs = ["anime", "manga", "character"]
 export const hasShowMore = true
 
@@ -18,7 +25,7 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
   const resp = await fetch(`https://api.jikan.moe/v3/search/${tab}?&limit=15&q=${encodeURI(query)}`)
   const data = await resp.json()
   if (last_id > id) return []
-  return (data.results ?? []).map((result: SearchResult) => {
+  return (data.results ?? []).map((result: APIResult) => {
     return {
       mal_id: result.mal_id,
       title: result.title || result.name,

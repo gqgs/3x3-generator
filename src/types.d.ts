@@ -8,5 +8,4 @@ export interface SearchResult {
   mal_id: number
   title: string
   image_url: string
-  name: string
 }

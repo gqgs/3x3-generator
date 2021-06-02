@@ -1,6 +1,6 @@
 import { SearchResult } from "../types"
 
-interface APIResult {
+interface APIAnimeResult {
   id: number
   coverImage: {
     extraLarge: string
@@ -10,20 +10,23 @@ interface APIResult {
   }
 }
 
-export const tabs = ["anime", "manga"]
+interface APICharacterResult {
+  id: number
+  name: {
+    full: string
+  }
+  image: {
+    large: string
+  }
+}
+
+export const tabs = ["anime", "manga", "character"]
 export const hasShowMore = false
 
 let last_id = 0
 
-const apiQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String, $type: MediaType) {
+const animeQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String, $type: MediaType) {
     Page (page: $page, perPage: $perPage) {
-      pageInfo {
-        total
-        currentPage
-        lastPage
-        hasNextPage
-        perPage
-      }
       media (id: $id, search: $search, type: $type) {
         id
         type
@@ -36,6 +39,50 @@ const apiQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String, $
       }
     }
   }`
+
+const characterQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String) {
+    Page (page: $page, perPage: $perPage) {
+      characters (id: $id, search: $search) {
+        id
+        name {
+          full
+        }
+        image {
+            large
+        }
+      }
+    }
+  }`
+
+const queries: { [key: string]: string } = {
+  anime: animeQuery,
+  manga: animeQuery,
+  character: characterQuery
+}
+
+const parseCharacters = (characters?: APICharacterResult[]): SearchResult[] => {
+  if (!characters) return []
+  return characters.map(character => {
+    return {
+      mal_id: character.id,
+      title: character.name.full,
+      image_url: character.image.large
+        .replace("https://", "https://cdn.statically.io/img/")
+    }
+  })
+}
+
+const parseAnime = (anime?: APIAnimeResult[]): SearchResult[] => {
+  if (!anime) return []
+  return anime.map(result => {
+    return {
+      mal_id: result.id,
+      title: result.title.romaji,
+      image_url: result.coverImage.extraLarge
+        .replace("https://", "https://cdn.statically.io/img/")
+    }
+  })
+}
 
 export const search = async (query: string, tab: string): Promise<SearchResult[]> => {
   if (query.length < 3) {
@@ -54,7 +101,7 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
       Accept: "application/json"
     },
     body: JSON.stringify({
-      query: apiQuery,
+      query: queries[tab],
       variables: variables
     })
   }
@@ -62,13 +109,8 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
   const resp = await fetch("https://graphql.anilist.co", options)
   const data = await resp.json()
   if (last_id > id) return []
-  return (data?.data?.Page?.media ?? []).map((result: APIResult) => {
-    return {
-      mal_id: result.id,
-      title: result.title.romaji,
-      image_url: result.coverImage.extraLarge.replace("https://", "https://cdn.statically.io/img/")
-    }
-  })
+  if (tab === "character") return parseCharacters(data?.data?.Page?.characters)
+  return parseAnime(data?.data?.Page?.media)
 }
 export default {
   search,
