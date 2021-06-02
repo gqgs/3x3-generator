@@ -2,83 +2,39 @@
     <progress v-if="processing" class="progress is-small is-primary my-4" :value="progress" max="100" />
     <div class="container is-max-desktop" id="bottom">
       <div class="columns is-gapless">
-        <div class="column">
-            <div :class="{'is-active': activeCellSize}" class="dropdown is-up">
-              <div class="dropdown-trigger">
-                <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeCellSize = !activeCellSize">
-                  <span>{{size*cellSize}}x{{size*cellSize}}</span>
-                  <span class="icon is-small">
-                    <ion-icon name="chevron-down-outline"></ion-icon>
-                  </span>
-                </button>
-              </div>
-              <div class="dropdown-menu" id="denoise-dropdown-menu" role="menu">
-                <div class="dropdown-content">
-                  <a href="#" :key='n' v-for="n in [200, 400]" @click.prevent="cellSize = n; activeCellSize = false" class="dropdown-item">
-                    {{size*n}}x{{size*n}}
-                  </a>
-                </div>
-              </div>
-          </div>
-        </div>
-        <div class="column">
-              <div :class="{'is-active': activeDenoise}" class="dropdown is-up">
-                <div class="dropdown-trigger">
-                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeDenoise = !activeDenoise">
-                    <span>{{humanize(denoise)}}</span>
-                    <span class="icon is-small">
-                      <ion-icon name="chevron-down-outline"></ion-icon>
-                    </span>
-                  </button>
-                </div>
-                <div class="dropdown-menu" id="denoise-dropdown-menu" role="menu">
-                  <div class="dropdown-content">
-                    <a href="#" :key='model' v-for="model in ['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @click.prevent="denoise = model; activeDenoise = false" class="dropdown-item">
-                      {{humanize(model)}}
-                    </a>
-                  </div>
-                </div>
-            </div>
-        </div>
-        <div class="column">
-            <div :class="{'is-active': activeDownload}" class="dropdown is-up">
-            <div class="dropdown-trigger">
-              <button class="button" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="activeDownload = !activeDownload">
-                <span v-if='processing'>{{progress_msg}}</span>
-                <span v-else>Download Image</span>
-                <span class="icon is-small">
-                  <ion-icon name="chevron-down-outline"></ion-icon>
-                </span>
-              </button>
-            </div>
-            <div class="dropdown-menu" id="download-dropdown-menu" role="menu">
-              <div class="dropdown-content">
-                <a href="#" :key='mime' v-for="mime in ['image/jpeg', 'image/png', 'image/webp']" @click.prevent="download(mime)" class="dropdown-item">
-                  Download ({{mime}})
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="column">
-          <div :class="{'is-active': activeSize}" class="dropdown is-up">
-            <div class="dropdown-trigger">
-              <button class="button" aria-haspopup="true" aria-controls="size-dropdown-menu" @click="activeSize = !activeSize">
-                <span >{{size}}x{{size}}</span>
-                <span class="icon is-small">
-                  <ion-icon name="chevron-down-outline"></ion-icon>
-                </span>
-              </button>
-            </div>
-            <div class="dropdown-menu" id="size-dropdown-menu" role="menu">
-              <div class="dropdown-content">
-                <a href="#" :key='n' v-for="n in [2, 3, 4, 5]" @click.prevent="updateSize(n); activeSize = false" class="dropdown-item">
-                  {{n}}x{{n}}
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Dropdown class="column" :options="[200, 400]" @clicked="cellSize = $event">
+          <template v-slot:selected>
+            <span>{{size*cellSize}}x{{size*cellSize}}</span>
+          </template>
+          <template v-slot:option="slotProps">
+            {{size*slotProps.option}}x{{size*slotProps.option}}
+          </template>
+        </Dropdown>
+        <Dropdown class="column" :options="['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @clicked="denoise = $event">
+          <template v-slot:selected>
+            <span>{{humanize(denoise)}}</span>
+          </template>
+          <template v-slot:option="slotProps">
+            {{humanize(slotProps.option)}}
+          </template>
+        </Dropdown>
+        <Dropdown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
+          <template v-slot:selected>
+            <span v-if='processing'>{{progress_msg}}</span>
+            <span v-else>Download image</span>
+          </template>
+          <template v-slot:option="slotProps">
+            Download ({{slotProps.option}})
+          </template>
+        </Dropdown>
+        <Dropdown class="column" :options="[2, 3, 4, 5]" @clicked="updateSize($event)">
+          <template v-slot:selected>
+              <span >{{size}}x{{size}}</span>
+          </template>
+          <template v-slot:option="slotProps">
+            {{slotProps.option}}x{{slotProps.option}}
+          </template>
+        </Dropdown>
         <div class="column">
           <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
         </div>
@@ -104,10 +60,6 @@
   padding: 10px 2px;
 }
 
-button {
-  font-size: 13px;
-}
-
 @media (max-width: 768px) {
   #color {
     width: 150px;
@@ -127,14 +79,14 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { Model } from "@/waifu2x"
 import { scaleImage } from "../image"
+import Dropdown from "./Dropdown.vue"
 
 export default defineComponent({
+  components: {
+    Dropdown
+  },
   setup () {
     const store = useStore()
-    const activeDownload = ref(false)
-    const activeDenoise = ref(false)
-    const activeCellSize = ref(false)
-    const activeSize = ref(false)
     const cellSize = ref(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const denoise = ref(localStorage.getItem("denoise") || "denoise1_model")
     const updateSize = (size: number) => store.dispatch("updateSize", size)
@@ -176,7 +128,6 @@ export default defineComponent({
     }
 
     const download = async (mimeType: string) => {
-      activeDownload.value = false
       if (!store.state.cached_source) {
         progress.value = 0
         processing.value = true
@@ -217,10 +168,6 @@ export default defineComponent({
     }
 
     return {
-      activeDownload,
-      activeDenoise,
-      activeSize,
-      activeCellSize,
       download,
       cellSize,
       progress,
