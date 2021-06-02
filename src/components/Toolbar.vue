@@ -110,7 +110,7 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { upscale } from "../upscale"
 import { Model } from "@/waifu2x"
-import downscale from "downscale"
+import { downscaleImage } from "../image"
 
 export default defineComponent({
   setup () {
@@ -137,31 +137,20 @@ export default defineComponent({
     })
 
     const processImage = async (image: ImageBitmap, targetSize: number, denoiseModel: Model): Promise<ImageBitmap> => {
-      return new Promise(resolve => {
-        const min = Math.min(image.width, image.height)
-        if (min === targetSize) return resolve(image)
-        if (min > targetSize) {
-          const canvas = document.createElement("canvas")
-          canvas.width = image.width
-          canvas.height = image.height
-          canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, image.width, image.height)
-          const img = new Image()
-          img.onload = async () => {
-            const downscaled = await downscale(img, targetSize, targetSize, { imageType: "png", returnCanvas: true })
-            resolve(await createImageBitmap(downscaled, 0, 0, targetSize, targetSize))
-          }
-          img.src = canvas.toDataURL("image/png")
-          return
-        }
-        // min < targetSize
+      const min = Math.min(image.width, image.height)
+      if (min > targetSize) {
+        return downscaleImage(image, targetSize)
+      }
+      if (min < targetSize) {
         const canvas = document.createElement("canvas")
-        canvas.width = targetSize / 2
-        canvas.height = targetSize / 2
-        canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, targetSize / 2, targetSize / 2)
-        upscale(canvas, denoiseModel).then(upscaled => {
-          resolve(upscaled)
-        })
-      })
+        canvas.width = image.width
+        canvas.height = image.height
+        canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height)
+        const upscaled = await upscale(canvas, denoiseModel)
+        return downscaleImage(upscaled, targetSize)
+      }
+      // min === targetSize
+      return Promise.resolve(image)
     }
 
     const drawImages = async (denoiseModel: Model): Promise<HTMLCanvasElement> => {

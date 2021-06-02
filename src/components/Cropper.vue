@@ -12,7 +12,7 @@ import { ref, onUnmounted, defineComponent, PropType } from "vue"
 import { useStore } from "../store"
 import VueCropper, { VueCropperMethods } from "vue-cropperjs"
 import { SearchResult } from "../types"
-import downscale from "downscale"
+import { downscaleImage } from "../image"
 
 export default defineComponent({
   components: {
@@ -36,23 +36,21 @@ export default defineComponent({
     const cropend = () => {
       const { x, y, width, height } = (cropper.value as VueCropperMethods)?.getData()
       const img = new Image()
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.createElement("canvas")
         canvas.width = width
         canvas.height = height
         const ctx = canvas.getContext("2d")
         ctx?.drawImage(img, x, y, width, height, 0, 0, width, height)
-        const cropped = new Image()
-        cropped.onload = async () => {
-          const imageSize = 200
-          const downscale_canvas = await downscale(cropped, imageSize, imageSize, { imageType: "png", returnCanvas: true })
-          store.dispatch("updateCell", {
-            image: downscale_canvas.toDataURL("image/png"),
-            title: props.result.title,
-            bitmap: await createImageBitmap(canvas, 0, 0, width, height)
-          })
-        }
-        cropped.src = canvas.toDataURL("image/png")
+        const imageSize = 200
+        const downscaled = await downscaleImage(canvas, imageSize)
+        const downscale_canvas = document.createElement("canvas")
+        downscale_canvas.getContext("bitmaprenderer")?.transferFromImageBitmap(downscaled)
+        store.dispatch("updateCell", {
+          image: downscale_canvas.toDataURL("image/png"),
+          title: props.result.title,
+          bitmap: await createImageBitmap(canvas, 0, 0, width, height)
+        })
       }
       img.crossOrigin = "Anonymous"
       img.src = props.result.image_url
