@@ -1,17 +1,30 @@
 <template>
     <progress v-if="processing" class="progress is-small is-primary my-4" :value="progress" max="100" />
     <div class="container is-max-desktop" id="bottom">
-      <div class="columns">
+      <div class="columns is-gapless">
         <div class="column">
-          <label class="checkbox pt-3 is-size-7">
-            <input type="checkbox" v-model="should_upscale">
-            Upscale
-          </label>
+            <div :class="{'is-active': activeCellSize}" class="dropdown is-up">
+              <div class="dropdown-trigger">
+                <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeCellSize = !activeCellSize">
+                  <span>{{size*cellSize}}x{{size*cellSize}}</span>
+                  <span class="icon is-small">
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                  </span>
+                </button>
+              </div>
+              <div class="dropdown-menu" id="denoise-dropdown-menu" role="menu">
+                <div class="dropdown-content">
+                  <a href="#" :key='n' v-for="n in [200, 400]" @click.prevent="cellSize = n; activeCellSize = false" class="dropdown-item">
+                    {{size*n}}x{{size*n}}
+                  </a>
+                </div>
+              </div>
+          </div>
         </div>
         <div class="column">
               <div :class="{'is-active': activeDenoise}" class="dropdown is-up">
                 <div class="dropdown-trigger">
-                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" :disabled="!should_upscale" @click="activeDenoise = !activeDenoise">
+                  <button class="button" aria-haspopup="true" aria-controls="denoise-dropdown-menu" @click="activeDenoise = !activeDenoise">
                     <span>{{humanize(denoise)}}</span>
                     <span class="icon is-small">
                       <ion-icon name="chevron-down-outline"></ion-icon>
@@ -32,7 +45,7 @@
             <div class="dropdown-trigger">
               <button class="button" aria-haspopup="true" aria-controls="download-dropdown-menu" @click="activeDownload = !activeDownload">
                 <span v-if='processing'>{{progress_msg}}</span>
-                <span v-else>Download image</span>
+                <span v-else>Download Image</span>
                 <span class="icon is-small">
                   <ion-icon name="chevron-down-outline"></ion-icon>
                 </span>
@@ -67,7 +80,7 @@
           </div>
         </div>
         <div class="column">
-          <input class="button" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
+          <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
         </div>
         <div class="column">
           <a href="https://github.com/gqgs/3x3-generator" target="_blank">
@@ -89,6 +102,10 @@
 
 .column {
   padding: 10px 2px;
+}
+
+button {
+  font-size: 13px;
 }
 
 @media (max-width: 768px) {
@@ -116,8 +133,9 @@ export default defineComponent({
     const store = useStore()
     const activeDownload = ref(false)
     const activeDenoise = ref(false)
+    const activeCellSize = ref(false)
     const activeSize = ref(false)
-    const should_upscale = ref(JSON.parse(localStorage.getItem("should_upscale") || "true"))
+    const cellSize = ref(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const denoise = ref(localStorage.getItem("denoise") || "denoise1_model")
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (color: string) => store.dispatch("updateColor", color)
@@ -130,13 +148,13 @@ export default defineComponent({
       localStorage.setItem("denoise", denoise)
     })
 
-    watch(should_upscale, (should_upscale) => {
+    watch(cellSize, (cellSize) => {
       store.state.cached_source = null
-      localStorage.setItem("should_upscale", JSON.stringify(should_upscale))
+      localStorage.setItem("cellSize", JSON.stringify(cellSize))
     })
 
     const drawImages = async (denoiseModel: Model): Promise<HTMLCanvasElement> => {
-      const imageSize = should_upscale.value ? 400 : 200
+      const imageSize = cellSize.value
       const size = store.state.size
       const images = store.state.images
       const canvas = document.createElement("canvas")
@@ -202,8 +220,9 @@ export default defineComponent({
       activeDownload,
       activeDenoise,
       activeSize,
+      activeCellSize,
       download,
-      should_upscale,
+      cellSize,
       progress,
       progress_msg,
       denoise,
