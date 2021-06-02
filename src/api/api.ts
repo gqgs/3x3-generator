@@ -1,6 +1,7 @@
 import { watch, ref } from "vue"
 import jikan from "./jikan"
 import kitsu from "./kitsu"
+import anilist from "./anilist"
 import { SearchResult } from "../types"
 import debounce from "lodash.debounce"
 
@@ -11,8 +12,16 @@ interface API {
 }
 
 const apiFromString = (name: string): API => {
-  if (name === "kitsu") return kitsu
-  return jikan
+  switch (name) {
+    case "kitsu":
+      return kitsu
+    case "anilist":
+      return anilist
+    case "jikan":
+      return jikan
+    default:
+      throw new Error(`undefined api: ${name}`)
+  }
 }
 
 const storage_api = localStorage.getItem("api") || "kitsu"
@@ -20,7 +29,7 @@ const storage_api = localStorage.getItem("api") || "kitsu"
 let api: API = apiFromString(storage_api)
 let lastQuery = ""
 
-const apis = ref(["kitsu", "jikan"])
+const apis = ref(["kitsu", "jikan", "anilist"])
 const currentApi = ref(storage_api)
 const query = ref("")
 const currentTab = ref("anime")
