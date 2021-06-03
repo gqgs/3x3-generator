@@ -1,6 +1,6 @@
 import { SearchResult } from "../types"
 
-interface APIAnimeResult {
+interface APIMediaResult {
   id: number
   coverImage: {
     extraLarge: string
@@ -25,7 +25,7 @@ export const hasShowMore = false
 
 let last_id = 0
 
-const animeQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String, $type: MediaType) {
+const mediaQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String, $type: MediaType) {
     Page (page: $page, perPage: $perPage) {
       media (id: $id, search: $search, type: $type) {
         id
@@ -55,26 +55,26 @@ const characterQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: Str
   }`
 
 const queries: { [key: string]: string } = {
-  anime: animeQuery,
-  manga: animeQuery,
+  anime: mediaQuery,
+  manga: mediaQuery,
   character: characterQuery
 }
 
 const parseCharacters = (characters?: APICharacterResult[]): SearchResult[] => {
   if (!characters) return []
-  return characters.map(character => {
+  return characters.map(result => {
     return {
-      mal_id: character.id,
-      title: character.name.full,
-      image_url: character.image.large
+      mal_id: result.id,
+      title: result.name.full,
+      image_url: result.image.large
         .replace("https://", "https://cdn.statically.io/img/")
     }
   })
 }
 
-const parseAnime = (anime?: APIAnimeResult[]): SearchResult[] => {
-  if (!anime) return []
-  return anime.map(result => {
+const parseMedia = (media?: APIMediaResult[]): SearchResult[] => {
+  if (!media) return []
+  return media.map(result => {
     return {
       mal_id: result.id,
       title: result.title.romaji,
@@ -110,7 +110,7 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
   const data = await resp.json()
   if (last_id > id) return []
   if (tab === "character") return parseCharacters(data?.data?.Page?.characters)
-  return parseAnime(data?.data?.Page?.media)
+  return parseMedia(data?.data?.Page?.media)
 }
 export default {
   search,
