@@ -77,7 +77,7 @@ import { ref, defineComponent, watch } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { Model } from "@/waifu2x"
+import { Model } from "../image/waifu2x"
 import { scaleImage } from "../image"
 import Dropdown from "./Dropdown.vue"
 
