@@ -45,6 +45,8 @@ export default defineComponent({
         const imageSize = 200
         const downscaled = await downscaleImage(canvas, imageSize)
         const downscale_canvas = document.createElement("canvas")
+        downscale_canvas.width = downscaled.width
+        downscale_canvas.height = downscaled.height
         downscale_canvas.getContext("bitmaprenderer")?.transferFromImageBitmap(downscaled)
         store.dispatch("updateCell", {
           image: downscale_canvas.toDataURL("image/png"),
