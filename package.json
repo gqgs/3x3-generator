@@ -14,7 +14,8 @@
     "downscale": "^1.0.6",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
-    "vue": "^3.0.0",
+    "seedrandom": "^3.0.5",
+    "vue": "^3.1.2",
     "vue-cropperjs": "^5.0.0",
     "vuex": "^4.0.0-0",
     "waifu2x-tfjs": "1.0.4"
@@ -28,7 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-eslint": "^5.0.0-beta.2",
     "@vue/cli-plugin-typescript": "~4.5.0",
     "@vue/cli-plugin-vuex": "~4.5.0",
     "@vue/cli-service": "^4.5.12",
@@ -38,10 +39,9 @@
     "eslint": "^7.24.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0",
-    "eslint-plugin-standard": "^5.0.0",
     "eslint-plugin-vue": "^7.0.0",
     "typescript": "^4.2.3",
+    "webpack": "^4.46.0",
     "worker-loader": "^3.0.8"
   }
 }
