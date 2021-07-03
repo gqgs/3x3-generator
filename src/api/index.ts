@@ -24,7 +24,7 @@ const apiFromString = (name: string): API => {
   }
 }
 
-const storage_api = localStorage.getItem("api") || "kitsu"
+const storage_api = localStorage.getItem("api") || "anilist"
 
 let api: API = apiFromString(storage_api)
 let lastQuery = ""
