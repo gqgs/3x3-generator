@@ -48,7 +48,7 @@ export const showMore = async (tab: string, selected: SearchResult): Promise<Sea
   }).filter((result: SearchResult) => {
     const is_duplicated = image_set.has(result.image_url)
     image_set.add(result.image_url)
-    return is_duplicated
+    return !is_duplicated
   })
   return fetch_result
 }
