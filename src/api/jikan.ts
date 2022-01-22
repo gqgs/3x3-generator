@@ -3,6 +3,7 @@ import { SearchResult } from "../types"
 interface Picture {
   large: string
   small: string
+  image_url: string
 }
 
 interface APIResult {
@@ -43,7 +44,7 @@ export const showMore = async (tab: string, selected: SearchResult): Promise<Sea
   const fetch_result: SearchResult[] = (data.pictures ?? []).map((picture: Picture) => {
     return {
       title: selected.title,
-      image_url: picture.large
+      image_url: picture.large || picture.image_url
     }
   }).filter((result: SearchResult) => {
     const is_duplicated = image_set.has(result.image_url)
