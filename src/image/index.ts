@@ -33,7 +33,12 @@ export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, ta
   })
 }
 
-const has_offscreen_canvas_support = typeof document.createElement("canvas").transferControlToOffscreen === "function"
+// https://github.com/microsoft/TypeScript/issues/45745
+interface OffscreenCanvas extends HTMLCanvasElement {
+  transferControlToOffscreen?: () => void
+}
+
+const has_offscreen_canvas_support = typeof (document.createElement("canvas") as OffscreenCanvas).transferControlToOffscreen === "function"
 
 const loadUpscaleWorker = (async () => {
   const Worker = (await (has_offscreen_canvas_support ? import("worker-loader!./waifu2x.worker") : import("./waifu2x"))).default
