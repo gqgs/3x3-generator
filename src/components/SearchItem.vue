@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import Cropper from "./Cropper.vue"
+import Cropper from "./ImgCropper.vue"
 import Api from "../api"
 
 export default defineComponent({

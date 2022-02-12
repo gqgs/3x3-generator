@@ -2,23 +2,23 @@
     <progress v-if="processing" class="progress is-small is-primary my-4" :value="progress" max="100" />
     <div class="container is-max-desktop" id="bottom">
       <div class="columns is-gapless">
-        <Dropdown class="column" :options="[200, 400]" @clicked="cellSize = $event">
+        <DropDown class="column" :options="[200, 400]" @clicked="cellSize = $event">
           <template v-slot:selected>
             <span>{{size*cellSize}}x{{size*cellSize}}</span>
           </template>
           <template v-slot:option="slotProps">
             {{size*slotProps.option}}x{{size*slotProps.option}}
           </template>
-        </Dropdown>
-        <Dropdown class="column" :options="['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @clicked="denoise = $event">
+        </DropDown>
+        <DropDown class="column" :options="['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @clicked="denoise = $event">
           <template v-slot:selected>
             <span>{{humanize(denoise)}}</span>
           </template>
           <template v-slot:option="slotProps">
             {{humanize(slotProps.option)}}
           </template>
-        </Dropdown>
-        <Dropdown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
+        </DropDown>
+        <DropDown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
           <template v-slot:selected>
             <span v-if='processing'>{{progress_msg}}</span>
             <span v-else>Download image</span>
@@ -26,15 +26,15 @@
           <template v-slot:option="slotProps">
             Download ({{slotProps.option}})
           </template>
-        </Dropdown>
-        <Dropdown class="column" :options="[2, 3, 4, 5]" @clicked="updateSize($event)">
+        </DropDown>
+        <DropDown class="column" :options="[2, 3, 4, 5]" @clicked="updateSize($event)">
           <template v-slot:selected>
               <span >{{size}}x{{size}}</span>
           </template>
           <template v-slot:option="slotProps">
             {{slotProps.option}}x{{slotProps.option}}
           </template>
-        </Dropdown>
+        </DropDown>
         <div class="column">
           <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
         </div>
@@ -79,11 +79,11 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { Model } from "../image/waifu2x"
 import { scaleImage } from "../image"
-import Dropdown from "./Dropdown.vue"
+import DropDown from "./DropDown.vue"
 
 export default defineComponent({
   components: {
-    Dropdown
+    DropDown
   },
   setup () {
     const store = useStore()

@@ -9,22 +9,22 @@
       v-for="n in tiles" :key="n" :id="n" :style="{ borderColor: n === selected_id ? comp_color : color }" />
     </div>
   </div>
-  <Toolbar />
+  <Tools />
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue"
 import { mapState, mapActions, mapGetters } from "vuex"
-import Cell from "./components/Cell.vue"
-import Search from "./components/Search.vue"
-import Toolbar from "./components/Toolbar.vue"
+import Cell from "./components/GridCellI.vue"
+import Search from "./components/SearchItem.vue"
+import Tools from "./components/ToolBar.vue"
 
 export default defineComponent({
   name: "App",
   components: {
     Cell,
     Search,
-    Toolbar
+    Tools
   },
   computed: {
     ...mapState([
