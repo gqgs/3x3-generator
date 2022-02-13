@@ -2,7 +2,7 @@
   <div>
     <div :class="{'is-active': active}" class="dropdown is-up">
         <div class="dropdown-trigger">
-        <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="active = !active">
+        <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="active = !active" :disabled=disabled>
             <slot name="selected"></slot>
             <span class="icon is-small">
             <ion-icon name="chevron-down-outline"></ion-icon>
@@ -35,6 +35,10 @@ export default defineComponent({
     options: {
       type: Array,
       required: true
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ["clicked"],

@@ -10,7 +10,7 @@
             {{size*slotProps.option}}x{{size*slotProps.option}}
           </template>
         </DropDown>
-        <DropDown class="column" :options="['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @clicked="denoise = $event">
+        <DropDown class="column" :options="['denoise0_model', 'denoise1_model', 'denoise2_model', 'denoise3_model']" @clicked="denoise = $event" :disabled="cellSize == 200">
           <template v-slot:selected>
             <span>{{humanize(denoise)}}</span>
           </template>
