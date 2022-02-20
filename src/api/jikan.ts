@@ -1,19 +1,20 @@
 import { SearchResult } from "../types"
 
-interface Picture {
-  large: string
-  small: string
-  image_url: string
+interface Image {
+  jpg: {
+    image_url: string
+    large_image_url: string
+  }
 }
 
 interface APIResult {
   mal_id: number
   title: string
-  image_url: string
+  images: Image
   name: string // for characters
 }
 
-export const tabs = ["anime", "manga", "character"]
+export const tabs = ["anime", "manga", "characters"]
 export const hasShowMore = true
 
 let last_id = 0
@@ -23,28 +24,28 @@ export const search = async (query: string, tab: string): Promise<SearchResult[]
     return []
   }
   const id = ++last_id
-  const resp = await fetch(`https://api.jikan.moe/v3/search/${tab}?&limit=15&q=${encodeURI(query)}`)
+  const resp = await fetch(`https://api.jikan.moe/v4/${tab}?limit=15&desc=desc&order_by=popularity&q=${encodeURI(query)}`)
   const data = await resp.json()
   if (last_id > id) return []
-  return (data.results ?? []).map((result: APIResult) => {
+  return (data.data ?? []).map((result: APIResult) => {
     return {
       mal_id: result.mal_id,
       title: result.title || result.name,
-      image_url: result.image_url
+      image_url: result.images.jpg.large_image_url || result.images.jpg.image_url
     }
   })
 }
 
 export const showMore = async (tab: string, selected: SearchResult): Promise<SearchResult[]> => {
   const id = ++last_id
-  const resp = await fetch(`https://api.jikan.moe/v3/${tab}/${selected.mal_id}/pictures`)
+  const resp = await fetch(`https://api.jikan.moe/v4/${tab}/${selected.mal_id}/pictures`)
   const data = await resp.json()
   if (last_id > id) return []
   const image_set = new Set()
-  const fetch_result: SearchResult[] = (data.pictures ?? []).map((picture: Picture) => {
+  const fetch_result: SearchResult[] = (data.data ?? []).map((image: Image) => {
     return {
       title: selected.title,
-      image_url: picture.large || picture.image_url
+      image_url: image.jpg.large_image_url || image.jpg.image_url
     }
   }).filter((result: SearchResult) => {
     const is_duplicated = image_set.has(result.image_url)
