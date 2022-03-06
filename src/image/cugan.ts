@@ -1,10 +1,17 @@
 import * as tf from "@tensorflow/tfjs"
+import * as tflite from "@tensorflow/tfjs-tflite"
 import { UpscaleWorker } from "../types"
 
 export default class Cugan2x implements UpscaleWorker {
+  model: Promise<tflite.TFLiteModel>
+
+  constructor () {
+    const path = `${process.env.BASE_URL}tfjs_models/model.tflite`
+    this.model = tflite.loadTFLiteModel(path)
+  }
+
   public async predict (pixels: ImageBitmap, canvas: HTMLCanvasElement | OffscreenCanvas | null = null): Promise<ImageBitmap> {
-    const path = `${process.env.BASE_URL}tfjs_models/model.json`
-    const model = await tf.loadGraphModel(path)
+    const model = await this.model
     const tidy = tf.tidy(() => {
       const img = tf.browser.fromPixels(pixels).toFloat()
       const offset = tf.scalar(255)
@@ -24,8 +31,6 @@ export default class Cugan2x implements UpscaleWorker {
 
     as3D.dispose()
     tidy.dispose()
-    model.dispose()
-
     return createImageBitmap(canvas)
   }
 }
