@@ -1,17 +1,17 @@
 import downscale from "downscale"
-import Waifu2x, { Model } from "./waifu2x"
+import { UpscaleWorker } from "../types"
 
-export const scaleImage = async (image: ImageBitmap, targetSize: number, denoiseModel: Model): Promise<ImageBitmap> => {
+export const scaleImage = async (image: ImageBitmap, targetSize: number): Promise<ImageBitmap> => {
   const min = Math.min(image.width, image.height)
   if (min > targetSize) {
     return downscaleImage(image, targetSize)
   }
   if (min < targetSize) {
     const canvas = document.createElement("canvas")
-    canvas.width = image.width
-    canvas.height = image.height
+    canvas.width = 200
+    canvas.height = 200
     canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height)
-    const upscaled = await upscaleImage(canvas, denoiseModel)
+    const upscaled = await upscaleImage(canvas)
     return downscaleImage(upscaled, targetSize)
   }
   // min === targetSize
@@ -33,28 +33,24 @@ export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, ta
   })
 }
 
-// https://github.com/microsoft/TypeScript/issues/45745
-interface OffscreenCanvas extends HTMLCanvasElement {
-  transferControlToOffscreen?: () => void
-}
-
-const has_offscreen_canvas_support = typeof (document.createElement("canvas") as OffscreenCanvas).transferControlToOffscreen === "function"
+const has_offscreen_canvas_support = typeof OffscreenCanvas === "function"
 
 const loadUpscaleWorker = (async () => {
-  const Worker = (await (has_offscreen_canvas_support ? import("worker-loader!./waifu2x.worker") : import("./waifu2x"))).default
+  const Worker = (await (has_offscreen_canvas_support ? import("worker-loader!./upscale.worker") : import("./cugan"))).default
   return new Worker()
 })()
 
-const upscaleImagefallback = async (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model) : Promise<ImageBitmap> => {
-  const [worker, bitmap] = await Promise.all([loadUpscaleWorker as Promise<Waifu2x>, createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)])
-  const denoised = await worker.predict(denoiseModel, bitmap)
-  const upscaled = await worker.predict(upscaleModel, denoised)
-  return upscaled
+const upscaleImagefallback = async (canvas: HTMLCanvasElement) : Promise<ImageBitmap> => {
+  const [worker, bitmap] = await Promise.all([loadUpscaleWorker as Promise<UpscaleWorker>, createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)])
+  const outputCanvas = document.createElement("canvas")
+  outputCanvas.width = 332
+  outputCanvas.height = 332
+  return await worker.predict(bitmap, outputCanvas)
 }
 
-const upscaleImage = async (canvas: HTMLCanvasElement, denoiseModel: Model, upscaleModel: Model = "scale2.0x_model.json") : Promise<ImageBitmap> => {
+const upscaleImage = async (canvas: HTMLCanvasElement) : Promise<ImageBitmap> => {
   if (!has_offscreen_canvas_support) {
-    return upscaleImagefallback(canvas, denoiseModel, upscaleModel)
+    return upscaleImagefallback(canvas)
   }
 
   const [worker, bitmap] = await Promise.all([loadUpscaleWorker as Promise<Worker>, createImageBitmap(canvas, 0, 0, canvas.width, canvas.height)])
@@ -65,9 +61,7 @@ const upscaleImage = async (canvas: HTMLCanvasElement, denoiseModel: Model, upsc
     }
 
     worker.postMessage({
-      bitmap,
-      denoiseModel,
-      upscaleModel
+      bitmap
     })
   })
 }

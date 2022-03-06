@@ -20,7 +20,7 @@ module.exports = {
       return args
     })
   },
-  transpileDependencies: ["waifu2x-tfjs", "color"],
+  transpileDependencies: ["color"],
   publicPath: process.env.NODE_ENV === "production"
     ? "/3x3-generator/"
     : "/"
