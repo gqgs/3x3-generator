@@ -8,7 +8,7 @@ export default class Cugan2x implements UpscaleWorker {
     const tidy = tf.tidy(() => {
       const img = tf.browser.fromPixels(pixels).toFloat()
       const offset = tf.scalar(255)
-      const normalized = img.div(offset)
+      const normalized = img.divNoNan(offset)
       const batched = normalized.reshape([1, 200, 200, 3])
       const pred = model.predict(batched) as tf.Tensor4D
       const tensor = pred.squeeze() as tf.Tensor3D
