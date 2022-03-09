@@ -11,5 +11,5 @@ export interface SearchResult {
 }
 
 export abstract class UpscaleWorker {
-  abstract predict (pixels: ImageBitmap, canvas: HTMLCanvasElement | OffscreenCanvas | null = null): Promise<ImageBitmap>
+  abstract predict (pixels: ImageData): Promise<ImageBitmap>
 }

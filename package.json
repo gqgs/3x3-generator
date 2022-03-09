@@ -8,13 +8,12 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@tensorflow/tfjs": "^3.5.0",
-    "@tensorflow/tfjs-tflite": "^0.0.1-alpha.8",
     "color": "^4.2.1",
     "core-js": "^3.21.1",
     "downscale": "^1.0.6",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
+    "onnxruntime-web": "^1.10.0",
     "vue": "^3.2.31",
     "vue-cropperjs": "^5.0.0",
     "vuex": "^4.0.0-0"
