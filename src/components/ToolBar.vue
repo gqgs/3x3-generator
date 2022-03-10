@@ -49,7 +49,7 @@
 
 <style scoped>
 #bottom {
-  max-width: 600px;
+  max-width: 560px;
 }
 
 #color {
