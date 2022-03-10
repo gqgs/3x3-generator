@@ -5,6 +5,7 @@ export default class Cugan2x implements UpscaleWorker {
   loadModel: Promise<ort.InferenceSession>
 
   constructor () {
+    ort.env.wasm.wasmPaths = `${process.env.BASE_URL}js/`
     const path = `${process.env.BASE_URL}models/upcunet.onnx`
     this.loadModel = ort.InferenceSession.create(path, {
       executionProviders: ["wasm"],

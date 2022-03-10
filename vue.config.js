@@ -1,3 +1,5 @@
+const CopyPlugin = require("copy-webpack-plugin");
+
 module.exports = {
   chainWebpack: config => {
     config.module
@@ -9,6 +11,20 @@ module.exports = {
           isCustomElement: tag => tag.startsWith("ion-")
         }
         return options
+      })
+
+    config
+      .plugin("copy-webpack-plugin")
+      .use(CopyPlugin)
+      .tap(() => {
+        return [{
+          patterns: [
+            {
+              from: "./node_modules/onnxruntime-web/dist/ort-*.wasm",
+              to: "js/[name][ext]",
+            }
+          ],
+        }]
       })
 
     config.optimization.minimizer("terser").tap((args) => {
