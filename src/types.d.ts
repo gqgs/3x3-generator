@@ -11,5 +11,5 @@ export interface SearchResult {
 }
 
 export abstract class UpscaleWorker {
-  abstract predict (pixels: ImageData): Promise<ImageBitmap>
+  abstract predict (pixels: ImageData, denoiseModel: string): Promise<ImageBitmap>
 }

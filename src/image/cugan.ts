@@ -2,19 +2,28 @@ import { UpscaleWorker } from "../types"
 import * as ort from "onnxruntime-web"
 
 export default class Cugan2x implements UpscaleWorker {
-  loadModel: Promise<ort.InferenceSession>
+  models: Map<string, Promise<ort.InferenceSession>> = new Map<string, Promise<ort.InferenceSession>>()
 
   constructor () {
     ort.env.wasm.wasmPaths = `${process.env.BASE_URL}js/`
-    const path = `${process.env.BASE_URL}models/upcunet.onnx`
-    this.loadModel = ort.InferenceSession.create(path, {
+  }
+
+  private async loadModel(denoiseModel: string): Promise<ort.InferenceSession> {
+    const cached_model = this.models.get(denoiseModel)
+    if (cached_model) {
+      return cached_model
+    }
+    const path = `${process.env.BASE_URL}models/up2x-latest-${denoiseModel}.onnx`
+    const model = ort.InferenceSession.create(path, {
       executionProviders: ["wasm"],
       graphOptimizationLevel: "all",
       executionMode: "parallel"
     })
+    this.models.set(path, model)
+    return model
   }
 
-  public async predict (img: ImageData): Promise<ImageBitmap> {
+  public async predict (img: ImageData, denoiseModel: string): Promise<ImageBitmap> {
     const red = new Array<number>()
     const green = new Array<number>()
     const blue = new Array<number>()
@@ -29,7 +38,7 @@ export default class Cugan2x implements UpscaleWorker {
       float32Data[i] = transposed[i] / 255.0
     }
     const tensor = new ort.Tensor("float32", float32Data, [1, 3, 200, 200])
-    const session = await this.loadModel
+    const session = await this.loadModel(denoiseModel)
     const feeds = { input_1: tensor }
     const results = await session.run(feeds)
 

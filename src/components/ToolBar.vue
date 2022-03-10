@@ -10,6 +10,14 @@
             {{size*slotProps.option}}x{{size*slotProps.option}}
           </template>
         </DropDown>
+        <DropDown class="column" :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
+          <template v-slot:selected>
+            <span>{{denoise}}</span>
+          </template>
+          <template v-slot:option="slotProps">
+            {{slotProps.option}}
+          </template>
+        </DropDown>
         <DropDown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
           <template v-slot:selected>
             <span v-if='processing'>{{progress_msg}}</span>
@@ -41,7 +49,7 @@
 
 <style scoped>
 #bottom {
-  max-width: 450px;
+  max-width: 600px;
 }
 
 #color {
@@ -81,16 +89,22 @@ export default defineComponent({
     const cellSize = ref(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (color: string) => store.dispatch("updateColor", color)
+    const denoise = ref(localStorage.getItem("denoise:v1") || "conservative")
     const progress = ref(0)
     const progress_msg = "Creating image..."
     const processing = ref(false)
+
+    watch(denoise, (denoise) => {
+      store.state.cached_source = null
+      localStorage.setItem("denoise:v1", denoise)
+    })
 
     watch(cellSize, (cellSize) => {
       store.state.cached_source = null
       localStorage.setItem("cellSize", JSON.stringify(cellSize))
     })
 
-    const drawImages = async (): Promise<HTMLCanvasElement> => {
+    const drawImages = async (denoiseModel: string): Promise<HTMLCanvasElement> => {
       const imageSize = cellSize.value
       const size = store.state.size
       const images = store.state.images
@@ -103,7 +117,7 @@ export default defineComponent({
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
           if (i in images) {
-            ctx.drawImage(await scaleImage(images[i], imageSize), 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+            ctx.drawImage(await scaleImage(images[i], imageSize, denoiseModel), 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
             ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
           }
           progress.value = (i + 1) / (size * size) * 100
@@ -116,7 +130,7 @@ export default defineComponent({
       if (!store.state.cached_source) {
         progress.value = 0
         processing.value = true
-        store.state.cached_source = await drawImages()
+        store.state.cached_source = await drawImages(denoise.value)
         processing.value = false
       }
       const size = store.state.size
@@ -142,6 +156,7 @@ export default defineComponent({
       cellSize,
       progress,
       progress_msg,
+      denoise,
       updateSize,
       updateColor,
       processing
