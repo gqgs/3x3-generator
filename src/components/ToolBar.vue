@@ -89,14 +89,14 @@ export default defineComponent({
     const cellSize = ref(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (color: string) => store.dispatch("updateColor", color)
-    const denoise = ref(localStorage.getItem("denoise:v1") || "conservative")
+    const denoise = ref(localStorage.getItem("denoise:v2") || "denoise1x")
     const progress = ref(0)
     const progress_msg = "Creating image..."
     const processing = ref(false)
 
     watch(denoise, (denoise) => {
       store.state.cached_source = null
-      localStorage.setItem("denoise:v1", denoise)
+      localStorage.setItem("denoise:v2", denoise)
     })
 
     watch(cellSize, (cellSize) => {
