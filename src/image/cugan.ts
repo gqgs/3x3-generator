@@ -19,7 +19,7 @@ export default class Cugan2x implements UpscaleWorker {
       graphOptimizationLevel: "all",
       executionMode: "parallel"
     })
-    this.models.set(path, model)
+    this.models.set(denoiseModel, model)
     return model
   }
 
