@@ -2,6 +2,7 @@ import { watch, ref } from "vue"
 import jikan from "./jikan"
 import kitsu from "./kitsu"
 import anilist from "./anilist"
+import minako from "./minako"
 import { SearchResult } from "../types"
 import debounce from "lodash.debounce"
 
@@ -19,6 +20,8 @@ const apiFromString = (name: string): API => {
       return anilist
     case "jikan":
       return jikan
+    case "minako":
+      return minako
     default:
       throw new Error(`undefined api: ${name}`)
   }
@@ -29,7 +32,7 @@ const storage_api = localStorage.getItem("api") || "anilist"
 let api: API = apiFromString(storage_api)
 let lastQuery = ""
 
-const apis = ref(["kitsu", "jikan", "anilist"])
+const apis = ref(["kitsu", "jikan", "anilist", "minako"])
 const currentApi = ref(storage_api)
 const query = ref("")
 const currentTab = ref("anime")
