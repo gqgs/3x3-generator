@@ -1,4 +1,5 @@
 import { SearchResult } from "../types"
+import { API } from "./api"
 
 interface APIMediaResult {
   id: number
@@ -20,10 +21,47 @@ interface APICharacterResult {
   }
 }
 
-export const tabs = ["anime", "manga", "character"]
-export const hasShowMore = false
+interface APIResult {
+  data: {
+    Page: {
+      media: APIMediaResult[]
+      characters: APICharacterResult[]
+    }
+  }
+}
 
-let last_id = 0
+export default class Anilist extends API<APIResult> {
+  readonly name = "anilist"
+  readonly tabs = ["anime", "manga", "character"]
+
+  fetchURL(tab: string, query: string): { url: string, options: RequestInit } {
+    const variables = {
+      search: encodeURI(query),
+      page: 1,
+      type: tab.toUpperCase(),
+      perPage: 15
+    }
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+        query: queries[tab],
+        variables: variables
+      })
+    }
+    return {
+      url: "https://graphql.anilist.co",
+      options
+    }
+  }
+  processResult(result: APIResult, tab: string): SearchResult[] {
+    if (tab === "character") return parseCharacters(result?.data?.Page?.characters)
+    return parseMedia(result?.data?.Page?.media)
+  }
+}
 
 const mediaQuery = `query ($id: Int, $page: Int, $perPage: Int, $search: String, $type: MediaType) {
     Page (page: $page, perPage: $perPage) {
@@ -82,38 +120,4 @@ const parseMedia = (media?: APIMediaResult[]): SearchResult[] => {
         .replace("https://", "https://cdn.statically.io/img/")
     }
   })
-}
-
-export const search = async (query: string, tab: string): Promise<SearchResult[]> => {
-  if (query.length < 3) {
-    return []
-  }
-  const variables = {
-    search: encodeURI(query),
-    page: 1,
-    type: tab.toUpperCase(),
-    perPage: 15
-  }
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json"
-    },
-    body: JSON.stringify({
-      query: queries[tab],
-      variables: variables
-    })
-  }
-  const id = ++last_id
-  const resp = await fetch("https://graphql.anilist.co", options)
-  const data = await resp.json()
-  if (last_id > id) return []
-  if (tab === "character") return parseCharacters(data?.data?.Page?.characters)
-  return parseMedia(data?.data?.Page?.media)
-}
-export default {
-  search,
-  hasShowMore,
-  tabs
 }

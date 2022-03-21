@@ -1,6 +1,11 @@
 import { SearchResult } from "../types"
+import { API } from "./api"
 
 interface APIResult {
+  data: Data[]
+}
+
+interface Data {
   id: number
   attributes: {
     titles: {
@@ -14,30 +19,22 @@ interface APIResult {
   }
 }
 
-export const tabs = ["anime", "manga"]
-export const hasShowMore = false
+export default class Kitsu extends API<APIResult> {
+  readonly name = "kitsu"
+  readonly tabs = ["anime", "manga"]
 
-let last_id = 0
-
-export const search = async (query: string, tab: string): Promise<SearchResult[]> => {
-  if (query.length < 3) {
-    return []
-  }
-  const id = ++last_id
-  const resp = await fetch(`https://kitsu.io/api/edge/${tab}?&fields[${tab}]=id,titles,posterImage&filter[text]=${encodeURI(query)}`)
-  const data = await resp.json()
-  if (last_id > id) return []
-  return (data.data ?? []).map((result: APIResult) => {
+  fetchURL(tab: string, query: string): { url: string } {
     return {
-      mal_id: result.id,
-      title: result.attributes.titles.en_jp,
-      image_url: (result.attributes.posterImage.original || result.attributes.posterImage.large).replace("https://", "https://cdn.statically.io/img/")
+      url: `https://kitsu.io/api/edge/${tab}?&fields[${tab}]=id,titles,posterImage&filter[text]=${encodeURI(query)}`
     }
-  })
-}
-
-export default {
-  tabs,
-  search,
-  hasShowMore
+  }
+  processResult(result: APIResult): SearchResult[] {
+    return (result.data ?? []).map((result: Data) => {
+      return {
+        mal_id: result.id,
+        title: result.attributes.titles.en_jp,
+        image_url: (result.attributes.posterImage.original || result.attributes.posterImage.large).replace("https://", "https://cdn.statically.io/img/")
+      }
+    })
+  }
 }

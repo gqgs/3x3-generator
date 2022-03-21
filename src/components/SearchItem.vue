@@ -2,7 +2,7 @@
     <div class="field" id="search">
     <div class="tabs is-small">
     <ul>
-      <li v-for="api in apis" :key=api :class="{'is-active': currentApi === api}">
+      <li v-for="api in apiNames" :key=api :class="{'is-active': currentApi === api}">
         <a class="is-capitalized" href="#" @click.prevent="changeApi(api)">{{api}}</a>
       </li>
     </ul>
@@ -23,8 +23,8 @@
       <Cropper @selected='selected = result' v-for="result in results" :key="result.mal_id" :result='result' />
     </div>
     <a v-show='showing_more' href="#" @click.prevent="goBack"><ion-icon size="large" name="arrow-undo-outline"></ion-icon></a>
-    <span v-if='!hasShowMore && selected'>{{selected.title}}</span>
-    <a v-else-if='!showing_more && selected && !showing_more' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
+    <span v-if='!has_show_more && selected'>{{selected.title}}</span>
+    <a v-else-if='!showing_more && selected' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
 </template>
 
 <script lang="ts">

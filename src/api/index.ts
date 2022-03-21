@@ -1,45 +1,40 @@
 import { watch, ref } from "vue"
-import jikan from "./jikan"
-import kitsu from "./kitsu"
-import anilist from "./anilist"
-import minako from "./minako"
 import { SearchResult } from "../types"
 import debounce from "lodash.debounce"
+import Kitsu from "./kitsu"
+import Minako from "./minako"
+import Anilist from "./anilist"
+import Jikan from "./jikan"
+import { API } from "./api"
 
-interface API {
-  tabs: string[]
-  search: (query: string, tab: string) => Promise<SearchResult[]>
-  hasShowMore: boolean
-}
+const apis = [new Kitsu(), new Jikan(), new Anilist(), new Minako()]
+const apisMap = new Map<string, API<unknown>>()
 
-const apiFromString = (name: string): API => {
-  switch (name) {
-    case "kitsu":
-      return kitsu
-    case "anilist":
-      return anilist
-    case "jikan":
-      return jikan
-    case "minako":
-      return minako
-    default:
-      throw new Error(`undefined api: ${name}`)
+apis.forEach(api => {
+  apisMap.set(api.name, api)
+})
+
+const apiFromString = (name: string): API<unknown> => {
+  const api = apisMap.get(name)
+  if (!api) {
+    throw Error("api not found")
   }
+  return api
 }
 
 const storage_api = localStorage.getItem("api") || "anilist"
 
-let api: API = apiFromString(storage_api)
+let api: API<unknown> = apiFromString(storage_api)
 let lastQuery = ""
 
-const apis = ref(["kitsu", "jikan", "anilist", "minako"])
+const apiNames = apis.map(api => api.name)
 const currentApi = ref(storage_api)
 const query = ref("")
 const currentTab = ref("anime")
 const loading = ref(false)
 const results = ref<SearchResult[]>([])
 const tabs = ref(api.tabs)
-const hasShowMore = ref(api.hasShowMore)
+const has_show_more = ref(api.has_show_more)
 const showing_more = ref(false)
 const selected = ref<SearchResult|null>(null)
 
@@ -70,7 +65,7 @@ const changeApi = async (newApi: string): Promise<void> => {
   currentApi.value = newApi
   api = apiFromString(newApi)
   tabs.value = api.tabs
-  hasShowMore.value = api.hasShowMore
+  has_show_more.value = api.has_show_more
   if (api.tabs.includes(currentTab.value)) {
     await search(lastQuery, currentTab.value)
   } else {
@@ -82,7 +77,7 @@ const changeApi = async (newApi: string): Promise<void> => {
 
 const showMore = async (tab: string): Promise<void> => {
   if (selected.value == null) return
-  results.value = await jikan.showMore(tab, selected.value)
+  results.value = await api.showMore(tab, selected.value)
   showing_more.value = true
 }
 
@@ -92,6 +87,7 @@ const goBack = async (): Promise<void> => {
 
 export default {
   apis,
+  apiNames,
   currentApi,
   changeApi,
   tabs,
@@ -100,7 +96,7 @@ export default {
   loading,
   query,
   results,
-  hasShowMore,
+  has_show_more,
   showing_more,
   selected,
   showMore,

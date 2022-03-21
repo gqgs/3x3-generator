@@ -15,7 +15,7 @@
 <script lang="ts">
 import { defineComponent } from "vue"
 import { mapState, mapActions, mapGetters } from "vuex"
-import Cell from "./components/GridCellI.vue"
+import Cell from "./components/GridCell.vue"
 import Search from "./components/SearchItem.vue"
 import Tools from "./components/ToolBar.vue"
 

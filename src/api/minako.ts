@@ -1,4 +1,5 @@
 import { SearchResult } from "../types"
+import { API } from "./api"
 
 interface APIResult {
   id: number
@@ -7,30 +8,22 @@ interface APIResult {
   name: string // for characters
 }
 
-export const tabs = ["anime", "character"]
-export const hasShowMore = false
+export default class Minako extends API<APIResult[]> {
+  readonly name = "minako"
+  readonly tabs = ["anime", "character"]
 
-let last_id = 0
-
-export const search = async (query: string, tab: string): Promise<SearchResult[]> => {
-  if (query.length < 3) {
-    return []
-  }
-  const id = ++last_id
-  const resp = await fetch(`https://api.minako.moe/${tab}/search/${encodeURI(query)}`)
-  const data = await resp.json()
-  if (last_id > id) return []
-  return (data ?? []).map((result: APIResult) => {
+  fetchURL(tab: string, query: string): { url: string } {
     return {
-      mal_id: result.id,
-      title: result.title || result.name,
-      image_url: `https://api.minako.moe/${tab}/${result.id}/image`
+      url: `https://api.minako.moe/${tab}/search/${encodeURI(query)}`
     }
-  })
-}
-
-export default {
-  tabs,
-  search,
-  hasShowMore,
+  }
+  processResult(result: APIResult[], tab: string): SearchResult[] {
+    return (result ?? []).map((result: APIResult) => {
+      return {
+        mal_id: result.id,
+        title: result.title || result.name,
+        image_url: `https://api.minako.moe/${tab}/${result.id}/image`
+      }
+    })
+  }
 }

@@ -56,12 +56,12 @@ export default defineComponent({
       }
       img.crossOrigin = "Anonymous"
       img.src = props.result.image_url
+      emit("selected", props.result)
     }
 
     const showCropper = () => {
       clicked.value = true
       cropend()
-      emit("selected", props.result)
     }
 
     return { cropper, ready, cropend, clicked, showCropper }
