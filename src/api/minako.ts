@@ -24,6 +24,6 @@ export default class Minako extends API<APIResult[]> {
         title: result.title || result.name,
         image_url: `https://api.minako.moe/${tab}/${result.id}/image`
       }
-    })
+    }).slice(0, 15)
   }
 }
