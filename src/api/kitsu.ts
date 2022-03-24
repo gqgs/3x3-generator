@@ -42,9 +42,10 @@ const params = (tab: string, query: string): string => {
 
 export default class Kitsu extends API<APIResult> {
   readonly name = "kitsu"
-  readonly tabs = ["anime", "manga", "characters"]
+  readonly tabs = ["anime", "manga", "character"]
 
   fetchURL(tab: string, query: string): { url: string } {
+    tab = this.denormalizeTab(tab)
     return {
       url: `https://kitsu.io/api/edge/${tab}?${params(tab, encodeURI(query))}`
     }
@@ -61,6 +62,6 @@ export default class Kitsu extends API<APIResult> {
   }
 }
 
-function isMediaData(data: MediaData | CharacterData): data is MediaData {
+const isMediaData = (data: MediaData | CharacterData): data is MediaData => {
   return (data as MediaData).attributes.titles !== undefined
 }

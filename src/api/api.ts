@@ -6,10 +6,14 @@ export abstract class API<APIResult> {
   readonly abstract name: string
   readonly abstract tabs: string[]
 
-  abstract fetchURL(tab: string, query: string): { url: string, options?: RequestInit }
-  abstract processResult(result: APIResult, tab: string): SearchResult[]
+  protected abstract fetchURL(tab: string, query: string): { url: string, options?: RequestInit }
+  protected abstract processResult(result: APIResult, tab: string): SearchResult[]
 
-  async search(query: string, tab: string): Promise<SearchResult[]> {
+  protected denormalizeTab(tab: string): string {
+    return tab == "character" ? "characters" : tab
+  }
+
+  public async search(query: string, tab: string): Promise<SearchResult[]> {
     if (query.length < 3) {
       return []
     }
@@ -22,7 +26,7 @@ export abstract class API<APIResult> {
   }
 
   // eslint-disable-next-line
-  async showMore(tab: string, selected: SearchResult): Promise<SearchResult[]> {
+  public async showMore(tab: string, selected: SearchResult): Promise<SearchResult[]> {
     return []
   }
 }

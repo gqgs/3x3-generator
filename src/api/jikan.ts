@@ -22,9 +22,10 @@ interface APIResult {
 export default class Jikan extends API<APIResult> {
   readonly has_show_more = true
   readonly name = "jikan"
-  readonly tabs = ["anime", "manga", "characters"]
+  readonly tabs = ["anime", "manga", "character"]
 
   fetchURL(tab: string, query: string): { url: string } {
+    tab = this.denormalizeTab(tab)
     return {
       url: `https://api.jikan.moe/v4/${tab}?limit=15&desc=desc&order_by=popularity&q=${encodeURI(query)}`
     }
@@ -39,6 +40,7 @@ export default class Jikan extends API<APIResult> {
     })
   }
   async showMore(tab: string, selected: SearchResult): Promise<SearchResult[]> {
+    tab = this.denormalizeTab(tab)
     const id = ++this.last_id
     const resp = await fetch(`https://api.jikan.moe/v4/${tab}/${selected.mal_id}/pictures`)
     const data = await resp.json()
