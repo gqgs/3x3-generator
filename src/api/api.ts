@@ -22,7 +22,25 @@ export abstract class API<APIResult> {
     const resp = await fetch(url, options)
     const data = await resp.json()
     if (this.last_id > id) return []
-    return this.processResult(data, tab)
+    const results = this.processResult(data, tab)
+    return this.filterValidResults(results)
+  }
+
+  private async filterValidResults(results: SearchResult[]): Promise<SearchResult[]> {
+    const valid_urls = new Set<string>()
+    await Promise.all(results.map(async result => {
+      try {
+        const head = await fetch(result.image_url, {
+          method: "HEAD"
+        })
+        if (head.status === 200) {
+          valid_urls.add(result.image_url)
+        }
+      } catch (e) {
+        console.warn(e)
+      }
+    }))
+    return results.filter(result => valid_urls.has(result.image_url))
   }
 
   // eslint-disable-next-line
