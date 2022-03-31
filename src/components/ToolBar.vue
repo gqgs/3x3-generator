@@ -97,9 +97,10 @@ export default defineComponent({
     // eslint-disable-next-line
     // @ts-ignore
     const isMobile = navigator?.userAgentData?.mobile || false
+    const max_workers = navigator.hardwareConcurrency
     const store = useStore()
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
-    const workers = ref<number>(JSON.parse(localStorage.getItem("workers") || (isMobile ? "1" : "4")))
+    const workers = ref<number>(JSON.parse(localStorage.getItem("workers") || (isMobile ? "1" : max_workers.toString())))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (color: string) => store.dispatch("updateColor", color)
     const denoise = ref(localStorage.getItem("denoise:v2") || "denoise1x")
@@ -187,7 +188,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    const workerList = [...Array(4).keys()].map(key => key+1)
+    const workerList = [...Array(max_workers).keys()].map(key => key+1)
 
     return {
       download,
