@@ -35,6 +35,14 @@
             {{slotProps.option}}x{{slotProps.option}}
           </template>
         </DropDown>
+        <DropDown class="column" :options="workerList" @clicked="workers = $event" title="Workers">
+          <template v-slot:selected>
+              <span >{{workers}}</span>
+          </template>
+          <template v-slot:option="slotProps">
+            {{slotProps.option}}
+          </template>
+        </DropDown>
         <div class="column">
           <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
         </div>
@@ -79,14 +87,19 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImageWithDoneCallback } from "../image"
 import DropDown from "./DropDown.vue"
+import { workerStart, workerTerminate } from "../image/worker_pool"
 
 export default defineComponent({
   components: {
     DropDown
   },
   setup () {
+    // eslint-disable-next-line
+    // @ts-ignore
+    const isMobile = navigator?.userAgentData?.mobile || false
     const store = useStore()
-    const cellSize = ref(JSON.parse(localStorage.getItem("cellSize") || "400"))
+    const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
+    const workers = ref<number>(JSON.parse(localStorage.getItem("workers") || (isMobile ? "1" : "4")))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (color: string) => store.dispatch("updateColor", color)
     const denoise = ref(localStorage.getItem("denoise:v2") || "denoise1x")
@@ -102,6 +115,10 @@ export default defineComponent({
     watch(cellSize, (cellSize) => {
       store.state.cached_source = null
       localStorage.setItem("cellSize", JSON.stringify(cellSize))
+    })
+
+    watch(workers, (workers) => {
+      localStorage.setItem("workers", JSON.stringify(workers))
     })
 
     const drawImages = async (denoiseModel: string): Promise<HTMLCanvasElement> => {
@@ -122,7 +139,10 @@ export default defineComponent({
         }
       }
       const updater = newUpdater()
-
+      const is_upscaling = cellSize.value == 400
+      if (is_upscaling) {
+        await workerStart(workers.value)
+      }
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       for (let i of Object.keys(images)) {
         upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, denoiseModel, updater))
@@ -138,6 +158,7 @@ export default defineComponent({
           }
         }
       }
+      workerTerminate()
       return canvas
     }
 
@@ -166,6 +187,8 @@ export default defineComponent({
       }, mimeType)
     }
 
+    const workerList = [...Array(4).keys()].map(key => key+1)
+
     return {
       download,
       cellSize,
@@ -174,7 +197,9 @@ export default defineComponent({
       denoise,
       updateSize,
       updateColor,
-      processing
+      processing,
+      workers,
+      workerList
     }
   },
   computed: {

@@ -5,6 +5,7 @@ const ctx: Worker = self as any
 let worker: Cugan2x | null = null
 
 onmessage = async (event: MessageEvent) => {
+  const id = event.data.id
   const bitmap = event.data.bitmap
   const denoiseModel = event.data.denoiseModel
 
@@ -13,6 +14,7 @@ onmessage = async (event: MessageEvent) => {
 
   ctx.postMessage({
     type: "done",
-    upscaled
+    upscaled,
+    id
   })
 }
