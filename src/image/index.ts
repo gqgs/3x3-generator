@@ -1,5 +1,11 @@
 import downscale from "downscale"
 
+export const scaleImageWithDoneCallback = async (image: ImageBitmap, targetSize: number, denoiseModel: string, callback: () => void): Promise<ImageBitmap> => {
+  const result = await scaleImage(image, targetSize, denoiseModel)
+  callback()
+  return result
+}
+
 export const scaleImage = async (image: ImageBitmap, targetSize: number, denoiseModel: string): Promise<ImageBitmap> => {
   const min = Math.min(image.width, image.height)
   if (min > targetSize) {
@@ -31,16 +37,14 @@ export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, ta
   })
 }
 
-const loadUpscaleWorker = (async () => {
-  const Worker = (await (import("worker-loader!./upscale.worker"))).default
-  return new Worker()
-})()
-
 const upscaleImage = async (canvas: HTMLCanvasElement, denoiseModel: string) : Promise<ImageBitmap> => {
-  const [worker, bitmap] = await Promise.all([loadUpscaleWorker as Promise<Worker>, canvas.getContext("2d")?.getImageData(0, 0, 200, 200)])
+  const Worker = (await (import("worker-loader!./upscale.worker"))).default
+  const worker = new Worker()
+  const bitmap = canvas.getContext("2d")?.getImageData(0, 0, 200, 200)
   return new Promise(resolve => {
     worker.onmessage = (event: MessageEvent) => {
       const { upscaled } = event.data
+      worker.terminate()
       resolve(upscaled)
     }
 

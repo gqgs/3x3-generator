@@ -77,7 +77,7 @@ import { ref, defineComponent, watch } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { scaleImage } from "../image"
+import { scaleImageWithDoneCallback } from "../image"
 import DropDown from "./DropDown.vue"
 
 export default defineComponent({
@@ -114,13 +114,28 @@ export default defineComponent({
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.state.color
+
+      const newUpdater = () => {
+        let i = 0
+        return () => {
+          progress.value = (++i) / Object.keys(images).length * 100
+        }
+      }
+      const updater = newUpdater()
+
+      const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
+      for (let i of Object.keys(images)) {
+        upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, denoiseModel, updater))
+      }
+      await Promise.all(Object.values(upscale_jobs))
+
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
-          if (i in images) {
-            ctx.drawImage(await scaleImage(images[i], imageSize, denoiseModel), 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+          const upscaled = upscale_jobs.get(i.toString())
+          if (upscaled) {
+            ctx.drawImage(await upscaled, 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
             ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
           }
-          progress.value = (i + 1) / (size * size) * 100
         }
       }
       return canvas
