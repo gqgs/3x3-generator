@@ -140,10 +140,7 @@ export default defineComponent({
         }
       }
       const updater = newUpdater()
-      const is_upscaling = cellSize.value == 400
-      if (is_upscaling) {
-        await workerStart(workers.value)
-      }
+      workerStart(workers.value)
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       for (let i of Object.keys(images)) {
         upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, denoiseModel, updater))

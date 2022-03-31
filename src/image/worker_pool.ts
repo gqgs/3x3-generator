@@ -5,13 +5,13 @@ interface Job {
 }
 
 class WorkerPool {
+  private created_workers = 0
+  private max_workers: number
   private jobs: Job[] = []
   private workers: Worker[] = []
-  public async start(max_workers: number) {
-    const Worker = await import("worker-loader!./upscale.worker")
-    for (let i = 0; i < max_workers; i++) {
-      this.workers.push(new Worker.default())
-    }
+
+  public constructor(max_workers: number) {
+    this.max_workers = max_workers
   }
 
   public terminate() {
@@ -19,11 +19,17 @@ class WorkerPool {
     this.workers = []
   }
 
-  public execute(job: Job) {
-    let id = 0
+  public async execute(job: Job) {
+    if (this.created_workers < this.max_workers) {
+      this.created_workers++
+      const Worker = await import("worker-loader!./upscale.worker")
+      this.workers.push(new Worker.default())
+    }
+
     const worker = this.workers.shift()
     const resolvers = new Map<number, (upscaled: ImageBitmap) => void>()
     if (worker) {
+      let id = 0
       const { bitmap, denoiseModel, resolve } = job
       resolvers.set(id, resolve)
 
@@ -56,9 +62,8 @@ class WorkerPool {
 
 let worker_pool: WorkerPool | null
 
-export const workerStart = async (max_workers: number) => {
-  worker_pool = new WorkerPool()
-  return worker_pool.start(max_workers)
+export const workerStart = (max_workers: number) => {
+  worker_pool = new WorkerPool(max_workers)
 }
 
 export const workerExecute = (job: Job) => {
@@ -67,6 +72,7 @@ export const workerExecute = (job: Job) => {
 
 export const workerTerminate = () => {
   worker_pool?.terminate()
+  worker_pool = null
 }
 
 export default {
