@@ -1,5 +1,5 @@
 import downscale from "downscale"
-import { workerExecute } from "./worker_pool"
+import { workerPool } from "./worker_pool"
 
 export const scaleImageWithDoneCallback = async (image: ImageBitmap, targetSize: number, denoiseModel: string, callback: () => void): Promise<ImageBitmap> => {
   const result = await scaleImage(image, targetSize, denoiseModel)
@@ -41,7 +41,7 @@ export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, ta
 const upscaleImage = async (canvas: HTMLCanvasElement, denoiseModel: string) : Promise<ImageBitmap> => {
   const bitmap = canvas.getContext("2d")?.getImageData(0, 0, 200, 200)
   return new Promise(resolve => {
-    workerExecute({
+    workerPool.execute({
       bitmap,
       denoiseModel,
       resolve,

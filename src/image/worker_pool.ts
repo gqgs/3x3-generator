@@ -6,12 +6,16 @@ interface Job {
 
 class WorkerPool {
   private created_workers = 0
-  private max_workers: number
+  private _max_workers = 1
   private jobs: Job[] = []
   private workers: Worker[] = []
 
-  public constructor(max_workers: number) {
-    this.max_workers = max_workers
+  public get max_workers(): number {
+    return this._max_workers
+  }
+
+  public set max_workers(workers: number) {
+    this._max_workers = workers
   }
 
   public terminate() {
@@ -60,23 +64,22 @@ class WorkerPool {
   }
 }
 
-let worker_pool: WorkerPool | null
+class WorkerManager {
+  private worker_pool = new WorkerPool()
 
-export const workerStart = (max_workers: number) => {
-  worker_pool = new WorkerPool(max_workers)
+  public update(max_workers: number) {
+    this.worker_pool.max_workers = max_workers
+  }
+  public execute(job: Job) {
+    this.worker_pool.execute(job)
+  }
+  public terminate() {
+    this.worker_pool.terminate()
+  }
 }
 
-export const workerExecute = (job: Job) => {
-  worker_pool?.execute(job)
-}
-
-export const workerTerminate = () => {
-  worker_pool?.terminate()
-  worker_pool = null
-}
+export const workerPool = new WorkerManager()
 
 export default {
-  workerStart,
-  workerTerminate,
-  workerExecute,
+  workerPool
 }

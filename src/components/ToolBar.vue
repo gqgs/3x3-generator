@@ -87,7 +87,7 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImageWithDoneCallback } from "../image"
 import DropDown from "./DropDown.vue"
-import { workerStart, workerTerminate } from "../image/worker_pool"
+import { workerPool } from "../image/worker_pool"
 
 export default defineComponent({
   components: {
@@ -133,6 +133,8 @@ export default defineComponent({
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.state.color
 
+      workerPool.update(workers.value)
+
       const newUpdater = () => {
         let i = 0
         return () => {
@@ -140,9 +142,8 @@ export default defineComponent({
         }
       }
       const updater = newUpdater()
-      workerStart(workers.value)
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
-      for (let i of Object.keys(images)) {
+      for (const i of Object.keys(images)) {
         upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, denoiseModel, updater))
       }
       await Promise.all(Object.values(upscale_jobs))
@@ -156,7 +157,7 @@ export default defineComponent({
           }
         }
       }
-      workerTerminate()
+      workerPool.terminate()
       return canvas
     }
 
