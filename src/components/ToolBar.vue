@@ -18,6 +18,14 @@
             {{slotProps.option}}
           </template>
         </DropDown>
+        <DropDown class="column" :options="workerList" @clicked="workers = $event" title="Max number of workers used when upscaling images" :disabled="cellSize == 200">
+          <template v-slot:selected>
+              <span >{{workers}}</span>
+          </template>
+          <template v-slot:option="slotProps">
+            Upscale workers: {{slotProps.option}}
+          </template>
+        </DropDown>
         <DropDown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
           <template v-slot:selected>
             <span v-if='processing'>{{progress_msg}}</span>
@@ -33,14 +41,6 @@
           </template>
           <template v-slot:option="slotProps">
             {{slotProps.option}}x{{slotProps.option}}
-          </template>
-        </DropDown>
-        <DropDown class="column" :options="workerList" @clicked="workers = $event" title="Workers">
-          <template v-slot:selected>
-              <span >{{workers}}</span>
-          </template>
-          <template v-slot:option="slotProps">
-            {{slotProps.option}}
           </template>
         </DropDown>
         <div class="column">
