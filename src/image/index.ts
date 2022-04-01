@@ -1,5 +1,7 @@
-import downscale from "downscale"
 import { workerPool } from "./worker_pool"
+import pica from "pica"
+
+const resizer = new pica()
 
 export const scaleImageWithDoneCallback = async (image: ImageBitmap, targetSize: number, denoiseModel: string, callback: () => void): Promise<ImageBitmap> => {
   const result = await scaleImage(image, targetSize, denoiseModel)
@@ -31,8 +33,11 @@ export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, ta
     canvas.getContext("2d")?.drawImage(source, 0, 0, source.width, source.height, 0, 0, source.width, source.height)
     const img = new Image()
     img.onload = async () => {
-      const downscaled = await downscale(img, targetSize, targetSize, { imageType: "png", returnCanvas: true })
-      resolve(await createImageBitmap(downscaled, 0, 0, targetSize, targetSize))
+      const result = document.createElement("canvas")
+      result.width = targetSize
+      result.height = targetSize
+      const resized = await resizer.resize(img, result)
+      resolve(await createImageBitmap(resized, 0, 0, targetSize, targetSize))
     }
     img.src = canvas.toDataURL("image/png")
   })
