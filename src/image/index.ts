@@ -26,21 +26,11 @@ export const scaleImage = async (image: ImageBitmap, targetSize: number, denoise
 }
 
 export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, targetSize: number): Promise<ImageBitmap> => {
-  return new Promise(resolve => {
-    const canvas = document.createElement("canvas")
-    canvas.width = source.width
-    canvas.height = source.height
-    canvas.getContext("2d")?.drawImage(source, 0, 0, source.width, source.height, 0, 0, source.width, source.height)
-    const img = new Image()
-    img.onload = async () => {
-      const result = document.createElement("canvas")
-      result.width = targetSize
-      result.height = targetSize
-      const resized = await resizer.resize(img, result)
-      resolve(await createImageBitmap(resized, 0, 0, targetSize, targetSize))
-    }
-    img.src = canvas.toDataURL("image/png")
-  })
+  const result = document.createElement("canvas")
+  result.width = targetSize
+  result.height = targetSize
+  const resized = await resizer.resize(source, result)
+  return createImageBitmap(resized, 0, 0, targetSize, targetSize)
 }
 
 const upscaleImage = async (canvas: HTMLCanvasElement, denoiseModel: string) : Promise<ImageBitmap> => {
