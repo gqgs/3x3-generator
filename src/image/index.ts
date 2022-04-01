@@ -18,8 +18,8 @@ export const scaleImage = async (image: ImageBitmap, targetSize: number, denoise
     const canvas = document.createElement("canvas")
     canvas.width = 200
     canvas.height = 200
-    canvas.getContext("2d")?.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height)
-    return upscaleImage(canvas, denoiseModel)
+    const resized = await resizer.resize(image, canvas)
+    return upscaleImage(resized, denoiseModel)
   }
   // min === targetSize
   return Promise.resolve(image)
