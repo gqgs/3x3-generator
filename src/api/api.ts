@@ -27,20 +27,20 @@ export abstract class API<APIResult> {
   }
 
   private async filterValidResults(results: SearchResult[]): Promise<SearchResult[]> {
-    const valid_urls = new Set<string>()
+    const valid_results = new WeakSet<SearchResult>()
     await Promise.all(results.map(async result => {
       try {
         const head = await fetch(result.image_url, {
           method: "HEAD"
         })
         if (head.status === 200) {
-          valid_urls.add(result.image_url)
+          valid_results.add(result)
         }
       } catch (e) {
         console.warn(e)
       }
     }))
-    return results.filter(result => valid_urls.has(result.image_url))
+    return results.filter(result => valid_results.has(result))
   }
 
   // eslint-disable-next-line
