@@ -21,6 +21,7 @@ class WorkerPool {
   public terminate() {
     this.workers.map(worker => worker.terminate())
     this.workers = []
+    this.created_workers = 0
   }
 
   public async execute(job: Job) {
