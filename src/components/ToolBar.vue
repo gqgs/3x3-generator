@@ -88,6 +88,7 @@ import fileDownload from "js-file-download"
 import { scaleImageWithDoneCallback } from "../image"
 import DropDown from "./DropDown.vue"
 import { UpscaleWorker } from "upscalejs"
+import type { Model as DenoiseModel } from "upscalejs"
 
 export default defineComponent({
   components: {
@@ -122,18 +123,6 @@ export default defineComponent({
       localStorage.setItem("workers", JSON.stringify(workers))
     })
 
-    const validateDenoiseModel = (model: string): "no-denoise" | "conservative" | "denoise1x" | "denoise2x" | "denoise3x" => {
-      switch (model) {
-        case "no-denoise":
-        case "conservative":
-        case "denoise1x":
-        case "denoise2x":
-        case "denoise3x":
-          return model
-      }
-      throw new Error("invalid denoise model")
-    }
-
     const drawImages = async (denoiseModel: string): Promise<HTMLCanvasElement> => {
       const imageSize = cellSize.value
       const size = store.state.size
@@ -149,7 +138,7 @@ export default defineComponent({
         base: process.env.BASE_URL,
         maxWorkers: workers.value,
         maxInternalWorkers: 1,
-        denoiseModel: validateDenoiseModel(denoiseModel)
+        denoiseModel: denoiseModel as DenoiseModel,
       })
 
       const newUpdater = () => {
