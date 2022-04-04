@@ -20,20 +20,16 @@ module.exports = {
         return [{
           patterns: [
             {
-              from: "./node_modules/onnxruntime-web/dist/ort-*.wasm",
+              from: "./node_modules/upscalejs/public/js/ort-*.wasm",
               to: "js/[name][ext]",
+            },
+            {
+              from: "./node_modules/upscalejs/public/models/*.onnx",
+              to: "models/[name][ext]",
             }
           ],
         }]
       })
-
-    config.resolve
-      .alias
-      .set("onnxruntime-web",
-        process.env.NODE_ENV === "production"
-          ? "onnxruntime-web/dist/ort.wasm.min.js"
-          : "onnxruntime-web"
-      )
 
     config.optimization.minimizer("terser").tap((args) => {
       args[0].terserOptions.output = {

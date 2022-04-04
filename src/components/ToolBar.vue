@@ -87,7 +87,7 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImageWithDoneCallback } from "../image"
 import DropDown from "./DropDown.vue"
-import { workerPool } from "../image/worker_pool"
+import { UpscaleWorker } from "upscalejs"
 
 export default defineComponent({
   components: {
@@ -122,6 +122,18 @@ export default defineComponent({
       localStorage.setItem("workers", JSON.stringify(workers))
     })
 
+    const validateDenoiseModel = (model: string): "no-denoise" | "conservative" | "denoise1x" | "denoise2x" | "denoise3x" => {
+      switch (model) {
+        case "no-denoise":
+        case "conservative":
+        case "denoise1x":
+        case "denoise2x":
+        case "denoise3x":
+          return model
+      }
+      throw new Error("invalid denoise model")
+    }
+
     const drawImages = async (denoiseModel: string): Promise<HTMLCanvasElement> => {
       const imageSize = cellSize.value
       const size = store.state.size
@@ -133,7 +145,12 @@ export default defineComponent({
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.state.color
 
-      workerPool.update(workers.value)
+      const workerPool = new UpscaleWorker({
+        base: process.env.BASE_URL,
+        maxWorkers: workers.value,
+        maxInternalWorkers: 1,
+        denoiseModel: validateDenoiseModel(denoiseModel)
+      })
 
       const newUpdater = () => {
         let i = 0
@@ -144,7 +161,7 @@ export default defineComponent({
       const updater = newUpdater()
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       for (const i of Object.keys(images)) {
-        upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, denoiseModel, updater))
+        upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, workerPool, updater))
       }
       await Promise.all(Object.values(upscale_jobs))
 

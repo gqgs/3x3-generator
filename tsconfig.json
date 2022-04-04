@@ -13,7 +13,8 @@
     "baseUrl": ".",
     "types": [
       "webpack-env",
-      "offscreencanvas"
+      "offscreencanvas",
+      "vite/client"
     ],
     "paths": {
       "@/*": [
