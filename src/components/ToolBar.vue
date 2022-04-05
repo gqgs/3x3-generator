@@ -135,7 +135,6 @@ export default defineComponent({
       ctx.strokeStyle = store.state.color
 
       const workerPool = new UpscaleWorker({
-        base: process.env.BASE_URL,
         maxWorkers: workers.value,
         maxInternalWorkers: 1,
         denoiseModel: denoiseModel as DenoiseModel,

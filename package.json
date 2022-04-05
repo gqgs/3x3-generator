@@ -14,7 +14,7 @@
     "lodash.debounce": "^4.0.8",
     "onnxruntime-web": "^1.11.0",
     "pica": "^9.0.1",
-    "upscalejs": "^0.1.3",
+    "upscalejs": "^0.2.0",
     "vue": "^3.2.31",
     "vue-cropperjs": "^5.0.0",
     "vuex": "^4.0.0-0"
