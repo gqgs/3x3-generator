@@ -2,12 +2,12 @@
     <progress v-if="processing" class="progress is-small is-primary my-4" :value="progress" max="100" />
     <div class="container is-max-desktop" id="bottom">
       <div class="columns is-gapless">
-        <DropDown class="column" :options="[200, 400]" @clicked="cellSize = $event">
+        <DropDown class="column" :options="['200', '400']" @clicked="cellSize = $event">
           <template v-slot:selected>
             <span>{{size*cellSize}}x{{size*cellSize}}</span>
           </template>
           <template v-slot:option="slotProps">
-            {{size*slotProps.option}}x{{size*slotProps.option}}
+            {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
           </template>
         </DropDown>
         <DropDown class="column" :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
@@ -35,7 +35,7 @@
             Download ({{slotProps.option}})
           </template>
         </DropDown>
-        <DropDown class="column" :options="[2, 3, 4, 5]" @clicked="updateSize($event)">
+        <DropDown class="column" :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
           <template v-slot:selected>
               <span >{{size}}x{{size}}</span>
           </template>
@@ -44,7 +44,7 @@
           </template>
         </DropDown>
         <div class="column">
-          <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event.target.value)">
+          <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event)">
         </div>
         <div class="column">
           <a href="https://github.com/gqgs/3x3-generator" target="_blank">
@@ -103,7 +103,7 @@ export default defineComponent({
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const workers = ref<number>(JSON.parse(localStorage.getItem("workers") || (isMobile ? "1" : max_workers.toString())))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
-    const updateColor = (color: string) => store.dispatch("updateColor", color)
+    const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const denoise = ref(localStorage.getItem("denoise:v2") || "denoise1x")
     const progress = ref(0)
     const progress_msg = "Creating image..."
@@ -191,7 +191,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    const workerList = [...Array(max_workers).keys()].map(key => key+1)
+    const workerList = [...Array(max_workers).keys()].map(key => (key+1).toString())
 
     return {
       download,
