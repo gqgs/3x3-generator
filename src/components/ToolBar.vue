@@ -85,7 +85,7 @@ import { ref, defineComponent, watch } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { scaleImageWithDoneCallback } from "../image"
+import { scaleImage } from "../image"
 import DropDown from "./DropDown.vue"
 import { UpscaleWorker } from "upscalejs"
 import type { Model as DenoiseModel } from "upscalejs"
@@ -140,16 +140,18 @@ export default defineComponent({
         denoiseModel: denoiseModel as DenoiseModel,
       })
 
-      const newUpdater = () => {
+      const upscaleFunc = () => {
         let i = 0
-        return () => {
+        return async (image: ImageBitmap): Promise<ImageBitmap> => {
+          const result = await scaleImage(image, imageSize, workerPool)
           progress.value = (++i) / Object.keys(images).length * 100
+          return result
         }
       }
-      const updater = newUpdater()
+      const upscale = upscaleFunc()
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       for (const i of Object.keys(images)) {
-        upscale_jobs.set(i, scaleImageWithDoneCallback(images[i], imageSize, workerPool, updater))
+        upscale_jobs.set(i, upscale(images[i]))
       }
       await Promise.all(Object.values(upscale_jobs))
 

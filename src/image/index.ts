@@ -3,12 +3,6 @@ import pica from "pica"
 
 const resizer = new pica()
 
-export const scaleImageWithDoneCallback = async (image: ImageBitmap, targetSize: number, workerPool: UpscaleWorker, callback: () => void): Promise<ImageBitmap> => {
-  const result = await scaleImage(image, targetSize, workerPool)
-  callback()
-  return result
-}
-
 export const scaleImage = async (image: ImageBitmap, targetSize: number, workerPool: UpscaleWorker): Promise<ImageBitmap> => {
   const min = Math.min(image.width, image.height)
   if (min > targetSize) {
