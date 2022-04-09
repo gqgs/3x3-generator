@@ -1,6 +1,8 @@
 import { SearchResult } from "../types"
 import { API } from "./api"
 
+// https://cryental.dev/services/anime/api/
+
 interface APIResult {
   id: number
   type: string

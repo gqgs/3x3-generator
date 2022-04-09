@@ -1,6 +1,8 @@
 import { SearchResult } from "../types"
 import { API } from "./api"
 
+// https://jikan.docs.apiary.io/
+
 interface Image {
   jpg: {
     image_url: string

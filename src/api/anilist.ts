@@ -1,6 +1,8 @@
 import { SearchResult } from "../types"
 import { API } from "./api"
 
+// https://anilist.github.io/ApiV2-GraphQL-Docs/
+
 interface APIMediaResult {
   id: number
   coverImage: {

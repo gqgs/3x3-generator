@@ -1,6 +1,8 @@
 import { SearchResult } from "../types"
 import { API } from "./api"
 
+// https://kitsu.docs.apiary.io/
+
 interface APIResult {
   data: MediaData[] | CharacterData[]
 }
