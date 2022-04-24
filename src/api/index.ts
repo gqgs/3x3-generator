@@ -42,6 +42,7 @@ const search = debounce(async (query: string, tab: string): Promise<void> => {
   loading.value = true
   showing_more.value = false
   selected.value = null
+  has_show_more.value = api.has_show_more
   results.value = await api.search(query, tab)
   loading.value = false
 }, 500)
@@ -85,6 +86,23 @@ const goBack = async (): Promise<void> => {
   await search(lastQuery, currentTab.value)
 }
 
+const handleDrop = (event: DragEvent) => {
+  const files = event.dataTransfer?.files
+  if (!files) return
+  const dropped: SearchResult[] = []
+  for (let i = 0; i < files.length; i++) {
+    const file = files.item(i) as File
+    dropped.push({
+      mal_id: Math.random(),
+      title: file.name,
+      image_url: URL.createObjectURL(file),
+    })
+  }
+  results.value = dropped
+  has_show_more.value = false
+  showing_more.value = false
+}
+
 export default {
   apis,
   apiNames,
@@ -100,5 +118,6 @@ export default {
   showing_more,
   selected,
   showMore,
-  goBack
+  goBack,
+  handleDrop
 }

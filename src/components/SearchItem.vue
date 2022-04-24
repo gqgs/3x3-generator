@@ -15,7 +15,8 @@
     </ul>
     </div>
     <div class="control">
-      <input class="input" :placeholder="'Search ' + currentTab + '...'" autocomplete="off" v-model="query" type="text" id="name" name="name">
+      <input class="input" :placeholder="'Search ' + currentTab + ' or drag and drop images here'" autocomplete="off" v-model="query"
+        type="text" id="name" name="name" @dragenter.prevent @dragover.prevent @drop.prevent="handleDrop">
     </div>
     </div>
     <progress v-if="loading" class="progress is-small is-info" />
