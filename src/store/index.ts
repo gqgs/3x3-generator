@@ -11,6 +11,7 @@ export interface State {
   size: number
   cached_source: HTMLCanvasElement | null,
   color: string
+  alpha: number
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -27,7 +28,8 @@ export default createStore<State>({
     images: {},
     size: 3,
     cached_source: null,
-    color: localStorage.getItem("color") || "#ffffff"
+    color: localStorage.getItem("color") || "#ffffff",
+    alpha: parseInt(localStorage.getItem("alpha") || "100")
   },
   mutations: {
     setShowSearch (state, showSearch) {
@@ -62,6 +64,11 @@ export default createStore<State>({
       state.cached_source = null
       state.color = color
       localStorage.setItem("color", color)
+    },
+    updateAlpha (state, alpha) {
+      state.cached_source = null
+      state.alpha = alpha
+      localStorage.setItem("alpha", alpha)
     }
   },
   actions: {
@@ -85,14 +92,20 @@ export default createStore<State>({
     },
     updateColor (context, color) {
       context.commit("updateColor", color)
+    },
+    updateAlpha (context, alpha) {
+      context.commit("updateAlpha", alpha)
     }
   },
   getters: {
     tiles (state) {
       return state.size * state.size
     },
-    comp_color (state) {
+    complementary_color (state) {
       return new Color(state.color).mix(Color("darkblue")).hex()
+    },
+    color (state) {
+      return new Color(state.color).alpha(state.alpha/100).hexa()
     }
   }
 })

@@ -44,7 +44,11 @@
           </template>
         </DropDown>
         <div class="column">
-          <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event)">
+          <button class="button is-small" @click="select_color = !select_color">Border</button>
+          <div v-if="select_color">
+            <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event)">
+            <input class="is-small" type="range" :value="alpha" @input="updateAlpha($event)" />
+          </div>
         </div>
         <div class="column">
           <a href="https://github.com/gqgs/3x3-generator" target="_blank">
@@ -104,10 +108,12 @@ export default defineComponent({
     const workers = ref<number>(JSON.parse(localStorage.getItem("workers") || (isMobile ? "1" : max_workers.toString())))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
+    const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
     const denoise = ref(localStorage.getItem("denoise:v2") || "denoise1x")
     const progress = ref(0)
     const progress_msg = "Creating image..."
     const processing = ref(false)
+    const select_color = ref(false)
 
     watch(denoise, (denoise) => {
       store.state.cached_source = null
@@ -132,7 +138,7 @@ export default defineComponent({
       canvas.height = size * imageSize
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("could not get canvas context")
-      ctx.strokeStyle = store.state.color
+      ctx.strokeStyle = store.getters.color
 
       const workerPool = new UpscaleWorker({
         maxWorkers: workers.value,
@@ -203,16 +209,19 @@ export default defineComponent({
       denoise,
       updateSize,
       updateColor,
+      updateAlpha,
       processing,
       workers,
-      workerList
+      workerList,
+      select_color
     }
   },
   computed: {
     ...mapState([
       "size",
       "images",
-      "color"
+      "color",
+      "alpha"
     ])
   }
 })

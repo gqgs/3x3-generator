@@ -6,7 +6,7 @@
   <div id="grid" class="container is-max-desktop py-5" @click="hideForm">
     <div id="columns" class="columns is-inline-flex is-multiline is-mobile">
     <Cell class="image column p-0" :class="{'selected': n === selected_id, 'is-half': tiles === 4, 'is-one-third': tiles === 9, 'is-one-quarter': tiles === 16, 'is-one-fifth': tiles === 25}"
-      v-for="n in tiles" :key="n" :id="n" :style="{ borderColor: n === selected_id ? comp_color : color }" />
+      v-for="n in tiles" :key="n" :id="n" :style="{'box-shadow': '0px 0px 0px 1px ' + (n === selected_id ? complementary_color : color) }" />
     </div>
   </div>
   <Tools />
@@ -29,12 +29,12 @@ export default defineComponent({
   computed: {
     ...mapState([
       "show_search",
-      "selected_id",
-      "color"
+      "selected_id"
     ]),
     ...mapGetters([
       "tiles",
-      "comp_color"
+      "complementary_color",
+      "color"
     ])
   },
   methods: {
@@ -81,8 +81,6 @@ html {
 }
 
 .image {
-  border-style: solid;
-  border-width: 1px;
   aspect-ratio: 1 / 1;
   overflow: hidden;
 }
