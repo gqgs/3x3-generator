@@ -3,14 +3,14 @@
     <div class="tabs is-small">
     <ul>
       <li v-for="api in apiNames" :key=api :class="{'is-active': currentApi === api}">
-        <a class="is-capitalized" href="#" @click.prevent="changeApi(api)">{{api}}</a>
+        <a class="first-capitalized" href="#" @click.prevent="changeApi(api)">{{api}}</a>
       </li>
     </ul>
     </div>
     <div class="tabs is-small">
     <ul>
       <li v-for="tab in tabs" :key=tab :class="{'is-active': currentTab === tab}">
-        <a class="is-capitalized" href="#" @click.prevent="changeTab(tab)">{{tab}}</a>
+        <a class="first-capitalized" href="#" @click.prevent="changeTab(tab)">{{tab}}</a>
       </li>
     </ul>
     </div>
@@ -68,5 +68,12 @@ img.result {
   cursor: pointer;
   display: block;
   max-width: 100%;
+}
+
+a.first-capitalized {
+  display: block;
+}
+a.first-capitalized:first-letter {
+  text-transform: uppercase;
 }
 </style>

@@ -5,9 +5,10 @@ import Kitsu from "./kitsu"
 import Minako from "./minako"
 import Anilist from "./anilist"
 import Jikan from "./jikan"
+import LastFM from "./lastfm"
 import { API } from "./api"
 
-const apis = [new Kitsu(), new Jikan(), new Anilist(), new Minako()]
+const apis = [new Kitsu(), new Jikan(), new Anilist(), new Minako(), new LastFM()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
@@ -30,7 +31,7 @@ let lastQuery = ""
 const apiNames = apis.map(api => api.name)
 const currentApi = ref(storage_api)
 const query = ref("")
-const currentTab = ref("anime")
+const currentTab = ref(api.tabs[0])
 const loading = ref(false)
 const results = ref<SearchResult[]>([])
 const tabs = ref(api.tabs)
