@@ -29,7 +29,7 @@ export default createStore<State>({
     size: 3,
     cached_source: null,
     color: localStorage.getItem("color") || "#ffffff",
-    alpha: parseInt(localStorage.getItem("alpha") || "100")
+    alpha: parseInt(localStorage.getItem("alpha") || "50")
   },
   mutations: {
     setShowSearch (state, showSearch) {
