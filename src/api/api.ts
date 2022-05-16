@@ -30,7 +30,8 @@ export abstract class API<APIResult> {
     const valid_results = new WeakSet<SearchResult>()
     await Promise.all(results.map(async result => {
       try {
-        const head = await fetch(result.image_url, {
+        const url = new URL(result.image_url)
+        const head = await fetch(url.toString(), {
           method: "HEAD"
         })
         if (head.status === 200) {
