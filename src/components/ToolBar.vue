@@ -29,7 +29,7 @@
         <DropDown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
           <template v-slot:selected>
             <span v-if='processing'>{{progress_msg}}</span>
-            <span v-else>Download image</span>
+            <span v-else>Download</span>
           </template>
           <template v-slot:option="slotProps">
             Download ({{slotProps.option}})
@@ -61,7 +61,7 @@
 
 <style scoped>
 #bottom {
-  max-width: 560px;
+  max-width: 550px;
 }
 
 #color {
