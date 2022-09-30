@@ -10,7 +10,7 @@
             {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
           </template>
         </DropDown>
-        <DropDown class="column" :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
+        <DropDown class="column" :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x', 'pro-no-denoise', 'pro-conservative', 'pro-denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
           <template v-slot:selected>
             <span>{{denoise}}</span>
           </template>
@@ -91,7 +91,7 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImage } from "../image"
 import DropDown from "./DropDown.vue"
-import { UpscaleWorker } from "upscalejs"
+import { Upscaler } from "upscalejs"
 import type { Model as DenoiseModel } from "upscalejs"
 
 export default defineComponent({
@@ -140,7 +140,7 @@ export default defineComponent({
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.getters.color
 
-      const workerPool = new UpscaleWorker({
+      const workerPool = new Upscaler({
         maxWorkers: workers.value,
         maxInternalWorkers: 1,
         denoiseModel: denoiseModel as DenoiseModel,

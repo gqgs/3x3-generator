@@ -13,7 +13,7 @@
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
     "pica": "^9.0.1",
-    "upscalejs": "^0.2.0",
+    "upscalejs": "^1.1.0",
     "vue": "^3.2.31",
     "vue-cropperjs": "^5.0.0",
     "vuex": "^4.0.0-0"

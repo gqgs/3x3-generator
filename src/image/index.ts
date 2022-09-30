@@ -1,9 +1,9 @@
-import { UpscaleWorker } from "upscalejs"
+import { Upscaler } from "upscalejs"
 import pica from "pica"
 
 const resizer = new pica()
 
-export const scaleImage = async (image: ImageBitmap, targetSize: number, workerPool: UpscaleWorker): Promise<ImageBitmap> => {
+export const scaleImage = async (image: ImageBitmap, targetSize: number, workerPool: Upscaler): Promise<ImageBitmap> => {
   const min = Math.min(image.width, image.height)
   if (min > targetSize) {
     return downscaleImage(image, targetSize)
@@ -27,8 +27,8 @@ export const downscaleImage = async (source: HTMLCanvasElement | ImageBitmap, ta
   return createImageBitmap(resized, 0, 0, targetSize, targetSize)
 }
 
-const upscaleImage = async (canvas: HTMLCanvasElement, workerPool: UpscaleWorker) : Promise<ImageBitmap> => {
-  return workerPool.upscale(await createImageBitmap(canvas))
+const upscaleImage = async (canvas: HTMLCanvasElement, workerPool: Upscaler) : Promise<ImageBitmap> => {
+  return createImageBitmap(await workerPool.upscale(await createImageBitmap(canvas)))
 }
 
 export default {
