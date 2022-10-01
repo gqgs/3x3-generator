@@ -1,5 +1,6 @@
 import { SearchResult } from "../types"
 import { API } from "./api"
+import { proxyImage } from "../proxy"
 
 // https://kitsu.docs.apiary.io/
 
@@ -57,8 +58,7 @@ export default class Kitsu extends API<APIResult> {
       return {
         mal_id: result.id,
         title: isMediaData(result) ? result.attributes.titles.en_jp : result.attributes.names.en,
-        image_url: (isMediaData(result) ? (result.attributes.posterImage.original || result.attributes.posterImage.large) : result.attributes?.image?.original ?? "")
-          .replace("https://", "https://cdn.statically.io/img/")
+        image_url: proxyImage((isMediaData(result) ? (result.attributes.posterImage.original || result.attributes.posterImage.large) : result.attributes?.image?.original ?? ""))
       }
     }).filter(result => result.image_url.length > 0)
   }

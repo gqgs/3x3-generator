@@ -1,5 +1,6 @@
 import { SearchResult } from "../types"
 import { API } from "./api"
+import { proxyImage } from "../proxy"
 
 // https://anilist.github.io/ApiV2-GraphQL-Docs/
 
@@ -106,8 +107,7 @@ const parseCharacters = (characters?: APICharacterResult[]): SearchResult[] => {
     return {
       mal_id: result.id,
       title: result.name.full,
-      image_url: result.image.large
-        .replace("https://", "https://cdn.statically.io/img/")
+      image_url: proxyImage(result.image.large)
     }
   })
 }
@@ -118,8 +118,7 @@ const parseMedia = (media?: APIMediaResult[]): SearchResult[] => {
     return {
       mal_id: result.id,
       title: result.title.romaji,
-      image_url: result.coverImage.extraLarge
-        .replace("https://", "https://cdn.statically.io/img/")
+      image_url: proxyImage(result.coverImage.extraLarge)
     }
   })
 }
