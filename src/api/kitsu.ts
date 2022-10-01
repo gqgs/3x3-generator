@@ -58,7 +58,7 @@ export default class Kitsu extends API<APIResult> {
         mal_id: result.id,
         title: isMediaData(result) ? result.attributes.titles.en_jp : result.attributes.names.en,
         image_url: (isMediaData(result) ? (result.attributes.posterImage.original || result.attributes.posterImage.large) : result.attributes?.image?.original ?? "")
-          .replace("https://", "https://a7c6b1b687e3f2ffe841.ucr.io/https://")
+          .replace("https://", "https://cdn.statically.io/img/")
       }
     }).filter(result => result.image_url.length > 0)
   }

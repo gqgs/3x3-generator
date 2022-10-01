@@ -107,7 +107,7 @@ const parseCharacters = (characters?: APICharacterResult[]): SearchResult[] => {
       mal_id: result.id,
       title: result.name.full,
       image_url: result.image.large
-        .replace("https://", "https://a7c6b1b687e3f2ffe841.ucr.io/https://")
+        .replace("https://", "https://cdn.statically.io/img/")
     }
   })
 }
@@ -119,7 +119,7 @@ const parseMedia = (media?: APIMediaResult[]): SearchResult[] => {
       mal_id: result.id,
       title: result.title.romaji,
       image_url: result.coverImage.extraLarge
-        .replace("https://", "https://a7c6b1b687e3f2ffe841.ucr.io/https://")
+        .replace("https://", "https://cdn.statically.io/img/")
     }
   })
 }
