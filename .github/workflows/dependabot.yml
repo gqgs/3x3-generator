@@ -20,3 +20,13 @@ jobs:
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Buid
+        run: npm run build
+      - name: Deploy
+        run: |
+          git init
+          git add -A
+          git commit -m "deploy"
+          git push -f git@github.com:gqgs/3x3-generator.git master:gh-pages
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
