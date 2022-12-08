@@ -20,11 +20,15 @@ jobs:
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Buid
         run: npm run build
       - name: Deploy
         run: |
           git init
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add -A
           git commit -m "deploy"
           git push -f git@github.com:gqgs/3x3-generator.git master:gh-pages
