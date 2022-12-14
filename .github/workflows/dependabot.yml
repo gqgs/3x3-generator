@@ -34,6 +34,8 @@ jobs:
           git config user.email github-actions@github.com
           git add -A
           git commit -m "deploy"
-          git push -f git@github.com:gqgs/3x3-generator.git master:gh-pages
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
