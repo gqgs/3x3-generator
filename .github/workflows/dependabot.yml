@@ -28,7 +28,7 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
-      - name: Deploy
+      - name: Commit
         run: |
           cd dist
           git init
@@ -36,7 +36,7 @@ jobs:
           git config user.email github-actions@github.com
           git add -A
           git commit -m "deploy"
-      - name: Push changes
+      - name: Deploy
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
