@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "color": "^4.2.1",
-    "core-js": "^3.26.1",
+    "core-js": "^3.27.0",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
     "pica": "^9.0.1",
