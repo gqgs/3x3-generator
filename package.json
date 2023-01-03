@@ -26,7 +26,7 @@
     "@types/tracking": "^1.1.29",
     "@types/vue-cropperjs": "^4.1.1",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
-    "@typescript-eslint/parser": "^5.47.1",
+    "@typescript-eslint/parser": "^5.48.0",
     "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-plugin-eslint": "^5.0.8",
     "@vue/cli-plugin-typescript": "^5.0.8",
