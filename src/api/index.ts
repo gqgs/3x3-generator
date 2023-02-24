@@ -68,13 +68,10 @@ const changeApi = async (newApi: string): Promise<void> => {
   api = apiFromString(newApi)
   tabs.value = api.tabs
   has_show_more.value = api.has_show_more
-  if (api.tabs.includes(currentTab.value)) {
-    await search(lastQuery, currentTab.value)
-  } else {
-    selected.value = null
-    showing_more.value = false
-    results.value = []
+  if (!api.tabs.includes(currentTab.value)) {
+    currentTab.value = api.tabs[0]
   }
+  await search(lastQuery, currentTab.value)
 }
 
 const showMore = async (tab: string): Promise<void> => {
