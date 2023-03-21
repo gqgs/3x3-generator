@@ -42,7 +42,7 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-vue": "^8.4.1",
     "typescript": "^5.0.2",
-    "vite": "^4.2.0",
+    "vite": "^4.2.1",
     "webpack": "^5.76.2",
     "worker-loader": "^3.0.8"
   }
