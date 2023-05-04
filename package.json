@@ -43,7 +43,7 @@
     "eslint-plugin-vue": "^8.4.1",
     "typescript": "^5.0.4",
     "vite": "^4.3.4",
-    "webpack": "^5.81.0",
+    "webpack": "^5.82.0",
     "worker-loader": "^3.0.8"
   }
 }
