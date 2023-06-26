@@ -43,7 +43,7 @@ export default defineComponent({
         const ctx = canvas.getContext("2d")
         ctx?.drawImage(img, x, y, width, height, 0, 0, width, height)
         const imageSize = 200
-        const downscaled = await downscaleImage(canvas, imageSize)
+        const downscaled = await downscaleImage(await createImageBitmap(canvas), imageSize)
         const downscale_canvas = document.createElement("canvas")
         downscale_canvas.width = downscaled.width
         downscale_canvas.height = downscaled.height
