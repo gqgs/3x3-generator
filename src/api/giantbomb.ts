@@ -24,7 +24,7 @@ export default class GiantBomb extends API<APIResult> {
 
   fetchURL(tab: string, query: string): { url: string } {
     return {
-      url: proxyImage(`https://www.giantbomb.com/api/search/?api_key=${api_key}&resources=${tab}&query=${encodeURI(query)}&format=json`)
+      url: proxyImage(`https://www.giantbomb.com/api/search/?api_key=${api_key}&resources=${tab}&query=${encodeURI(query)}&format=json&field_list=id,name,image`)
     }
   }
   processResult(result: APIResult): SearchResult[] {
