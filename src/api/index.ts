@@ -5,9 +5,10 @@ import Kitsu from "./kitsu"
 import Anilist from "./anilist"
 import Jikan from "./jikan"
 import LastFM from "./lastfm"
+import GiantBomb from "./giantbomb"
 import { API } from "./api"
 
-const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM()]
+const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new GiantBomb()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
