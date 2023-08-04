@@ -5,6 +5,7 @@ export interface Update {
 }
 
 export interface SearchResult {
+  guid?: string
   mal_id: number
   title: string
   image_url: string

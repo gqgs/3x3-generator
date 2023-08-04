@@ -44,8 +44,7 @@ export abstract class API<APIResult> {
     return results.filter(result => valid_results.has(result))
   }
 
-  // eslint-disable-next-line
-  public async showMore(tab: string, selected: SearchResult): Promise<SearchResult[]> {
+  public async showMore({} : { tab: string, selected: SearchResult }): Promise<SearchResult[]> {
     return []
   }
 }

@@ -41,7 +41,7 @@ export default class Jikan extends API<APIResult> {
       }
     })
   }
-  async showMore(tab: string, selected: SearchResult): Promise<SearchResult[]> {
+  async showMore({ tab, selected } : { tab: string, selected: SearchResult }): Promise<SearchResult[]> {
     tab = this.denormalizeTab(tab)
     const id = ++this.last_id
     const resp = await fetch(`https://api.jikan.moe/v4/${tab}/${selected.mal_id}/pictures`)

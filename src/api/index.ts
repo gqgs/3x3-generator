@@ -78,7 +78,7 @@ const changeApi = async (newApi: string): Promise<void> => {
 
 const showMore = async (tab: string): Promise<void> => {
   if (selected.value == null) return
-  results.value = await api.showMore(tab, selected.value)
+  results.value = await api.showMore({ tab, selected: selected.value })
   showing_more.value = true
 }
 
