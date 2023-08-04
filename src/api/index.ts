@@ -2,13 +2,12 @@ import { watch, ref } from "vue"
 import { SearchResult } from "../types"
 import debounce from "lodash.debounce"
 import Kitsu from "./kitsu"
-import Minako from "./minako"
 import Anilist from "./anilist"
 import Jikan from "./jikan"
 import LastFM from "./lastfm"
 import { API } from "./api"
 
-const apis = [new Kitsu(), new Jikan(), new Anilist(), new Minako(), new LastFM()]
+const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
@@ -24,12 +23,14 @@ const apiFromString = (name: string): API<unknown> => {
 }
 
 const storage_api = localStorage.getItem("api") || "anilist"
+const api_exists = apis.some(api => {return api.name == storage_api })
+const used_api = api_exists ? storage_api : apis[0].name
 
-let api: API<unknown> = apiFromString(storage_api)
+let api: API<unknown> = apiFromString(used_api)
 let lastQuery = ""
 
 const apiNames = apis.map(api => api.name)
-const currentApi = ref(storage_api)
+const currentApi = ref(used_api)
 const query = ref("")
 const currentTab = ref(api.tabs[0])
 const loading = ref(false)
