@@ -26,11 +26,14 @@ export abstract class API<APIResult> {
     return this.filterValidResults(results)
   }
 
-  private async filterValidResults(results: SearchResult[]): Promise<SearchResult[]> {
+  protected async filterValidResults(results: SearchResult[]): Promise<SearchResult[]> {
     const valid_results = new WeakSet<SearchResult>()
+    const image_set = new Set()
     await Promise.all(results.map(async result => {
       try {
         const url = new URL(result.image_url)
+        if (image_set.has(result.image_url)) return
+        image_set.add(result.image_url)
         const head = await fetch(url.toString(), {
           method: "HEAD"
         })
@@ -43,8 +46,21 @@ export abstract class API<APIResult> {
     }))
     return results.filter(result => valid_results.has(result))
   }
+}
 
-  public async showMore({} : { tab: string, selected: SearchResult }): Promise<SearchResult[]> {
-    return []
+export abstract class APIWithShowMore<APIResult, APIShowMoreResult> extends API<APIResult> {
+  readonly has_show_more = true
+
+  protected abstract showMoreURL({} : { tab?: string, selected: SearchResult }): { url: string }
+  protected abstract processShowMoreResult({} : { result: APIShowMoreResult, selected: SearchResult }) : SearchResult[]
+
+  public async showMore({ tab, selected } : { tab: string, selected: SearchResult}): Promise<SearchResult[]> {
+    const id = ++this.last_id
+    const { url } = this.showMoreURL({ tab, selected })
+    const resp = await fetch(url)
+    const result = await resp.json()
+    if (this.last_id > id) return []
+    const results = this.processShowMoreResult({ result, selected })
+    return this.filterValidResults(results)
   }
 }

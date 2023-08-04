@@ -1,5 +1,5 @@
 import { SearchResult } from "../types"
-import { API } from "./api"
+import { APIWithShowMore } from "./api"
 import { proxyImage } from "../proxy"
 
 // https://www.giantbomb.com/api/documentation/
@@ -21,8 +21,11 @@ interface Image {
   original_url: string
 }
 
-export default class GiantBomb extends API<APIResult> {
-  readonly has_show_more = true
+interface APIShowMoreResult {
+  results: Image[]
+}
+
+export default class GiantBomb extends APIWithShowMore<APIResult, APIShowMoreResult> {
   readonly name = "giantbomb"
   readonly tabs = ["game", "character"]
 
@@ -31,6 +34,7 @@ export default class GiantBomb extends API<APIResult> {
       url: proxyImage(`https://www.giantbomb.com/api/search/?api_key=${api_key}&resources=${tab}&query=${encodeURI(query)}&format=json&field_list=id,name,image,guid`)
     }
   }
+
   processResult(result: APIResult): SearchResult[] {
     return (result?.results ?? []).map((result: Result) => {
       return {
@@ -41,22 +45,20 @@ export default class GiantBomb extends API<APIResult> {
       }
     })
   }
-  async showMore({ selected } : { selected: SearchResult}): Promise<SearchResult[]> {
-    const id = ++this.last_id
-    const resp = await fetch(proxyImage(`https://www.giantbomb.com/api/images/${selected.guid}/?api_key=${api_key}&format=json&limit=30`))
-    const result = await resp.json()
-    if (this.last_id > id) return []
-    const image_set = new Set()
-    const fetch_result: SearchResult[] = (result.results ?? []).map((image: Image) => {
+
+  showMoreURL({ selected } : { selected: SearchResult } ) : { url: string } {
+    return {
+      url: proxyImage(`https://www.giantbomb.com/api/images/${selected.guid}/?api_key=${api_key}&format=json&limit=30`)
+    }
+  }
+
+  processShowMoreResult({ result, selected } : { result: APIShowMoreResult, selected: SearchResult }) : SearchResult[] {
+    return (result?.results ?? []).map((image: Image) => {
       return {
+        mal_id: Math.random(),
         title: selected.title,
         image_url: proxyImage(image.original_url)
       }
-    }).filter((result: SearchResult) => {
-      const is_duplicated = image_set.has(result.image_url)
-      image_set.add(result.image_url)
-      return !is_duplicated
     })
-    return fetch_result
   }
 }

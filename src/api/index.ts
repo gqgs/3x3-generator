@@ -6,7 +6,7 @@ import Anilist from "./anilist"
 import Jikan from "./jikan"
 import LastFM from "./lastfm"
 import GiantBomb from "./giantbomb"
-import { API } from "./api"
+import { API, APIWithShowMore } from "./api"
 
 const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new GiantBomb()]
 const apisMap = new Map<string, API<unknown>>()
@@ -78,7 +78,7 @@ const changeApi = async (newApi: string): Promise<void> => {
 
 const showMore = async (tab: string): Promise<void> => {
   if (selected.value == null) return
-  results.value = await api.showMore({ tab, selected: selected.value })
+  results.value = await (api as APIWithShowMore<unknown, unknown>).showMore({ tab, selected: selected.value })
   showing_more.value = true
 }
 

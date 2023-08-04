@@ -1,5 +1,5 @@
 import { SearchResult } from "../types"
-import { API } from "./api"
+import { APIWithShowMore } from "./api"
 
 // https://jikan.docs.apiary.io/
 
@@ -21,8 +21,11 @@ interface APIResult {
   data: Data[]
 }
 
-export default class Jikan extends API<APIResult> {
-  readonly has_show_more = true
+interface APIShowMoreResult {
+  data: Image[]
+}
+
+export default class Jikan extends APIWithShowMore<APIResult, APIShowMoreResult> {
   readonly name = "jikan"
   readonly tabs = ["anime", "manga", "character"]
 
@@ -41,23 +44,20 @@ export default class Jikan extends API<APIResult> {
       }
     })
   }
-  async showMore({ tab, selected } : { tab: string, selected: SearchResult }): Promise<SearchResult[]> {
+  showMoreURL({ tab, selected } : { tab: string, selected: SearchResult }): { url: string } {
     tab = this.denormalizeTab(tab)
-    const id = ++this.last_id
-    const resp = await fetch(`https://api.jikan.moe/v4/${tab}/${selected.mal_id}/pictures`)
-    const data = await resp.json()
-    if (this.last_id > id) return []
-    const image_set = new Set()
-    const fetch_result: SearchResult[] = (data.data ?? []).map((image: Image) => {
+    return {
+      url: `https://api.jikan.moe/v4/${tab}/${selected.mal_id}/pictures`
+    }
+  }
+
+  processShowMoreResult({ result, selected } : { result: APIShowMoreResult, selected: SearchResult }) : SearchResult[] {
+    return (result?.data ?? []).map((image: Image) => {
       return {
+        mal_id: Math.random(),
         title: selected.title,
         image_url: image.jpg.large_image_url || image.jpg.image_url
       }
-    }).filter((result: SearchResult) => {
-      const is_duplicated = image_set.has(result.image_url)
-      image_set.add(result.image_url)
-      return !is_duplicated
     })
-    return fetch_result
   }
 }
