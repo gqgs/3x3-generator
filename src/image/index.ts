@@ -14,7 +14,7 @@ const resizeBitmap = async (bitmap: ImageBitmap, targetSize: number): Promise<Bl
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const image = await Jimp.read(imageData);
 
-  image.resize(targetSize, targetSize);
+  image.resize(parseInt(`${targetSize}`), parseInt(`${targetSize}`));
   const resizedBuffer = await image.getBufferAsync(Jimp.MIME_PNG);
 
   return new Blob([resizedBuffer], {type: Jimp.MIME_PNG});
