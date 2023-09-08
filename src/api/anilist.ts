@@ -39,7 +39,7 @@ export default class Anilist extends API<APIResult> {
 
   fetchURL(tab: string, query: string): { url: string, options: RequestInit } {
     const variables = {
-      search: encodeURI(query),
+      search: query,
       page: 1,
       type: tab.toUpperCase(),
       perPage: 15

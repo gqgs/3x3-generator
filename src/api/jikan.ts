@@ -32,7 +32,7 @@ export default class Jikan extends APIWithShowMore<APIResult, APIShowMoreResult>
   fetchURL(tab: string, query: string): { url: string } {
     tab = this.denormalizeTab(tab)
     return {
-      url: `https://api.jikan.moe/v4/${tab}?limit=15&desc=desc&order_by=popularity&q=${encodeURI(query)}`
+      url: `https://api.jikan.moe/v4/${tab}?limit=15&sort=desc&order_by=favorites&q=${encodeURI(query)}`
     }
   }
   processResult(result: APIResult): SearchResult[] {
