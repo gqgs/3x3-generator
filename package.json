@@ -24,7 +24,7 @@
     "@types/offscreencanvas": "^2019.6.4",
     "@types/pica": "^9.0.1",
     "@types/tracking": "^1.1.29",
-    "@types/vue-cropperjs": "^4.1.1",
+    "@types/vue-cropperjs": "^4.1.3",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
     "@vue/cli-plugin-babel": "^5.0.8",
