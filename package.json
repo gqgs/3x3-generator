@@ -21,7 +21,7 @@
   "devDependencies": {
     "@types/color": "^3.0.3",
     "@types/lodash.debounce": "^4.0.6",
-    "@types/offscreencanvas": "^2019.6.4",
+    "@types/offscreencanvas": "^2019.7.1",
     "@types/pica": "^9.0.1",
     "@types/tracking": "^1.1.29",
     "@types/vue-cropperjs": "^4.1.1",
