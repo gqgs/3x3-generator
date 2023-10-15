@@ -1,5 +1,4 @@
 <template>
-  <div id="background"></div>
   <transition name="fade">
   <div v-if="show_search"><Search /></div>
   </transition>
@@ -53,17 +52,6 @@ export default defineComponent({
 <style>
 html {
   background: rgb(0, 0, 0, 5%);
-}
-
-#background {
-  background-image: url("./assets/nyanpasu.webp");
-  width: 582px;
-  height: 958px;
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  opacity: 0.04;
-  z-index: -1;
 }
 
 #app {
