@@ -19,7 +19,7 @@
     "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@types/color": "^3.0.4",
+    "@types/color": "^3.0.6",
     "@types/lodash.debounce": "^4.0.8",
     "@types/offscreencanvas": "^2019.7.2",
     "@types/pica": "^9.0.3",
