@@ -36,7 +36,7 @@ export default class GiantBomb extends APIWithShowMore<APIResult, APIShowMoreRes
   }
 
   processResult(result: APIResult): SearchResult[] {
-    return (result?.results ?? []).map((result: Result) => {
+    return (result?.results ?? []).filter(result => result.image.original_url.length).map((result: Result) => {
       return {
         guid: result.guid,
         mal_id: result.id,
@@ -53,7 +53,7 @@ export default class GiantBomb extends APIWithShowMore<APIResult, APIShowMoreRes
   }
 
   processShowMoreResult({ result, selected } : { result: APIShowMoreResult, selected: SearchResult }) : SearchResult[] {
-    return (result?.results ?? []).map((image: Image) => {
+    return (result?.results ?? []).filter(result => result.original_url.length).map((image: Image) => {
       return {
         mal_id: Math.random(),
         title: selected.title,

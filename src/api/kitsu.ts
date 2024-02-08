@@ -58,9 +58,15 @@ export default class Kitsu extends API<APIResult> {
       return {
         mal_id: result.id,
         title: isMediaData(result) ? result.attributes.titles.en_jp : result.attributes.names.en,
-        image_url: proxyImage((isMediaData(result) ? (result.attributes.posterImage.original || result.attributes.posterImage.large) : result.attributes?.image?.original ?? ""))
+        image_url: (isMediaData(result) ? (result.attributes.posterImage.original || result.attributes.posterImage.large) : result.attributes?.image?.original ?? "")
       }
-    }).filter(result => result.image_url.length > 0)
+    }).filter(result => result.image_url.length)
+      .map(result => {
+        return  {
+          ...result,
+          image_url: proxyImage(result.image_url)
+        }
+      })
   }
 }
 

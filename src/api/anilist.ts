@@ -103,7 +103,7 @@ const queries: { [key: string]: string } = {
 
 const parseCharacters = (characters?: APICharacterResult[]): SearchResult[] => {
   if (!characters) return []
-  return characters.map(result => {
+  return characters.filter(result => result.image.large.length).map(result => {
     return {
       mal_id: result.id,
       title: result.name.full,
@@ -114,7 +114,7 @@ const parseCharacters = (characters?: APICharacterResult[]): SearchResult[] => {
 
 const parseMedia = (media?: APIMediaResult[]): SearchResult[] => {
   if (!media) return []
-  return media.map(result => {
+  return media.filter(result => result.coverImage.extraLarge.length).map(result => {
     return {
       mal_id: result.id,
       title: result.title.romaji,
