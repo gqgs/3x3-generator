@@ -10,7 +10,7 @@
   "dependencies": {
     "color": "^4.2.1",
     "core-js": "^3.36.0",
-    "jimp": "^0.22.10",
+    "jimp": "^0.22.12",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
     "upscalejs": "^1.1.0",
