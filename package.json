@@ -39,7 +39,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-promise": "^6.2.0",
     "eslint-plugin-vue": "^8.4.1",
     "typescript": "^5.4.5",
     "vite": "^5.2.12",
