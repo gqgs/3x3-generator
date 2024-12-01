@@ -1,7 +1,7 @@
 import { Upscaler } from "upscalejs"
-import "jimp"
-// eslint-disable-next-line
-const { Jimp } = window as any
+import { Jimp } from "jimp";
+
+const MIME_PNG = "image/png"
 
 const resizeBitmap = async (bitmap: ImageBitmap, targetSize: number): Promise<Blob> => {
   const canvas = document.createElement("canvas")
@@ -12,12 +12,14 @@ const resizeBitmap = async (bitmap: ImageBitmap, targetSize: number): Promise<Bl
 
   ctx.drawImage(bitmap, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const image = await Jimp.read(imageData);
+  const image = await Jimp.fromBitmap(imageData);
 
-  image.resize(parseInt(`${targetSize}`), parseInt(`${targetSize}`));
-  const resizedBuffer = await image.getBufferAsync(Jimp.MIME_PNG);
+  const target = parseInt(`${targetSize}`)
+  const resized = await image
+  .resize({w: target, h: target})
+  .getBuffer(MIME_PNG)
 
-  return new Blob([resizedBuffer], {type: Jimp.MIME_PNG});
+  return new Blob([resized], {type: MIME_PNG});
 }
 
 export const scaleImage = async (bitmap: ImageBitmap, targetSize: number, workerPool: Upscaler): Promise<ImageBitmap> => {
