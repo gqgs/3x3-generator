@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "color": "^4.2.1",
-    "core-js": "^3.39.0",
+    "core-js": "^3.40.0",
     "jimp": "^1.6.0",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
@@ -22,7 +22,7 @@
     "@types/color": "^4.2.0",
     "@types/lodash.debounce": "^4.0.9",
     "@types/offscreencanvas": "^2019.7.3",
-    "@types/pica": "^9.0.4",
+    "@types/pica": "^9.0.5",
     "@types/tracking": "^1.1.33",
     "@types/vue-cropperjs": "^4.1.6",
     "@vue/cli-plugin-babel": "^5.0.8",
@@ -32,8 +32,8 @@
     "@vue/compiler-sfc": "^3.4.27",
     "@vue/tsconfig": "^0.7.0",
     "copy-webpack-plugin": "^12.0.2",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.6",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11",
     "webpack": "^5.97.1",
     "worker-loader": "^3.0.8"
   }
