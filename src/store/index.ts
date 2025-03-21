@@ -7,11 +7,17 @@ export interface State {
   show_search: boolean
   selected_id: number
   updater: (update: Update) => void
-  images: { [key: string]: ImageBitmap }
+  images: { 
+    [key: string]: { 
+      bitmap: ImageBitmap,
+      url: string 
+    } 
+  }
   size: number
   cached_source: HTMLCanvasElement | null,
   color: string
   alpha: number
+  draggedImage: { id: number, bitmap: ImageBitmap } | null
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -29,9 +35,34 @@ export default createStore<State>({
     size: 3,
     cached_source: null,
     color: localStorage.getItem("color") || "#ffffff",
-    alpha: parseInt(localStorage.getItem("alpha") || "50")
+    alpha: parseInt(localStorage.getItem("alpha") || "50"),
+    draggedImage: null
   },
   mutations: {
+    setDraggedImage(state, { id, bitmap }) {
+      state.draggedImage = { id, bitmap };
+    },
+    clearDraggedImage(state) {
+      state.draggedImage = null;
+    },
+    moveImage(state, { fromId, toId }) {
+      if (state.images[fromId]) {
+        const fromImage = state.images[fromId];
+        const toImage = state.images[toId];
+        
+        // If destination has an image, swap them
+        if (toImage) {
+          state.images[fromId] = toImage;
+          state.images[toId] = fromImage;
+        } else {
+          // Otherwise just move the image
+          state.images[toId] = fromImage;
+          delete state.images[fromId];
+        }
+        
+        state.cached_source = null;
+      }
+    },
     setShowSearch (state, showSearch) {
       state.show_search = showSearch
     },
@@ -48,7 +79,7 @@ export default createStore<State>({
     updateSize (state, size) {
       state.cached_source = null
       // remove outdated images
-      const images: { [key: string]: ImageBitmap } = {}
+      const images: { [key: string]: { bitmap: ImageBitmap, url: string } } = {}
       Object.keys(state.images).forEach(id => {
         if (parseInt(id) <= size * size) {
           images[id] = state.images[id]
@@ -57,8 +88,11 @@ export default createStore<State>({
       state.images = images
       state.size = size
     },
-    updateImages (state, { id, bitmap }) {
-      state.images[id] = bitmap
+    updateImages(state, { id, bitmap, image }) {
+      state.images[id] = {
+        bitmap,
+        url: image
+      };
     },
     updateColor (state, color) {
       state.cached_source = null
@@ -69,7 +103,7 @@ export default createStore<State>({
       state.cached_source = null
       state.alpha = alpha
       localStorage.setItem("alpha", alpha)
-    }
+    },
   },
   actions: {
     showSearch (context, { id, updater }) {
