@@ -156,8 +156,12 @@ export default defineComponent({
       }
       const upscale = upscaleFunc()
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
+      
+      // Use the bitmap from the new state structure
       for (const i of Object.keys(images)) {
-        upscale_jobs.set(i, upscale(images[i]))
+        if (images[i]?.bitmap) {
+          upscale_jobs.set(i, upscale(images[i].bitmap))
+        }
       }
       await Promise.all(Object.values(upscale_jobs))
 
