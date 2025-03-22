@@ -1,6 +1,11 @@
 <template>
-<a href="#" @click.prevent="showSearch">
-  <img v-if="image" :src="image" :title="title" />
+<a href="#" 
+   @click.prevent="showSearch"
+   draggable="true"
+   @dragstart="onDragStart"
+   @dragover.prevent
+   @drop="onDrop">
+  <img v-if="currentImage" :src="currentImage" :title="title" />
   <span v-else class="icon-img icon is-medium">
     <ion-icon class="is-size-1" name="images-outline" />
   </span>
@@ -14,7 +19,7 @@ span.icon-img {
 </style>
 
 <script lang="ts">
-import { ref, defineComponent } from "vue"
+import { ref, computed, defineComponent } from "vue"
 import { useStore } from "../store"
 import { Update } from "../types"
 
@@ -27,18 +32,44 @@ export default defineComponent({
   },
   setup (props) {
     const store = useStore()
-    const image = ref("")
     const title = ref("")
+    
+    const currentImage = computed(() => {
+      const img = store.state.images[props.id]
+      return img ? img.url : ""
+    })
 
     const update = (update: Update) => {
       title.value = update.title
-      image.value = update.image
-      store.dispatch("updateImages", { id: props.id, image: update.image, bitmap: update.bitmap })
+      store.dispatch("updateImages", { 
+        id: props.id, 
+        image: update.image, 
+        bitmap: update.bitmap 
+      })
     }
 
     const showSearch = () => store.dispatch("showSearch", { id: props.id, updater: update })
 
-    return { image, title, showSearch }
+    const onDragStart = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        event.dataTransfer.setData('text/plain', props.id.toString());
+      }
+    }
+
+    const onDrop = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        const fromId = event.dataTransfer.getData('text/plain');
+        store.commit('moveImage', { fromId, toId: props.id });
+      }
+    }
+
+    return { 
+      currentImage, 
+      title, 
+      showSearch,
+      onDragStart,
+      onDrop
+    }
   }
 })
 </script>
