@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "color": "^5.0.2",
-    "core-js": "^3.45.1",
+    "core-js": "^3.46.0",
     "jimp": "^1.6.0",
     "js-file-download": "^0.4.12",
     "lodash.debounce": "^4.0.8",
@@ -33,8 +33,8 @@
     "@vue/tsconfig": "^0.8.1",
     "copy-webpack-plugin": "^13.0.1",
     "typescript": "^5.9.3",
-    "vite": "^7.1.7",
-    "webpack": "^5.102.0",
+    "vite": "^7.1.12",
+    "webpack": "^5.102.1",
     "worker-loader": "^3.0.8"
   }
 }
