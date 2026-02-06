@@ -6,9 +6,10 @@ import Anilist from "./anilist"
 import Jikan from "./jikan"
 import LastFM from "./lastfm"
 import VNDB from "./vndb"
+import RAWG from "./rawg"
 import { API, APIWithShowMore } from "./api"
 
-const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new VNDB()]
+const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new RAWG(), new VNDB()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
