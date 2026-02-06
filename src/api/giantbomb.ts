@@ -26,7 +26,7 @@ interface APIShowMoreResult {
 }
 
 export default class GiantBomb extends APIWithShowMore<APIResult, APIShowMoreResult> {
-  readonly name = "giantbomb"
+  readonly name = "GiantBomb"
   readonly tabs = ["game", "character"]
 
   fetchURL(tab: string, query: string): { url: string } {

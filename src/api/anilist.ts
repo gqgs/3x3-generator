@@ -34,7 +34,7 @@ interface APIResult {
 }
 
 export default class Anilist extends API<APIResult> {
-  readonly name = "anilist"
+  readonly name = "Anilist"
   readonly tabs = ["anime", "manga", "character"]
 
   fetchURL(tab: string, query: string): { url: string, options: RequestInit } {

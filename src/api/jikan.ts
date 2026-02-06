@@ -26,7 +26,7 @@ interface APIShowMoreResult {
 }
 
 export default class Jikan extends APIWithShowMore<APIResult, APIShowMoreResult> {
-  readonly name = "jikan"
+  readonly name = "Jikan"
   readonly tabs = ["anime", "manga", "character"]
 
   fetchURL(tab: string, query: string): { url: string } {

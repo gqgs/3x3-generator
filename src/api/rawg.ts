@@ -14,7 +14,7 @@ interface APIResults {
 }
 
 export default class RAWG extends API<APIResults> {
-  readonly name = "rawg"
+  readonly name = "RAWG"
   readonly tabs = ["game"]
 
   fetchURL(tab: string, query: string): { url: string } {

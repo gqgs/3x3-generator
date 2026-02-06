@@ -24,7 +24,7 @@ const apiFromString = (name: string): API<unknown> => {
   return api
 }
 
-const storage_api = localStorage.getItem("api") || "anilist"
+const storage_api = localStorage.getItem("api") || "Anilist"
 const api_exists = apis.some(api => {return api.name == storage_api })
 const used_api = api_exists ? storage_api : apis[0].name
 

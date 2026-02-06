@@ -3,7 +3,7 @@
     <div class="tabs is-small">
     <ul>
       <li v-for="api in apiNames" :key=api :class="{'is-active': currentApi === api}">
-        <a class="first-capitalized" href="#" @click.prevent="changeApi(api)">{{api}}</a>
+        <a href="#" @click.prevent="changeApi(api)">{{api}}</a>
       </li>
     </ul>
     </div>
@@ -68,6 +68,10 @@ img.result {
   cursor: pointer;
   display: block;
   max-width: 100%;
+}
+
+a.capitalized {
+  text-transform: uppercase;
 }
 
 a.first-capitalized {

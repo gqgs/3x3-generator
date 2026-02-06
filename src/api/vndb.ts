@@ -18,7 +18,7 @@ interface APIResult {
 }
 
 export default class VNDB extends API<APIResults> {
-  readonly name = "vndb"
+  readonly name = "VNDB"
   readonly tabs = ["vn", "character"]
 
   fetchURL(tab: string, query: string): { url: string, options: RequestInit } {

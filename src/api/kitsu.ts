@@ -44,7 +44,7 @@ const params = (tab: string, query: string): string => {
 }
 
 export default class Kitsu extends API<APIResult> {
-  readonly name = "kitsu"
+  readonly name = "Kitsu"
   readonly tabs = ["anime", "manga", "character"]
 
   fetchURL(tab: string, query: string): { url: string } {

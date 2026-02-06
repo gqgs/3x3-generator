@@ -11,7 +11,7 @@ interface APIResult {
 }
 
 export default class Minako extends API<APIResult[]> {
-  readonly name = "minako"
+  readonly name = "Minako"
   readonly tabs = ["anime", "character"]
 
   fetchURL(tab: string, query: string): { url: string } {
