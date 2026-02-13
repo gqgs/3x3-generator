@@ -21,7 +21,7 @@ interface Image {
 }
 
 export default class LastFM extends API<APIResult> {
-  readonly name = "Last.FM"
+  readonly name = "Last.fm"
   readonly tabs = ["albums"]
 
   fetchURL(tab: string, query: string): { url: string } {

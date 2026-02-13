@@ -9,8 +9,8 @@
     </div>
     <div class="tabs is-small">
     <ul>
-      <li v-for="tab in tabs" :key=tab :class="{'is-active': currentTab === tab}">
-        <a class="first-capitalized" href="#" @click.prevent="changeTab(tab)">{{tab}}</a>
+      <li v-for="tab in tabs" :key=tab.value :class="{'is-active': currentTab === tab.value}">
+        <a class="tabs" href="#" @click.prevent="changeTab(tab.value)">{{tab.label}}</a>
       </li>
     </ul>
     </div>
@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
+import { defineComponent, computed } from "vue"
 import Cropper from "./ImgCropper.vue"
 import Api from "../api"
 
@@ -38,7 +38,20 @@ export default defineComponent({
     Cropper
   },
   setup () {
-    return { ...Api }
+    const capitalize = (str: string): string => {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    const tabs = computed(() => {
+      const tabs = Api.tabs.value.map(tab => {
+        return {
+          value: tab,
+          label: tab == "vn" ? "VN" : capitalize(tab)
+        }
+      })
+      return tabs
+    })
+    return { ...Api, tabs, capitalize }
   }
 })
 </script>
@@ -74,10 +87,7 @@ a.capitalized {
   text-transform: uppercase;
 }
 
-a.first-capitalized {
+a.tabs {
   display: block;
-}
-a.first-capitalized:first-letter {
-  text-transform: uppercase;
 }
 </style>
