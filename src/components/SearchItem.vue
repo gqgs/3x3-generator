@@ -43,15 +43,14 @@ export default defineComponent({
     }
 
     const tabs = computed(() => {
-      const tabs = Api.tabs.value.map(tab => {
+      return Api.tabs.value.map(tab => {
         return {
           value: tab,
           label: tab == "vn" ? "VN" : capitalize(tab)
         }
       })
-      return tabs
     })
-    return { ...Api, tabs, capitalize }
+    return { ...Api, tabs }
   }
 })
 </script>
