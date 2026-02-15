@@ -27,24 +27,7 @@ export abstract class API<APIResult> {
   }
 
   protected async filterValidResults(results: SearchResult[]): Promise<SearchResult[]> {
-    const valid_results = new WeakSet<SearchResult>()
-    const image_set = new Set()
-    await Promise.all(results.map(async result => {
-      try {
-        const url = new URL(result.image_url)
-        if (image_set.has(result.image_url)) return
-        image_set.add(result.image_url)
-        const head = await fetch(url.toString(), {
-          method: "HEAD"
-        })
-        if (head.status === 200) {
-          valid_results.add(result)
-        }
-      } catch (e) {
-        console.warn(e)
-      }
-    }))
-    return results.filter(result => valid_results.has(result))
+    return results.filter(result => { return result.image_url.length > 0 })
   }
 }
 
