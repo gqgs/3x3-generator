@@ -9,7 +9,7 @@ interface APIResults {
 }
 
 interface APIResult {
-    image: {
+    image?: {
         url: string
     },
     title: string,
@@ -71,11 +71,13 @@ export default class VNDB extends API<APIResults> {
   }
 
   processResult(result: APIResults, tab: string): SearchResult[] {
-    return (result.results ?? []).map((result: APIResult) => {
+    return (result.results ?? []).filter((result: APIResult) => {
+      return result.image != undefined
+    }).map((result: APIResult) => {
       return {
         mal_id: Math.random(),
         title: result.title || result.name,
-        image_url: proxyImage(result.image.url)
+        image_url: proxyImage(result?.image?.url as string)
       }
     }).slice(0, 15)
   }
