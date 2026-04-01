@@ -1,14 +1,38 @@
 <template>
   <transition name="fade">
-  <div v-if="show_search"><Search /></div>
+    <div
+      v-if="show_search"
+      class="fixed inset-0 z-30 flex items-start justify-center bg-slate-950/40 px-4 py-6 backdrop-blur-sm sm:py-10"
+      @click.self="hideSearch"
+    >
+      <Search />
+    </div>
   </transition>
-  <div id="grid" class="container is-max-desktop py-5" @click="hideForm">
-    <div id="columns" class="columns is-inline-flex is-multiline is-mobile">
-    <Cell class="image column p-0" :class="{'selected': n === selected_id, 'is-half': tiles === 4, 'is-one-third': tiles === 9, 'is-one-quarter': tiles === 16, 'is-one-fifth': tiles === 25}"
-      v-for="n in tiles" :key="n" :id="n" :style="{'box-shadow': '0px 0px 0px 1px ' + (n === selected_id ? complementary_color : color) }" />
+  <main class="min-h-screen px-4 pb-32 pt-6 sm:px-6 lg:px-8" @click="hideForm">
+    <section class="mx-auto flex max-w-6xl flex-col items-center">
+      <div class="w-full max-w-4xl rounded-[2rem] border border-white/70 bg-white/75 p-4 shadow-[0_30px_80px_rgba(15,23,42,0.16)] ring-1 ring-slate-200/80 backdrop-blur">
+        <div
+          id="grid"
+          class="mx-auto grid w-full max-w-3xl gap-0 overflow-hidden rounded-[1.5rem] bg-slate-200/70 shadow-inner"
+          :style="gridStyle"
+        >
+          <Cell
+            v-for="n in tiles"
+            :id="n"
+            :key="n"
+            class="image"
+            :class="{ selected: n === selected_id }"
+            :style="{ boxShadow: '0px 0px 0px 1px ' + (n === selected_id ? complementary_color : color) }"
+          />
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-3 pb-3 sm:px-6 sm:pb-6">
+    <div class="pointer-events-auto mx-auto max-w-6xl">
+      <Tools />
     </div>
   </div>
-  <Tools />
 </template>
 
 <script lang="ts">
@@ -28,13 +52,19 @@ export default defineComponent({
   computed: {
     ...mapState([
       "show_search",
-      "selected_id"
+      "selected_id",
+      "size"
     ]),
     ...mapGetters([
       "tiles",
       "complementary_color",
       "color"
-    ])
+    ]),
+    gridStyle () {
+      return {
+        gridTemplateColumns: `repeat(${this.size}, minmax(0, 1fr))`
+      }
+    }
   },
   methods: {
     ...mapActions([
@@ -50,22 +80,9 @@ export default defineComponent({
 </script>
 
 <style>
-html {
-  background: rgb(0, 0, 0, 5%);
-}
-
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-#columns {
-  width: 100%;
-  max-width: 600px;
 }
 
 .image {
@@ -74,20 +91,21 @@ html {
 }
 
 .selected {
-  border-width: 5px;
-  border-style: dotted;
-  border-radius: 5px;
+  border-radius: 1rem;
+  outline: 4px dotted rgb(37 99 235 / 0.85);
+  outline-offset: -4px;
 }
 
 .fade-enter-active {
-  transition: all .4s ease;
+  transition: all .25s ease;
 }
 
 .fade-leave-active {
-  transition: all .1s ease;
+  transition: all .12s ease;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>

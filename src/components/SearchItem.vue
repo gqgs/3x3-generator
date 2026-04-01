@@ -1,31 +1,59 @@
 <template>
-    <div class="field" id="search">
-    <div class="tabs is-small">
-    <ul>
-      <li v-for="api in apiNames" :key=api :class="{'is-active': currentApi === api}">
-        <a href="#" @click.prevent="changeApi(api)">{{api}}</a>
-      </li>
-    </ul>
+  <div id="search" class="w-full h-full max-w-4xl rounded-[2rem] border border-white/60 bg-white/90 p-4 shadow-[0_30px_80px_rgba(15,23,42,0.24)] ring-1 ring-slate-200/80 backdrop-blur sm:p-6">
+    <div class="flex flex-wrap gap-2">
+      <a
+        v-for="api in apiNames"
+        :key="api"
+        href="#"
+        class="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] transition"
+        :class="currentApi === api ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'"
+        @click.prevent="changeApi(api)"
+      >{{ api }}</a>
     </div>
-    <div class="tabs is-small">
-    <ul>
-      <li v-for="tab in tabs" :key=tab.value :class="{'is-active': currentTab === tab.value}">
-        <a class="tabs" href="#" @click.prevent="changeTab(tab.value)">{{tab.label}}</a>
-      </li>
-    </ul>
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a
+        v-for="tab in tabs"
+        :key="tab.value"
+        href="#"
+        class="rounded-full px-4 py-2 text-sm font-medium transition"
+        :class="currentTab === tab.value ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'"
+        @click.prevent="changeTab(tab.value)"
+      >{{ tab.label }}</a>
     </div>
-    <div class="control">
-      <input class="input" :placeholder="'Search ' + currentTab + ' or drag and drop images here'" autocomplete="off" v-model="query"
-        type="text" id="name" name="name" @dragenter.prevent @dragover.prevent @drop.prevent="handleDrop">
+    <div class="mt-5 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50/80 p-3 shadow-inner sm:p-4">
+      <input
+        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+        :placeholder="'Search ' + currentTab + ' or drag and drop images here'"
+        autocomplete="off"
+        v-model="query"
+        type="text"
+        id="name"
+        name="name"
+        @dragenter.prevent
+        @dragover.prevent
+        @drop.prevent="handleDrop"
+      >
     </div>
+    <div v-if="loading" class="mt-4 overflow-hidden rounded-full bg-slate-200">
+      <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
     </div>
-    <progress v-if="loading" class="progress is-small is-info" />
-    <div id="results" v-else-if="results.length">
-      <Cropper @selected='selected = result' v-for="result in results" :key="result.mal_id" :result='result' />
+    <div v-else-if="results.length" id="results" class="mt-5 flex gap-4 overflow-x-auto pb-2">
+      <Cropper @selected="selected = result" v-for="result in results" :key="result.mal_id" :result="result" />
     </div>
-    <a v-show='showing_more' href="#" @click.prevent="goBack"><ion-icon size="large" name="arrow-undo-outline"></ion-icon></a>
-    <span v-if='!has_show_more && selected'>{{selected.title}}</span>
-    <a v-else-if='!showing_more && selected' href="#" @click.prevent="showMore(currentTab)">Show more of <b>{{selected.title}}</b></a>
+    <div class="mt-4 flex min-h-8 items-center justify-center gap-3 text-sm text-slate-600">
+      <a v-show="showing_more" href="#" class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 hover:bg-slate-200" @click.prevent="goBack">
+        <ion-icon name="arrow-undo-outline"></ion-icon>
+        <span>Back</span>
+      </a>
+      <span v-if="!has_show_more && selected" class="truncate">{{ selected.title }}</span>
+      <a
+        v-else-if="!showing_more && selected"
+        href="#"
+        class="rounded-full bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700"
+        @click.prevent="showMore(currentTab)"
+      >Show more of {{ selected.title }}</a>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -39,7 +67,7 @@ export default defineComponent({
   },
   setup () {
     const capitalize = (str: string): string => {
-      return str.charAt(0).toUpperCase() + str.slice(1);
+      return str.charAt(0).toUpperCase() + str.slice(1)
     }
 
     const tabs = computed(() => {
@@ -56,37 +84,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-div#search {
-    width: 400px;
-    margin: 10px auto;
-}
-
-div#results {
-  height: 220px;
-  overflow-x: auto;
-  display: flex;
-  max-width: 80%;
-  margin: 10px auto;
-}
-
-@media (max-width: 600px) {
-  div#results {
-    padding-bottom: 1.5rem
-  }
-}
-
-img.result {
-  padding: 1px;
-  cursor: pointer;
-  display: block;
-  max-width: 100%;
-}
-
-a.capitalized {
-  text-transform: uppercase;
-}
-
-a.tabs {
-  display: block;
+#results {
+  scrollbar-width: thin;
 }
 </style>

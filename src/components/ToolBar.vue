@@ -1,91 +1,99 @@
 <template>
-    <progress v-if="processing" class="progress is-small is-primary my-4" :value="progress" max="100" />
-    <div class="container is-max-desktop" id="bottom">
-      <div class="columns is-gapless">
-        <DropDown class="column" :options="['200', '400']" @clicked="cellSize = $event">
-          <template v-slot:selected>
-            <span>{{size*cellSize}}x{{size*cellSize}}</span>
-          </template>
-          <template v-slot:option="slotProps">
-            {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
-          </template>
-        </DropDown>
-        <DropDown class="column" :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x', 'pro-no-denoise', 'pro-conservative', 'pro-denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
-          <template v-slot:selected>
-            <span>{{denoise}}</span>
-          </template>
-          <template v-slot:option="slotProps">
-            {{slotProps.option}}
-          </template>
-        </DropDown>
-        <DropDown class="column" :options="workerList" @clicked="workers = $event" title="Max number of workers used when upscaling images" :disabled="cellSize == 200">
-          <template v-slot:selected>
-              <span >{{workers}}</span>
-          </template>
-          <template v-slot:option="slotProps">
-            Upscale workers: {{slotProps.option}}
-          </template>
-        </DropDown>
-        <DropDown class="column" :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
-          <template v-slot:selected>
-            <span v-if='processing'>{{progress_msg}}</span>
-            <span v-else>Download</span>
-          </template>
-          <template v-slot:option="slotProps">
-            Download ({{slotProps.option}})
-          </template>
-        </DropDown>
-        <DropDown class="column" :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
-          <template v-slot:selected>
-              <span >{{size}}x{{size}}</span>
-          </template>
-          <template v-slot:option="slotProps">
-            {{slotProps.option}}x{{slotProps.option}}
-          </template>
-        </DropDown>
-        <div class="column">
-          <button class="button is-small" @click="select_color = !select_color">Border</button>
-          <div v-if="select_color">
-            <input class="button is-small" type="color" id="color" :value="color" @input="updateColor($event)">
-            <input class="is-small" type="range" :value="alpha" @input="updateAlpha($event)" />
+  <div class="rounded-[2rem] border border-white/70 bg-slate-900/90 p-3 text-white shadow-[0_24px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl" @click.stop>
+    <div v-if="processing" class="mb-3 overflow-hidden rounded-full bg-white/15">
+      <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
+    </div>
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto]">
+      <DropDown :options="['200', '400']" @clicked="cellSize = $event">
+        <template v-slot:selected>
+          <span>{{size*cellSize}}x{{size*cellSize}}</span>
+        </template>
+        <template v-slot:option="slotProps">
+          {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
+        </template>
+      </DropDown>
+      <DropDown :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
+        <template v-slot:selected>
+          <span v-if='processing'>{{progress_msg}}</span>
+          <span v-else>Download</span>
+        </template>
+        <template v-slot:option="slotProps">
+          Download ({{slotProps.option}})
+        </template>
+      </DropDown>
+      <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
+        <template v-slot:selected>
+            <span >{{size}}x{{size}}</span>
+        </template>
+        <template v-slot:option="slotProps">
+          {{slotProps.option}}x{{slotProps.option}}
+        </template>
+      </DropDown>
+      <div class="relative">
+        <button
+          type="button"
+          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-left text-sm font-medium text-white hover:bg-white/15 xl:min-w-[150px]"
+          @click.stop="advancedOpen = !advancedOpen"
+        >
+          <span>Advanced</span>
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-slate-200">
+            <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </span>
+        </button>
+        <div
+          v-if="advancedOpen"
+          class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/10 bg-slate-950/95 p-4 shadow-[0_20px_50px_rgba(2,6,23,0.5)] backdrop-blur-xl"
+          @click.stop
+        >
+          <div class="space-y-4">
+            <div>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Upscaling</p>
+              <div class="grid gap-3">
+                <DropDown :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x', 'pro-no-denoise', 'pro-conservative', 'pro-denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
+                  <template v-slot:selected>
+                    <span>{{denoise}}</span>
+                  </template>
+                  <template v-slot:option="slotProps">
+                    {{slotProps.option}}
+                  </template>
+                </DropDown>
+                <DropDown :options="workerList" @clicked="workers = $event" title="Max number of workers used when upscaling images" :disabled="cellSize == 200">
+                  <template v-slot:selected>
+                    <span>{{workers}} workers</span>
+                  </template>
+                  <template v-slot:option="slotProps">
+                    Upscale workers: {{slotProps.option}}
+                  </template>
+                </DropDown>
+              </div>
+            </div>
+            <div>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Border</p>
+              <button class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-left text-sm font-medium text-white hover:bg-white/15" @click="select_color = !select_color">Border Appearance</button>
+              <div v-if="select_color" class="mt-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <input class="h-11 w-14 cursor-pointer rounded-xl border border-white/15 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
+                <input class="w-full accent-sky-300" type="range" :value="alpha" @input="updateAlpha($event)" />
+              </div>
+            </div>
           </div>
         </div>
-        <div class="column">
-          <a href="https://github.com/gqgs/3x3-generator" target="_blank">
-          <ion-icon class="pt-3" id="github" name="logo-octocat"></ion-icon>
-          </a>
-        </div>
+      </div>
+      <div class="flex items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/6 p-2 xl:min-w-[72px]">
+        <a
+          href="https://github.com/gqgs/3x3-generator"
+          target="_blank"
+          aria-label="Open GitHub repository"
+          class="inline-flex h-11 w-11 items-center justify-center rounded-full text-xl text-slate-100 hover:bg-white/10"
+        >
+          <ion-icon id="github" name="logo-octocat"></ion-icon>
+        </a>
       </div>
     </div>
+  </div>
 </template>
 
-<style scoped>
-#bottom {
-  max-width: 550px;
-}
-
-#color {
-  width: 100%
-}
-
-.column {
-  padding: 10px 2px;
-}
-
-@media (max-width: 768px) {
-  #color {
-    width: 150px;
-  }
-
-  .column {
-    padding: 5px;
-  }
-}
-
-</style>
-
 <script lang="ts">
-import { ref, defineComponent, watch } from "vue"
+import { ref, defineComponent, watch, onMounted, onBeforeUnmount } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
@@ -114,6 +122,13 @@ export default defineComponent({
     const progress_msg = "Creating image..."
     const processing = ref(false)
     const select_color = ref(false)
+    const advancedOpen = ref(false)
+    const handleWindowClick = () => {
+      advancedOpen.value = false
+    }
+
+    onMounted(() => window.addEventListener("click", handleWindowClick))
+    onBeforeUnmount(() => window.removeEventListener("click", handleWindowClick))
 
     watch(denoise, (denoise) => {
       store.state.cached_source = null
@@ -156,8 +171,7 @@ export default defineComponent({
       }
       const upscale = upscaleFunc()
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
-      
-      // Use the bitmap from the new state structure
+
       for (const i of Object.keys(images)) {
         if (images[i]?.bitmap) {
           upscale_jobs.set(i, upscale(images[i].bitmap))
@@ -203,7 +217,7 @@ export default defineComponent({
       }, mimeType)
     }
 
-    const workerList = [...Array(max_workers).keys()].map(key => (key+1).toString())
+    const workerList = [...Array(max_workers).keys()].map(key => (key + 1).toString())
 
     return {
       download,
@@ -217,7 +231,8 @@ export default defineComponent({
       processing,
       workers,
       workerList,
-      select_color
+      select_color,
+      advancedOpen
     }
   },
   computed: {

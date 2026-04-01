@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Avenir Next", "Montserrat", "Segoe UI", sans-serif;
+  --color-ink-950: #07111f;
+  --color-ink-900: #0f1b2d;
+  --color-ink-800: #16263b;
+  --color-mist-50: #f7fafc;
+  --color-mist-100: #eef4f8;
+  --color-mist-200: #dbe7f0;
+  --color-mist-300: #c7d7e5;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-peach-300: #fdba74;
+}
+
+@layer base {
+  :root {
+    color: var(--color-ink-950);
+    background:
+      radial-gradient(circle at top, rgb(96 165 250 / 0.18), transparent 30%),
+      linear-gradient(180deg, #f7fafc 0%, #eef4f8 52%, #dbe7f0 100%);
+  }
+
+  html {
+    min-height: 100%;
+    background: transparent;
+  }
+
+  body {
+    min-height: 100vh;
+    background: transparent;
+  }
+
+  body,
+  button,
+  input {
+    font-family: var(--font-sans);
+  }
+
+  button,
+  a,
+  input {
+    @apply transition duration-200;
+  }
+}
