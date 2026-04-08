@@ -1,5 +1,6 @@
 import { SearchResult } from "../types"
 import { APIWithShowMore } from "./api"
+import { proxyImage } from "@/proxy"
 
 // https://jikan.docs.apiary.io/
 
@@ -40,7 +41,7 @@ export default class Jikan extends APIWithShowMore<APIResult, APIShowMoreResult>
       return {
         mal_id: result.mal_id,
         title: result.title || result.name,
-        image_url: result.images.jpg.large_image_url || result.images.jpg.image_url
+        image_url: proxyImage(result.images.jpg.large_image_url || result.images.jpg.image_url)
       }
     })
   }
@@ -56,7 +57,7 @@ export default class Jikan extends APIWithShowMore<APIResult, APIShowMoreResult>
       return {
         mal_id: Math.random(),
         title: selected.title,
-        image_url: image.jpg.large_image_url || image.jpg.image_url
+        image_url: proxyImage(image.jpg.large_image_url || image.jpg.image_url)
       }
     })
   }
