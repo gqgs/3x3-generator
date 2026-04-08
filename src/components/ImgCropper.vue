@@ -48,9 +48,6 @@
         <div v-if="sourceLoading" class="overflow-hidden rounded-full bg-slate-200">
           <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
         </div>
-        <div v-if="needsProxyNotice" class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-700">
-          This image is being routed through the app image proxy so cropping can work with stricter third-party hosts.
-        </div>
         <div v-if="processing" class="overflow-hidden rounded-full bg-slate-200">
           <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
         </div>
@@ -120,14 +117,7 @@ export default defineComponent({
     })
 
     const cropperSrc = computed(() => {
-      if (isLocalImage(props.result.image_url) || isAlreadyProxied(props.result.image_url)) {
-        return props.result.image_url
-      }
-      try {
-        return proxyImage(props.result.image_url)
-      } catch {
-        return props.result.image_url
-      }
+      return props.result.image_url
     })
 
     const thumbnailSrc = computed(() => cropperSrc.value)
@@ -236,8 +226,7 @@ export default defineComponent({
       errorMessage,
       cropperSrc,
       thumbnailSrc,
-      resolvedCropperSrc,
-      needsProxyNotice
+      resolvedCropperSrc
     }
   }
 })
