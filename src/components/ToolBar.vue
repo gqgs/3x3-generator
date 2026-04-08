@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-[2rem] border border-white/70 bg-slate-900/90 p-3 text-white shadow-[0_24px_60px_rgba(15,23,42,0.35)] backdrop-blur-xl" @click.stop>
-    <div v-if="processing" class="mb-3 overflow-hidden rounded-full bg-white/15">
+  <div class="rounded-[2rem] border border-white/75 bg-white/78 p-3 text-slate-700 shadow-[0_24px_70px_rgba(148,163,184,0.32)] ring-1 ring-slate-200/70 backdrop-blur-xl" @click.stop>
+    <div v-if="processing" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto]">
@@ -32,22 +32,22 @@
       <div class="relative">
         <button
           type="button"
-          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-left text-sm font-medium text-white hover:bg-white/15 xl:min-w-[150px]"
+          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90 xl:min-w-[150px]"
           @click.stop="advancedOpen = !advancedOpen"
         >
           <span>Advanced</span>
-          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-slate-200">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
             <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </span>
         </button>
         <div
           v-if="advancedOpen"
-          class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/10 bg-slate-950/95 p-4 shadow-[0_20px_50px_rgba(2,6,23,0.5)] backdrop-blur-xl"
+          class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/75 bg-white/92 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
           @click.stop
         >
           <div class="space-y-4">
             <div>
-              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Upscaling</p>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Upscaling</p>
               <div class="grid gap-3">
                 <DropDown :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x', 'pro-no-denoise', 'pro-conservative', 'pro-denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
                   <template v-slot:selected>
@@ -68,22 +68,22 @@
               </div>
             </div>
             <div>
-              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Border</p>
-              <button class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-left text-sm font-medium text-white hover:bg-white/15" @click="select_color = !select_color">Border Appearance</button>
-              <div v-if="select_color" class="mt-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
-                <input class="h-11 w-14 cursor-pointer rounded-xl border border-white/15 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
-                <input class="w-full accent-sky-300" type="range" :value="alpha" @input="updateAlpha($event)" />
+              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Border</p>
+              <button class="w-full rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90" @click="select_color = !select_color">Border Appearance</button>
+              <div v-if="select_color" class="mt-3 flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3">
+                <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
+                <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="flex items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/6 p-2 xl:min-w-[72px]">
+      <div class="flex items-center justify-center rounded-2xl border border-white/70 bg-slate-100/70 p-2 xl:min-w-[72px]">
         <a
           href="https://github.com/gqgs/3x3-generator"
           target="_blank"
           aria-label="Open GitHub repository"
-          class="inline-flex h-11 w-11 items-center justify-center rounded-full text-xl text-slate-100 hover:bg-white/10"
+          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-xl text-slate-600 shadow-sm hover:bg-white"
         >
           <ion-icon id="github" name="logo-octocat"></ion-icon>
         </a>
