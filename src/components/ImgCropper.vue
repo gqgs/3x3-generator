@@ -80,8 +80,6 @@ import { ref, onUnmounted, defineComponent, PropType, computed } from "vue"
 import { useStore } from "../store"
 import VueCropper, { VueCropperMethods } from "vue-cropperjs"
 import { SearchResult } from "../types"
-import { downscaleImage } from "../image"
-import { proxyImage } from "../proxy"
 
 export default defineComponent({
   components: {
@@ -192,14 +190,9 @@ export default defineComponent({
 
       try {
         const originalBitmap = await createImageBitmap(cropCanvas)
-        const downscaled = await downscaleImage(originalBitmap, 200)
-        const downscaleCanvas = document.createElement("canvas")
-        downscaleCanvas.width = downscaled.width
-        downscaleCanvas.height = downscaled.height
-        downscaleCanvas.getContext("bitmaprenderer")?.transferFromImageBitmap(downscaled)
 
         store.dispatch("updateCell", {
-          image: downscaleCanvas.toDataURL("image/png"),
+          image: cropCanvas.toDataURL("image/png"),
           title: props.result.title,
           bitmap: originalBitmap
         })
