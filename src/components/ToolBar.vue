@@ -1,6 +1,6 @@
 <template>
   <div class="rounded-[2rem] border border-white/75 bg-white/78 p-3 text-slate-700 shadow-[0_24px_70px_rgba(148,163,184,0.32)] ring-1 ring-slate-200/70 backdrop-blur-xl" @click.stop>
-    <div v-if="processing" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
+    <div v-if="downloading" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
     <div class="grid gap-3 md:grid-cols-5 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto_auto]">
@@ -44,7 +44,7 @@
       </DropDown>
       <DropDown :options="downloadFormats" @clicked="download($event)">
         <template v-slot:selected>
-          <span v-if='processing'>{{progress_msg}}</span>
+          <span v-if='downloading'>{{progress_msg}}</span>
           <span v-else class="inline-flex items-center gap-2">
             <span>Download</span>
           </span>
@@ -88,9 +88,7 @@ export default defineComponent({
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
-    const progress = ref(0)
     const progress_msg = "Creating image..."
-    const processing = ref(false)
     const select_color = ref(false)
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
     const selectedDownloadFormatLabel = "JPG"
@@ -131,7 +129,7 @@ export default defineComponent({
         let i = 0
         return async (image: ImageBitmap): Promise<ImageBitmap> => {
           const result = await scaleImage(image, imageSize)
-          progress.value = (++i) / Object.keys(images).length * 100
+          store.commit("setProgress", (++i) / Object.keys(images).length * 100)
           return result
         }
       }
@@ -159,10 +157,10 @@ export default defineComponent({
 
     const download = async (mimeType: string) => {
       if (!store.state.cached_source) {
-        progress.value = 0
-        processing.value = true
+        store.commit("setProgress", 0)
+        store.commit("setDownloading", true)
         store.state.cached_source = await drawImages()
-        processing.value = false
+        store.commit("setDownloading", false)
       }
       const size = store.state.size
       store.state.cached_source.toBlob(blob => {
@@ -185,12 +183,10 @@ export default defineComponent({
     return {
       download,
       cellSize,
-      progress,
       progress_msg,
       updateSize,
       updateColor,
       updateAlpha,
-      processing,
       downloadFormats,
       selectedDownloadFormatLabel,
       formatMimeLabel,
@@ -202,7 +198,9 @@ export default defineComponent({
       "size",
       "images",
       "color",
-      "alpha"
+      "alpha",
+      "downloading",
+      "progress"
     ])
   }
 })

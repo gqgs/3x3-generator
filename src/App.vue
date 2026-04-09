@@ -8,6 +8,34 @@
       <Search />
     </div>
   </transition>
+
+  <!-- Download Progress Overlay -->
+  <transition name="fade">
+    <div
+      v-if="downloading"
+      class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/60 backdrop-blur-md"
+    >
+      <div class="w-full max-w-md px-8 text-center">
+        <div class="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 text-white shadow-2xl ring-1 ring-white/20">
+          <ion-icon class="animate-pulse text-4xl" name="download-outline" />
+        </div>
+        <h2 class="mb-2 text-2xl font-bold text-white">Downloading...</h2>
+        <p class="text-slate-300">Processing images.</p>
+        <p class="mb-8 text-slate-300">This may take a minute.</p>
+        
+        <div class="relative h-4 overflow-hidden rounded-full bg-slate-800/50 p-1 shadow-inner ring-1 ring-white/10">
+          <div 
+            class="h-full rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-500 ease-out"
+            :style="{ width: `${progress}%` }"
+          ></div>
+        </div>
+        <div class="mt-3 text-right font-mono text-sm font-medium text-sky-400">
+          {{ Math.round(progress) }}%
+        </div>
+      </div>
+    </div>
+  </transition>
+
   <div class="flex min-h-screen flex-col">
     <main class="flex-1 px-4 pb-6 pt-6 sm:px-6 sm:pb-8 lg:px-8" @click="hideForm">
       <section class="mx-auto flex w-full max-w-4xl flex-col items-center gap-3 md:gap-4">
@@ -53,7 +81,9 @@ export default defineComponent({
     ...mapState([
       "show_search",
       "selected_id",
-      "size"
+      "size",
+      "downloading",
+      "progress"
     ]),
     ...mapGetters([
       "tiles",

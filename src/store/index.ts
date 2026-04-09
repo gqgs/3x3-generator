@@ -18,6 +18,8 @@ export interface State {
   color: string
   alpha: number
   draggedImage: { id: number, bitmap: ImageBitmap } | null
+  downloading: boolean
+  progress: number
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -36,9 +38,17 @@ export default createStore<State>({
     cached_source: null,
     color: localStorage.getItem("color") || "#ffffff",
     alpha: parseInt(localStorage.getItem("alpha") || "50"),
-    draggedImage: null
+    draggedImage: null,
+    downloading: false,
+    progress: 0
   },
   mutations: {
+    setDownloading (state, downloading) {
+      state.downloading = downloading
+    },
+    setProgress (state, progress) {
+      state.progress = progress
+    },
     setDraggedImage(state, { id, bitmap }) {
       state.draggedImage = { id, bitmap };
     },
