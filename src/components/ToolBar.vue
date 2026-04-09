@@ -104,8 +104,6 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImage } from "../image"
 import DropDown from "./DropDown.vue"
-import { Upscaler } from "upscalejs"
-import type { Model as DenoiseModel } from "upscalejs"
 
 export default defineComponent({
   components: {
@@ -172,16 +170,10 @@ export default defineComponent({
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.getters.color
 
-      const workerPool = new Upscaler({
-        maxWorkers: workers.value,
-        maxInternalWorkers: 1,
-        denoiseModel: denoiseModel as DenoiseModel,
-      })
-
       const upscaleFunc = () => {
         let i = 0
         return async (image: ImageBitmap): Promise<ImageBitmap> => {
-          const result = await scaleImage(image, imageSize, workerPool)
+          const result = await scaleImage(image, imageSize)
           progress.value = (++i) / Object.keys(images).length * 100
           return result
         }
@@ -205,7 +197,6 @@ export default defineComponent({
           }
         }
       }
-      workerPool.terminate()
       return canvas
     }
 

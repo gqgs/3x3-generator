@@ -1,0 +1,41 @@
+{
+  "_name_or_path": "caidas/swin2SR-lightweight-x2-64",
+  "architectures": [
+    "Swin2SRForImageSuperResolution"
+  ],
+  "attention_probs_dropout_prob": 0.0,
+  "depths": [
+    6,
+    6,
+    6,
+    6
+  ],
+  "drop_path_rate": 0.1,
+  "embed_dim": 60,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.0,
+  "image_size": 64,
+  "img_range": 1.0,
+  "initializer_range": 0.02,
+  "layer_norm_eps": 1e-05,
+  "mlp_ratio": 2.0,
+  "model_type": "swin2sr",
+  "num_channels": 3,
+  "num_channels_out": 3,
+  "num_heads": [
+    6,
+    6,
+    6,
+    6
+  ],
+  "num_layers": 4,
+  "patch_size": 1,
+  "path_norm": true,
+  "qkv_bias": true,
+  "resi_connection": "1conv",
+  "transformers_version": "4.36.0.dev0",
+  "upsampler": "pixelshuffledirect",
+  "upscale": 2,
+  "use_absolute_embeddings": false,
+  "window_size": 8
+}
