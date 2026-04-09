@@ -4,31 +4,6 @@
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto]">
-      <DropDown :options="['200', '400']" @clicked="cellSize = $event">
-        <template v-slot:selected>
-          <span>{{size*cellSize}}x{{size*cellSize}}</span>
-        </template>
-        <template v-slot:option="slotProps">
-          {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
-        </template>
-      </DropDown>
-      <DropDown :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
-        <template v-slot:selected>
-          <span v-if='processing'>{{progress_msg}}</span>
-          <span v-else>Download</span>
-        </template>
-        <template v-slot:option="slotProps">
-          Download ({{slotProps.option}})
-        </template>
-      </DropDown>
-      <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
-        <template v-slot:selected>
-            <span >{{size}}x{{size}}</span>
-        </template>
-        <template v-slot:option="slotProps">
-          {{slotProps.option}}x{{slotProps.option}}
-        </template>
-      </DropDown>
       <div class="relative">
         <button
           type="button"
@@ -78,6 +53,31 @@
           </div>
         </div>
       </div>
+      <DropDown :options="['200', '400']" @clicked="cellSize = $event">
+        <template v-slot:selected>
+          <span>{{size*cellSize}}x{{size*cellSize}}</span>
+        </template>
+        <template v-slot:option="slotProps">
+          {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
+        </template>
+      </DropDown>
+      <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
+        <template v-slot:selected>
+            <span >{{size}}x{{size}}</span>
+        </template>
+        <template v-slot:option="slotProps">
+          {{slotProps.option}}x{{slotProps.option}}
+        </template>
+      </DropDown>
+      <DropDown :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
+        <template v-slot:selected>
+          <span v-if='processing'>{{progress_msg}}</span>
+          <span v-else>Download</span>
+        </template>
+        <template v-slot:option="slotProps">
+          Download ({{slotProps.option}})
+        </template>
+      </DropDown>
       <div class="flex items-center justify-center rounded-2xl border border-white/70 bg-slate-100/70 p-2 xl:min-w-[72px]">
         <a
           href="https://github.com/gqgs/3x3-generator"
