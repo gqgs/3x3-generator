@@ -40,12 +40,11 @@ const results = ref<SearchResult[]>([])
 const tabs = ref(api.tabs)
 const has_show_more = ref(api.has_show_more)
 const showing_more = ref(false)
-const selected = ref<SearchResult|null>(null)
-
+const selected_title = ref("")
 const search = debounce(async (query: string, tab: string): Promise<void> => {
   loading.value = true
   showing_more.value = false
-  selected.value = null
+  selected_title.value = ""
   has_show_more.value = api.has_show_more
   results.value = await api.search(query, tab)
   loading.value = false
@@ -66,21 +65,21 @@ watch(query, async (query) => {
 })
 
 const changeApi = async (newApi: string): Promise<void> => {
-  selected.value = null
   currentApi.value = newApi
   api = apiFromString(newApi)
   tabs.value = api.tabs
   has_show_more.value = api.has_show_more
+  selected_title.value = ""
   if (!api.tabs.includes(currentTab.value)) {
     currentTab.value = api.tabs[0]
   }
   await search(lastQuery, currentTab.value)
 }
 
-const showMore = async (tab: string): Promise<void> => {
-  if (selected.value == null) return
-  results.value = await (api as APIWithShowMore<unknown, unknown>).showMore({ tab, selected: selected.value })
+const showMore = async ({ tab, selected }: { tab: string, selected: SearchResult }): Promise<void> => {
+  results.value = await (api as APIWithShowMore<unknown, unknown>).showMore({ tab, selected })
   showing_more.value = true
+  selected_title.value = selected.title
 }
 
 const goBack = async (): Promise<void> => {
@@ -102,6 +101,7 @@ const handleDrop = (event: DragEvent) => {
   results.value = dropped
   has_show_more.value = false
   showing_more.value = false
+  selected_title.value = ""
 }
 
 export default {
@@ -117,7 +117,7 @@ export default {
   results,
   has_show_more,
   showing_more,
-  selected,
+  selected_title,
   showMore,
   goBack,
   handleDrop

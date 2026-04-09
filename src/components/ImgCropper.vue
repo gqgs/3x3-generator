@@ -1,7 +1,7 @@
 <template>
   <img
     v-if="showImage"
-    @click="openCropper"
+    @click="handlePrimaryAction"
     :src="thumbnailSrc"
     :title="result.title"
     class="image-result h-36 w-36 min-w-36 cursor-pointer rounded-2xl object-cover shadow-sm ring-1 ring-slate-200 transition duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-blue-300 sm:h-40 sm:w-40 sm:min-w-40"
@@ -90,9 +90,13 @@ export default defineComponent({
     result: {
       required: true,
       type: Object as PropType<SearchResult>
+    },
+    clickAction: {
+      type: String as PropType<"crop" | "show-more">,
+      default: "crop"
     }
   },
-  emits: ["selected"],
+  emits: ["selected", "show-more"],
   setup (props, { emit }) {
     const cropper = ref<VueCropperMethods | null>(null)
     const store = useStore()
@@ -173,6 +177,14 @@ export default defineComponent({
       }
     }
 
+    const handlePrimaryAction = async () => {
+      if (props.clickAction === "show-more") {
+        emit("show-more", props.result)
+        return
+      }
+      await openCropper()
+    }
+
     const closeCropper = () => {
       isOpen.value = false
       processing.value = false
@@ -210,6 +222,7 @@ export default defineComponent({
       ready,
       showImage,
       onImageLoaded,
+      handlePrimaryAction,
       isOpen,
       openCropper,
       closeCropper,

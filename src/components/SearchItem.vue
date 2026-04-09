@@ -38,20 +38,28 @@
       <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
     </div>
     <div v-else-if="results.length" id="results" class="mt-5 flex gap-4 overflow-x-auto pb-2">
-      <Cropper @selected="selected = result" v-for="result in results" :key="result.mal_id" :result="result" />
+      <Cropper
+        v-for="result in results"
+        :key="result.mal_id"
+        :result="result"
+        :click-action="has_show_more && !showing_more ? 'show-more' : 'crop'"
+        @show-more="showMore({ tab: currentTab, selected: result })"
+      />
     </div>
-    <div class="mt-4 flex min-h-8 items-center justify-center gap-3 text-sm text-slate-600">
-      <a v-show="showing_more" href="#" class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 hover:bg-slate-200" @click.prevent="goBack">
+    <div v-if="showing_more && selected_title" class="mt-4 flex justify-center">
+      <p class="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
+        {{ selected_title }}
+      </p>
+    </div>
+    <div v-if="showing_more" class="mt-3 flex justify-center">
+      <a
+        href="#"
+        class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+        @click.prevent="goBack"
+      >
         <ion-icon name="arrow-undo-outline"></ion-icon>
         <span>Back</span>
       </a>
-      <span v-if="!has_show_more && selected" class="truncate">{{ selected.title }}</span>
-      <a
-        v-else-if="!showing_more && selected"
-        href="#"
-        class="rounded-full bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700"
-        @click.prevent="showMore(currentTab)"
-      >Show more of {{ selected.title }}</a>
     </div>
   </div>
 </template>
