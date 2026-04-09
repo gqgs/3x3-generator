@@ -19,16 +19,18 @@ export default class RAWG extends API<APIResults> {
 
   fetchURL(tab: string, query: string): { url: string } {
     return {
-        url: `https://api.rawg.io/api/games?key=d319323da8b7410d9ec813cbced4d01d&search=${encodeURI(query)}`
+        url: `https://api.rawg.io/api/games?key=d319323da8b7410d9ec813cbced4d01d&search=${encodeURI(query)}&page_size=40`
     }
   }
   processResult(result: APIResults, tab: string): SearchResult[] {
-    return (result.results ?? []).map((result: APIResult) => {
+    return (result.results ?? [])
+      .filter((result: APIResult) => result.background_image?.startsWith("https://media.rawg.io/media/games/"))
+      .map((result: APIResult) => {
       return {
         mal_id: Math.random(),
         title: result.name,
         image_url: proxyImage(result.background_image)
       }
-    }).slice(0, 15)
+    })
   }
 }

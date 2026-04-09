@@ -12,7 +12,7 @@ const randomDNS = (): string => {
 
 export const proxyImage = (url: string): string => {
   const parsed = URL.parse(url)
-  if (!parsed) throw Error("failed to parse URL")
+  if (!parsed) throw Error(`failed to parse URL: ${url}`)
   parsed.host = randomDNS()
   return parsed.toString()
 }
