@@ -31,7 +31,8 @@
           <span>{{size*cellSize}}x{{size*cellSize}}</span>
         </template>
         <template v-slot:option="slotProps">
-          {{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}
+          <span v-if="slotProps.option === '200'">{{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}</span>
+          <span v-else>{{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}} <small>(upscaled)</small></span>
         </template>
       </DropDown>
       <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
