@@ -4,7 +4,7 @@ import * as ort from "onnxruntime-web";
 const BASE_URL = process.env.NODE_ENV === "production" ? "/3x3-generator/" : "/";
 ort.env.wasm.wasmPaths = `${BASE_URL}js/`;
 ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 4, 8);
-ort.env.wasm.proxy = true;
+ort.env.wasm.proxy = false;
 
 const MODEL_URL = `${BASE_URL}models/Xenova/swin2SR-lightweight-x2-64/onnx/model_uint8.onnx`;
 

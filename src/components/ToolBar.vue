@@ -125,29 +125,42 @@ export default defineComponent({
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.getters.color
 
-      const upscaleFunc = () => {
-        let i = 0
-        return async (image: ImageBitmap): Promise<ImageBitmap> => {
-          const result = await scaleImage(image, imageSize)
-          store.commit("setProgress", (++i) / Object.keys(images).length * 100)
-          return result
-        }
-      }
-      const upscale = upscaleFunc()
+      let processedCount = 0
+      const totalCount = Object.keys(images).length
+      
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
-
-      for (const i of Object.keys(images)) {
-        if (images[i]?.bitmap) {
-          upscale_jobs.set(i, upscale(images[i].bitmap))
+      
+      // Limit concurrency to not saturate the CPU (since each worker uses threads internally)
+      const CONCURRENCY_LIMIT = Math.min(navigator.hardwareConcurrency || 4, 4)
+      const queue = Object.keys(images).filter(id => images[id]?.bitmap)
+      
+      const processQueue = async () => {
+        while (queue.length > 0) {
+          const id = queue.shift()
+          if (!id) break
+          
+          const job = (async () => {
+            const result = await scaleImage(images[id].bitmap, imageSize)
+            processedCount++
+            store.commit("setProgress", (processedCount / totalCount) * 100)
+            return result
+          })()
+          
+          upscale_jobs.set(id, job)
+          await job
         }
       }
-      await Promise.all(Object.values(upscale_jobs))
+
+      // Start workers
+      const workers = Array(CONCURRENCY_LIMIT).fill(null).map(() => processQueue())
+      await Promise.all(workers)
 
       for (let x = 0, i = 1; x < size; x++) {
         for (let y = 0; y < size; y++, i++) {
-          const upscaled = upscale_jobs.get(i.toString())
-          if (upscaled) {
-            ctx.drawImage(await upscaled, 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
+          const upscaledPromise = upscale_jobs.get(i.toString())
+          if (upscaledPromise) {
+            const upscaled = await upscaledPromise
+            ctx.drawImage(upscaled, 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
             ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
           }
         }
