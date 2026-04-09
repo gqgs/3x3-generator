@@ -4,8 +4,8 @@ import * as ort from "onnxruntime-web";
 const BASE_URL = process.env.NODE_ENV === "production" ? "/3x3-generator/" : "/";
 ort.env.wasm.wasmPaths = `${BASE_URL}js/`;
 ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 4, 8);
+ort.env.wasm.proxy = true;
 
-// const MODEL_URL = `${BASE_URL}models/Xenova/swin2SR-lightweight-x2-64/onnx/model.onnx`;
 const MODEL_URL = `${BASE_URL}models/Xenova/swin2SR-lightweight-x2-64/onnx/model_uint8.onnx`;
 
 let session: ort.InferenceSession | null = null;
@@ -33,6 +33,7 @@ const upscaleTiled = async (bitmap: ImageBitmap): Promise<ImageBitmap> => {
   // Swin2SR x2 window size is 64
   const TILE_SIZE = 64;
   const UPSCALE_FACTOR = 2;
+  const OUT_TILE_SIZE = TILE_SIZE * UPSCALE_FACTOR;
   
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -47,54 +48,60 @@ const upscaleTiled = async (bitmap: ImageBitmap): Promise<ImageBitmap> => {
   const outCtx = outputCanvas.getContext("2d", { alpha: false });
   if (!outCtx) throw new Error("Could not get output canvas context");
 
-  // Process tiles
-  for (let y = 0; y < height; y += TILE_SIZE) {
-    for (let x = 0; x < width; x += TILE_SIZE) {
-      // 1. Extract tile (pad if at edges to match TILE_SIZE)
-      const curW = Math.min(TILE_SIZE, width - x);
-      const curH = Math.min(TILE_SIZE, height - y);
-      
-      const tileData = ctx.getImageData(x, y, TILE_SIZE, TILE_SIZE);
-      const { data } = tileData;
+  // Reusable canvas to minimize GC pressure (cannot be transferred/detached)
+  const tileCanvas = document.createElement("canvas");
+  tileCanvas.width = OUT_TILE_SIZE;
+  tileCanvas.height = OUT_TILE_SIZE;
+  const tileCtx = tileCanvas.getContext("2d", { alpha: false });
 
-      // 2. Preprocess: Normalize to [0, 1] and convert to NCHW float32
-      const input = new Float32Array(3 * TILE_SIZE * TILE_SIZE);
-      for (let i = 0; i < TILE_SIZE * TILE_SIZE; i++) {
-        input[i] = data[i * 4] / 255;           // R
-        input[i + TILE_SIZE * TILE_SIZE] = data[i * 4 + 1] / 255;   // G
-        input[i + 2 * TILE_SIZE * TILE_SIZE] = data[i * 4 + 2] / 255; // B
-      }
+  // Process a single tile
+  const processTile = async (x: number, y: number) => {
+    const curW = Math.min(TILE_SIZE, width - x);
+    const curH = Math.min(TILE_SIZE, height - y);
+    
+    // 1. Extract tile (pad if at edges to match TILE_SIZE)
+    const tileData = ctx.getImageData(x, y, TILE_SIZE, TILE_SIZE);
+    const { data } = tileData;
 
-      // 3. Run Inference
-      const tensor = new ort.Tensor("float32", input, [1, 3, TILE_SIZE, TILE_SIZE]);
-      const feeds: Record<string, ort.Tensor> = {};
-      feeds[sess.inputNames[0]] = tensor;
-      const results = await sess.run(feeds);
-      const output = results[sess.outputNames[0]].data as Float32Array;
+    // 2. Preprocess: Normalize to [0, 1] and convert to NCHW float32
+    // We allocate a new buffer per tile because ORT's proxy mode transfers 
+    // the buffer to the worker, detaching it from the main thread.
+    const inputBuffer = new Float32Array(3 * TILE_SIZE * TILE_SIZE);
+    for (let i = 0; i < TILE_SIZE * TILE_SIZE; i++) {
+      inputBuffer[i] = data[i * 4] / 255;           // R
+      inputBuffer[i + TILE_SIZE * TILE_SIZE] = data[i * 4 + 1] / 255;   // G
+      inputBuffer[i + 2 * TILE_SIZE * TILE_SIZE] = data[i * 4 + 2] / 255; // B
+    }
 
-      // 4. Postprocess: Convert back to RGBA uint8
-      const outW = TILE_SIZE * UPSCALE_FACTOR;
-      const outH = TILE_SIZE * UPSCALE_FACTOR;
-      const outImageData = new Uint8ClampedArray(outW * outH * 4);
-      
-      for (let i = 0; i < outW * outH; i++) {
-        outImageData[i * 4] = Math.max(0, Math.min(255, output[i] * 255));
-        outImageData[i * 4 + 1] = Math.max(0, Math.min(255, output[i + outW * outH] * 255));
-        outImageData[i * 4 + 2] = Math.max(0, Math.min(255, output[i + 2 * outW * outH] * 255));
-        outImageData[i * 4 + 3] = 255; // Alpha
-      }
+    // 3. Run Inference
+    const tensor = new ort.Tensor("float32", inputBuffer, [1, 3, TILE_SIZE, TILE_SIZE]);
+    const feeds: Record<string, ort.Tensor> = { [sess.inputNames[0]]: tensor };
+    const results = await sess.run(feeds);
+    const output = results[sess.outputNames[0]].data as Float32Array;
 
-      // 5. Stitch tile back (crop edge tiles if they were padded)
-      const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = outW;
-      tempCanvas.height = outH;
-      tempCanvas.getContext("2d")?.putImageData(new ImageData(outImageData, outW, outH), 0, 0);
-      
+    // 4. Postprocess: Convert back to RGBA uint8
+    const outImageData = new Uint8ClampedArray(OUT_TILE_SIZE * OUT_TILE_SIZE * 4);
+    for (let i = 0; i < OUT_TILE_SIZE * OUT_TILE_SIZE; i++) {
+      outImageData[i * 4] = Math.max(0, Math.min(255, output[i] * 255));
+      outImageData[i * 4 + 1] = Math.max(0, Math.min(255, output[i + OUT_TILE_SIZE * OUT_TILE_SIZE] * 255));
+      outImageData[i * 4 + 2] = Math.max(0, Math.min(255, output[i + 2 * OUT_TILE_SIZE * OUT_TILE_SIZE] * 255));
+      outImageData[i * 4 + 3] = 255; // Alpha
+    }
+
+    // 5. Stitch tile back (crop edge tiles if they were padded)
+    if (tileCtx) {
+      tileCtx.putImageData(new ImageData(outImageData, OUT_TILE_SIZE, OUT_TILE_SIZE), 0, 0);
       outCtx.drawImage(
-        tempCanvas,
+        tileCanvas,
         0, 0, curW * UPSCALE_FACTOR, curH * UPSCALE_FACTOR,
         x * UPSCALE_FACTOR, y * UPSCALE_FACTOR, curW * UPSCALE_FACTOR, curH * UPSCALE_FACTOR
       );
+    }
+  };
+
+  for (let y = 0; y < height; y += TILE_SIZE) {
+    for (let x = 0; x < width; x += TILE_SIZE) {
+      await processTile(x, y);
     }
   }
 
