@@ -6,14 +6,14 @@ ort.env.wasm.wasmPaths = `${BASE_URL}js/`;
 ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 4, 8);
 ort.env.wasm.proxy = false;
 
-const MODEL_URL = `${BASE_URL}models/Xenova/swin2SR-lightweight-x2-64/onnx/model_uint8.onnx`;
+const MODEL_URL = `${BASE_URL}models/RealESRGAN/RealESRGAN_x4plus_anime_6B_uint8.onnx`;
 
 let session: ort.InferenceSession | null = null;
 
 const getSession = async () => {
   if (!session) {
     const options: ort.InferenceSession.SessionOptions = {
-      executionProviders: ["wasm"],
+      executionProviders: ["webgpu"],
       graphOptimizationLevel: "all",
     };
     session = await ort.InferenceSession.create(MODEL_URL, options);
@@ -22,17 +22,15 @@ const getSession = async () => {
 };
 
 /**
- * Tiled Upscaling Implementation (Inspired by upscalejs)
- * This breaks the image into 64x64 tiles, upscales each, and stitches them back.
- * This is 100x faster than upscaling a large image at once with a Transformer.
+ * Tiled Upscaling Implementation (Fixed Shape 128x128)
  */
 const upscaleTiled = async (bitmap: ImageBitmap): Promise<ImageBitmap> => {
   const sess = await getSession();
   const { width, height } = bitmap;
   
-  // Swin2SR x2 window size is 64
-  const TILE_SIZE = 64;
-  const UPSCALE_FACTOR = 2;
+  // FIXED SHAPE: Model is optimized for exactly 128x128 input
+  const TILE_SIZE = 128;
+  const UPSCALE_FACTOR = 4;
   const OUT_TILE_SIZE = TILE_SIZE * UPSCALE_FACTOR;
   
   const canvas = document.createElement("canvas");
@@ -48,7 +46,7 @@ const upscaleTiled = async (bitmap: ImageBitmap): Promise<ImageBitmap> => {
   const outCtx = outputCanvas.getContext("2d", { alpha: false });
   if (!outCtx) throw new Error("Could not get output canvas context");
 
-  // Reusable canvas to minimize GC pressure (cannot be transferred/detached)
+  // Reusable canvas to minimize GC pressure
   const tileCanvas = document.createElement("canvas");
   tileCanvas.width = OUT_TILE_SIZE;
   tileCanvas.height = OUT_TILE_SIZE;
@@ -59,13 +57,12 @@ const upscaleTiled = async (bitmap: ImageBitmap): Promise<ImageBitmap> => {
     const curW = Math.min(TILE_SIZE, width - x);
     const curH = Math.min(TILE_SIZE, height - y);
     
-    // 1. Extract tile (pad if at edges to match TILE_SIZE)
+    // 1. Extract tile (ALWAYS 128x128 for fixed-shape model)
+    // If the image is smaller than 128x128, the canvas will pad it with black
     const tileData = ctx.getImageData(x, y, TILE_SIZE, TILE_SIZE);
     const { data } = tileData;
 
     // 2. Preprocess: Normalize to [0, 1] and convert to NCHW float32
-    // We allocate a new buffer per tile because ORT's proxy mode transfers 
-    // the buffer to the worker, detaching it from the main thread.
     const inputBuffer = new Float32Array(3 * TILE_SIZE * TILE_SIZE);
     for (let i = 0; i < TILE_SIZE * TILE_SIZE; i++) {
       inputBuffer[i] = data[i * 4] / 255;           // R
@@ -88,7 +85,7 @@ const upscaleTiled = async (bitmap: ImageBitmap): Promise<ImageBitmap> => {
       outImageData[i * 4 + 3] = 255; // Alpha
     }
 
-    // 5. Stitch tile back (crop edge tiles if they were padded)
+    // 5. Stitch tile back (using curW/curH to handle edges correctly)
     if (tileCtx) {
       tileCtx.putImageData(new ImageData(outImageData, OUT_TILE_SIZE, OUT_TILE_SIZE), 0, 0);
       outCtx.drawImage(
@@ -114,17 +111,10 @@ export const scaleImage = async (bitmap: ImageBitmap, targetSize: number): Promi
     return downscaleImage(bitmap, targetSize);
   }
 
-  // 2. High-quality jump-start
-  const jumpSize = targetSize / 2;
-  let intermediate = bitmap;
-  if (bitmap.width < jumpSize) {
-    intermediate = await downscaleImage(bitmap, jumpSize);
-  }
+  // 2. Tiled AI Upscale (High speed x4)
+  const upscaled = await upscaleTiled(bitmap);
 
-  // 3. Tiled AI Upscale (High speed)
-  const upscaled = await upscaleTiled(intermediate);
-
-  // 4. Final fit
+  // 3. Final fit (downscale to exact targetSize)
   if (upscaled.width !== targetSize || upscaled.height !== targetSize) {
     return downscaleImage(upscaled, targetSize);
   }
