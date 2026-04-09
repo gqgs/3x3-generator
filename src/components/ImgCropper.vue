@@ -26,6 +26,7 @@
           :zoomable="false"
           :viewMode="1"
           :aspectRatio="1"
+          :autoCropArea="1"
           :minCropBoxWidth="200"
           :minCropBoxHeight="200"
           :checkCrossOrigin="true"
@@ -138,7 +139,6 @@ export default defineComponent({
     }
 
     const ready = () => {
-      ;(cropper.value as VueCropperMethods | null)?.zoomTo(0.5)
       errorMessage.value = ""
     }
 
