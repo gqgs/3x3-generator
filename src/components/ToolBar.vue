@@ -3,53 +3,26 @@
     <div v-if="processing" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
-    <div class="grid gap-3 md:grid-cols-5 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto]">
+    <div class="grid gap-3 md:grid-cols-5 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto_auto]">
       <div class="relative">
         <button
           type="button"
           class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90 xl:min-w-[150px]"
-          @click.stop="advancedOpen = !advancedOpen"
+          @click.stop="select_color = !select_color"
         >
-          <span>Advanced</span>
+          <span>Border</span>
           <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-            <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon :name="select_color ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </span>
         </button>
         <div
-          v-if="advancedOpen"
+          v-if="select_color"
           class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/75 bg-white/92 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
           @click.stop
         >
-          <div class="space-y-4">
-            <div>
-              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Upscaling</p>
-              <div class="grid gap-3">
-                <DropDown :options="['no-denoise', 'conservative', 'denoise1x', 'denoise2x', 'denoise3x', 'pro-no-denoise', 'pro-conservative', 'pro-denoise3x']" @clicked="denoise = $event" :disabled="cellSize == 200">
-                  <template v-slot:selected>
-                    <span>{{denoise}}</span>
-                  </template>
-                  <template v-slot:option="slotProps">
-                    {{slotProps.option}}
-                  </template>
-                </DropDown>
-                <DropDown :options="workerList" @clicked="workers = $event" title="Max number of workers used when upscaling images" :disabled="cellSize == 200">
-                  <template v-slot:selected>
-                    <span>{{workers}} workers</span>
-                  </template>
-                  <template v-slot:option="slotProps">
-                    Upscale workers: {{slotProps.option}}
-                  </template>
-                </DropDown>
-              </div>
-            </div>
-            <div>
-              <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Border</p>
-              <button class="w-full rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90" @click="select_color = !select_color">Border Appearance</button>
-              <div v-if="select_color" class="mt-3 flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3">
-                <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
-                <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
-              </div>
-            </div>
+          <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3">
+            <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
+            <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
           </div>
         </div>
       </div>
@@ -110,22 +83,15 @@ export default defineComponent({
     DropDown
   },
   setup () {
-    // eslint-disable-next-line
-    // @ts-ignore
-    const isMobile = navigator?.userAgentData?.mobile || false
-    const max_workers = navigator.hardwareConcurrency
     const store = useStore()
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
-    const workers = ref<number>(JSON.parse(localStorage.getItem("workers") || (isMobile ? "1" : max_workers.toString())))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
-    const denoise = ref(localStorage.getItem("denoise:v2") || "denoise1x")
     const progress = ref(0)
     const progress_msg = "Creating image..."
     const processing = ref(false)
     const select_color = ref(false)
-    const advancedOpen = ref(false)
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
     const selectedDownloadFormatLabel = "JPG"
     const formatMimeLabel = (mimeType: string) => {
@@ -139,27 +105,18 @@ export default defineComponent({
       }
     }
     const handleWindowClick = () => {
-      advancedOpen.value = false
+      select_color.value = false
     }
 
     onMounted(() => window.addEventListener("click", handleWindowClick))
     onBeforeUnmount(() => window.removeEventListener("click", handleWindowClick))
-
-    watch(denoise, (denoise) => {
-      store.state.cached_source = null
-      localStorage.setItem("denoise:v2", denoise)
-    })
 
     watch(cellSize, (cellSize) => {
       store.state.cached_source = null
       localStorage.setItem("cellSize", JSON.stringify(cellSize))
     })
 
-    watch(workers, (workers) => {
-      localStorage.setItem("workers", JSON.stringify(workers))
-    })
-
-    const drawImages = async (denoiseModel: string): Promise<HTMLCanvasElement> => {
+    const drawImages = async (): Promise<HTMLCanvasElement> => {
       const imageSize = cellSize.value
       const size = store.state.size
       const images = store.state.images
@@ -204,7 +161,7 @@ export default defineComponent({
       if (!store.state.cached_source) {
         progress.value = 0
         processing.value = true
-        store.state.cached_source = await drawImages(denoise.value)
+        store.state.cached_source = await drawImages()
         processing.value = false
       }
       const size = store.state.size
@@ -225,14 +182,11 @@ export default defineComponent({
       }, mimeType)
     }
 
-    const workerList = [...Array(max_workers).keys()].map(key => (key + 1).toString())
-
     return {
       download,
       cellSize,
       progress,
       progress_msg,
-      denoise,
       updateSize,
       updateColor,
       updateAlpha,
@@ -240,10 +194,7 @@ export default defineComponent({
       downloadFormats,
       selectedDownloadFormatLabel,
       formatMimeLabel,
-      workers,
-      workerList,
-      select_color,
-      advancedOpen
+      select_color
     }
   },
   computed: {
