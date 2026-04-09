@@ -69,13 +69,18 @@
           {{slotProps.option}}x{{slotProps.option}}
         </template>
       </DropDown>
-      <DropDown :options="['image/jpeg', 'image/png', 'image/webp']" @clicked="download($event)">
+      <DropDown :options="downloadFormats" @clicked="download($event)">
         <template v-slot:selected>
           <span v-if='processing'>{{progress_msg}}</span>
-          <span v-else>Download</span>
+          <span v-else class="inline-flex items-center gap-2">
+            <span>Download</span>
+          </span>
         </template>
         <template v-slot:option="slotProps">
-          Download ({{slotProps.option}})
+          <span class="inline-flex items-center gap-2">
+            <ion-icon name="download-outline"></ion-icon>
+            <span>{{ formatMimeLabel(slotProps.option) }}</span>
+          </span>
         </template>
       </DropDown>
       <div class="flex items-center justify-center rounded-2xl border border-white/70 bg-slate-100/70 p-2 xl:min-w-[72px]">
@@ -123,6 +128,18 @@ export default defineComponent({
     const processing = ref(false)
     const select_color = ref(false)
     const advancedOpen = ref(false)
+    const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
+    const selectedDownloadFormatLabel = "JPG"
+    const formatMimeLabel = (mimeType: string) => {
+      switch (mimeType) {
+        case "image/png":
+          return "PNG"
+        case "image/webp":
+          return "WEBP"
+        default:
+          return "JPG"
+      }
+    }
     const handleWindowClick = () => {
       advancedOpen.value = false
     }
@@ -229,6 +246,9 @@ export default defineComponent({
       updateColor,
       updateAlpha,
       processing,
+      downloadFormats,
+      selectedDownloadFormatLabel,
+      formatMimeLabel,
       workers,
       workerList,
       select_color,
