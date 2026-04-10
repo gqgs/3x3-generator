@@ -1,92 +1,50 @@
 import * as ort from "onnxruntime-web";
 
-// Configure ONNX Runtime
+// Configure ONNX Runtime for high-performance WASM
 const BASE_URL = process.env.NODE_ENV === "production" ? "/3x3-generator/" : "/";
 ort.env.wasm.wasmPaths = `${BASE_URL}js/`;
+// WASM multi-threading is key for CPU performance
 ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 4, 8);
 ort.env.wasm.proxy = false;
 
 let session: ort.InferenceSession | null = null;
 let currentModelPath: string | null = null;
-let currentPrecision: 'fp16' | 'uint8' = 'uint8';
-
-/**
- * Converts a Float32 value to a Float16 bit-pattern stored in a Uint16.
- */
-const float32ToFloat16 = (f32: number): number => {
-  const f32View = new Float32Array(1);
-  const u32View = new Uint32Array(f32View.buffer);
-  f32View[0] = f32;
-  const u32 = u32View[0];
-
-  const sign = (u32 >> 31) & 0x1;
-  const exp = (u32 >> 23) & 0xff;
-  const mantissa = u32 & 0x7fffff;
-
-  if (exp === 0) return (sign << 15);
-  if (exp === 0xff) {
-    if (mantissa === 0) return (sign << 15) | 0x7c00;
-    return 0x7e00;
-  }
-
-  let newExp = exp - 127 + 15;
-  if (newExp >= 31) return (sign << 15) | 0x7c00;
-  if (newExp <= 0) return (sign << 15);
-
-  return (sign << 15) | (newExp << 10) | (mantissa >> 13);
-};
 
 const getModelConfig = (modelType: '6B' | 'Swin2SR') => {
   if (modelType === 'Swin2SR') {
     return {
-      path: (precision: string) => `${BASE_URL}models/Swin2SR/swin2SR_${precision}.onnx`,
-      tileSize: 64, // Swin2SR x2 uses 64
-      upscaleFactor: 2,
-      isResidual: false
+      path: `${BASE_URL}models/Swin2SR/swin2SR_uint8.onnx`,
+      tileSize: 64,
+      upscaleFactor: 2
     };
   }
   return {
-    path: (precision: string) => `${BASE_URL}models/RealESRGAN/RealESRGAN_x4plus_anime_6B_${precision}.onnx`,
+    path: `${BASE_URL}models/RealESRGAN/RealESRGAN_x4plus_anime_6B_uint8.onnx`,
     tileSize: 256,
-    upscaleFactor: 4,
-    isResidual: false
+    upscaleFactor: 4
   };
 };
 
 const getSession = async (modelType: '6B' | 'Swin2SR') => {
-  const { provider, precision } = await (async () => {
-    try {
-      if ('gpu' in navigator) {
-        const adapter = await navigator.gpu.requestAdapter();
-        if (adapter && adapter.features.has("shader-f16")) {
-          return { provider: 'webgpu', precision: 'fp16' };
-        }
-        if (adapter) return { provider: 'webgpu', precision: 'uint8' };
-      }
-    } catch (e) {}
-    return { provider: 'wasm', precision: 'uint8' };
-  })();
-
   const config = getModelConfig(modelType);
-  const modelPath = config.path(precision);
+  const modelPath = config.path;
 
   if (!session || currentModelPath !== modelPath) {
     if (session) await session.release();
     session = await ort.InferenceSession.create(modelPath, {
-      executionProviders: [provider],
+      executionProviders: ["wasm"],
       graphOptimizationLevel: "all",
     });
     currentModelPath = modelPath;
-    currentPrecision = precision as 'fp16' | 'uint8';
   }
-  return { session, config, precision: currentPrecision };
+  return { session, config };
 };
 
 /**
- * Tiled Upscaling Implementation
+ * Tiled Upscaling Implementation (WASM Optimized)
  */
 const upscaleTiled = async (bitmap: ImageBitmap, modelType: '6B' | 'Swin2SR'): Promise<ImageBitmap> => {
-  const { session: sess, config, precision } = await getSession(modelType);
+  const { session: sess, config } = await getSession(modelType);
   const { width, height } = bitmap;
   
   const TILE_SIZE = config.tileSize;
@@ -115,30 +73,22 @@ const upscaleTiled = async (bitmap: ImageBitmap, modelType: '6B' | 'Swin2SR'): P
     const curW = Math.min(TILE_SIZE, width - x);
     const curH = Math.min(TILE_SIZE, height - y);
     
-    // Always extract TILE_SIZE for fixed-shape models
+    // Extract tile data
     const tileData = ctx.getImageData(x, y, TILE_SIZE, TILE_SIZE);
     const { data } = tileData;
 
-    let tensor: ort.Tensor;
-    if (precision === 'fp16') {
-      const inputBuffer = new Uint16Array(3 * TILE_SIZE * TILE_SIZE);
-      for (let i = 0; i < TILE_SIZE * TILE_SIZE; i++) {
-        inputBuffer[i] = float32ToFloat16(data[i * 4] / 255);
-        inputBuffer[i + TILE_SIZE * TILE_SIZE] = float32ToFloat16(data[i * 4 + 1] / 255);
-        inputBuffer[i + 2 * TILE_SIZE * TILE_SIZE] = float32ToFloat16(data[i * 4 + 2] / 255);
-      }
-      tensor = new ort.Tensor("float16", inputBuffer, [1, 3, TILE_SIZE, TILE_SIZE]);
-    } else {
-      const inputBuffer = new Float32Array(3 * TILE_SIZE * TILE_SIZE);
-      for (let i = 0; i < TILE_SIZE * TILE_SIZE; i++) {
-        inputBuffer[i] = data[i * 4] / 255;
-        inputBuffer[i + TILE_SIZE * TILE_SIZE] = data[i * 4 + 1] / 255;
-        inputBuffer[i + 2 * TILE_SIZE * TILE_SIZE] = data[i * 4 + 2] / 255;
-      }
-      tensor = new ort.Tensor("float32", inputBuffer, [1, 3, TILE_SIZE, TILE_SIZE]);
+    // Preprocess: NCHW Float32 (normalized to [0, 1])
+    // The model is INT8 internally but the input tensor is expected to be Float32
+    const inputBuffer = new Float32Array(3 * TILE_SIZE * TILE_SIZE);
+    for (let i = 0; i < TILE_SIZE * TILE_SIZE; i++) {
+      inputBuffer[i] = data[i * 4] / 255;           // R
+      inputBuffer[i + TILE_SIZE * TILE_SIZE] = data[i * 4 + 1] / 255;   // G
+      inputBuffer[i + 2 * TILE_SIZE * TILE_SIZE] = data[i * 4 + 2] / 255; // B
     }
 
+    const tensor = new ort.Tensor("float32", inputBuffer, [1, 3, TILE_SIZE, TILE_SIZE]);
     const feeds: Record<string, ort.Tensor> = { [sess.inputNames[0]]: tensor };
+    
     const results = await sess.run(feeds);
     const output = results[sess.outputNames[0]].data as Float32Array;
 
@@ -173,11 +123,7 @@ export const scaleImage = async (bitmap: ImageBitmap, targetSize: number, modelT
   if (bitmap.width >= targetSize && bitmap.height >= targetSize) {
     return downscaleImage(bitmap, targetSize);
   }
-  
-  // If targetSize is more than 2x the bitmap size and we use Swin2SR (x2), we might need multiple passes
-  // but for simplicity and common use cases, one pass is usually acceptable or followed by downscale.
   const upscaled = await upscaleTiled(bitmap, modelType);
-  
   if (upscaled.width !== targetSize || upscaled.height !== targetSize) {
     return downscaleImage(upscaled, targetSize);
   }

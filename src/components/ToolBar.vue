@@ -161,6 +161,7 @@ export default defineComponent({
       const totalCount = Object.keys(images).length
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       
+      // Parallel processing works great for WASM as it scales across CPU cores.
       const CONCURRENCY_LIMIT = Math.min(navigator.hardwareConcurrency || 4, 4)
       const queue = Object.keys(images).filter(id => images[id]?.bitmap)
       
