@@ -63,10 +63,16 @@ describe("Vuex Store", () => {
         expect(store.state.images["3"]).toEqual(img1)
     })
 
-    it("updateColor updates color and localStorage", () => {
-        store.commit("updateColor", "#ff0000")
-        expect(store.state.color).toBe("#ff0000")
-        expect(localStorage.getItem("color")).toBe("#ff0000")
+    it("updateAlpha updates alpha and localStorage", () => {
+        store.commit("updateAlpha", 25)
+        expect(store.state.alpha).toBe(25)
+        expect(localStorage.getItem("alpha")).toBe("25")
+    })
+
+    it("setUpscaleModel updates upscaleModel and localStorage", () => {
+        store.commit("setUpscaleModel", "6B")
+        expect(store.state.upscaleModel).toBe("6B")
+        expect(localStorage.getItem("upscaleModel")).toBe("6B")
     })
   })
 

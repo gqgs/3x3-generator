@@ -36,12 +36,12 @@
               </div>
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
-                <DropDown :options="['Swin2SR', 'Real-ESRGAN']" @clicked="updateModel($event)">
+                <DropDown :options="['Swin2SR', '6B']" @clicked="updateModel($event)">
                   <template v-slot:selected>
-                    <span>{{ upscaleModel === 'Real-ESRGAN' ? 'High Quality' : 'Balanced' }}</span>
+                    <span>{{ upscaleModel === '6B' ? 'High Quality' : 'Balanced' }}</span>
                   </template>
                   <template v-slot:option="slotProps">
-                    {{ slotProps.option === 'Real-ESRGAN' ? 'High Quality' : 'Balanced' }} <small>{{ slotProps.option === 'Real-ESRGAN' ? '(Real-ESRGAN)' : '(Swin2SR)' }}</small>
+                    {{ slotProps.option === '6B' ? 'High Quality' : 'Balanced' }} <small>{{ slotProps.option === '6B' ? '(Real-ESRGAN)' : '(Swin2SR)' }}</small>
                   </template>
                 </DropDown>
               </div>

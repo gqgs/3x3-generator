@@ -44,7 +44,11 @@ export default createStore<State>({
     draggedImage: null,
     downloading: false,
     progress: 0,
-    upscaleModel: (localStorage.getItem("upscaleModel") as ModelType) || 'Swin2SR'
+    upscaleModel: (() => {
+      const stored = localStorage.getItem("upscaleModel");
+      if (stored === 'Real-ESRGAN') return '6B';
+      return (stored as ModelType) || 'Swin2SR';
+    })()
   },
   mutations: {
     setUpscaleModel(state, model: ModelType) {
