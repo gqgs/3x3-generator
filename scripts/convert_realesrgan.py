@@ -5,8 +5,6 @@ import os
 import urllib.request
 import onnx
 from onnxruntime.quantization import quantize_dynamic, QuantType
-from onnxsim import simplify
-from onnxconverter_common import convert_float_to_float16
 
 # RRDBNet architecture for RealESRGAN_x4plus_anime_6B
 def make_layer(block, n_layers):
@@ -72,7 +70,6 @@ def convert_6b():
     model_url = "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth"
     model_path = "RealESRGAN_x4plus_anime_6B.pth"
     raw_onnx = "public/models/RealESRGAN/RealESRGAN_x4plus_anime_6B_raw.onnx"
-    fp16_onnx = "public/models/RealESRGAN/RealESRGAN_x4plus_anime_6B_fp16.onnx"
     uint8_onnx = "public/models/RealESRGAN/RealESRGAN_x4plus_anime_6B_uint8.onnx"
     
     if not os.path.exists(model_path): urllib.request.urlretrieve(model_url, model_path)
@@ -86,28 +83,15 @@ def convert_6b():
     dummy_input = torch.randn(1, 3, 256, 256)
     torch.onnx.export(model, dummy_input, raw_onnx, opset_version=14, input_names=['input'], output_names=['output'])
     
-    # 1. FP16 (Simplified - Works well on WebGPU)
-    print("Generating Optimized FP16 version...")
-    onnx_model = onnx.load(raw_onnx)
-    model_simp, check = simplify(onnx_model)
-    # The simplifier might split the model weights, so let's save carefully
-    onnx.save(model_simp, raw_onnx + ".opt")
-    model_fp16 = convert_float_to_float16(onnx.load(raw_onnx + ".opt"))
-    onnx.save(model_fp16, fp16_onnx)
-
-    # 2. UINT8 (Conservative - For WASM Stability)
-    print("Generating Conservative UINT8 version for WASM...")
+    print("Generating UINT8 version for Real-ESRGAN...")
     quantize_dynamic(
         model_input=raw_onnx, 
         model_output=uint8_onnx, 
-        weight_type=QuantType.QUInt8,
+        weight_type=QuantType.QUInt8, # Back to UINT8
         per_channel=False,
         reduce_range=False
     )
-    
-    # Cleanup
-    for f in [raw_onnx, raw_onnx + ".opt", raw_onnx + ".data", raw_onnx + ".opt.data"]:
-        if os.path.exists(f): os.remove(f)
+    if os.path.exists(raw_onnx): os.remove(raw_onnx)
 
 if __name__ == "__main__":
     os.makedirs("public/models/RealESRGAN", exist_ok=True)

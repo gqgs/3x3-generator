@@ -3,10 +3,7 @@
     <div v-if="downloading" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
-    <!-- Responsive Grid: 4x1 (default/small), 2x2 (sm), 1x4 (lg) -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      
-      <!-- 1. Advanced Button -->
       <div class="relative">
         <button
           type="button"
@@ -26,7 +23,6 @@
             @click.stop
           >
             <div class="space-y-5">
-              <!-- Grid Size Selection -->
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Grid Size</p>
                 <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
@@ -38,8 +34,6 @@
                   </template>
                 </DropDown>
               </div>
-
-              <!-- Model Selection -->
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
                 <DropDown :options="['Swin2SR', 'Real-ESRGAN']" @clicked="updateModel($event)">
@@ -47,12 +41,10 @@
                     <span>{{ upscaleModel === 'Real-ESRGAN' ? 'High Quality' : 'Balanced' }}</span>
                   </template>
                   <template v-slot:option="slotProps">
-                    {{ slotProps.option === 'Real-ESRGAN' ? 'High Quality (Real-ESRGAN)' : 'Balanced (Swin2SR)' }}
+                    {{ slotProps.option === 'Real-ESRGAN' ? 'High Quality' : 'Balanced' }} <small>{{ slotProps.option === 'Real-ESRGAN' ? '(Real-ESRGAN)' : '(Swin2SR)' }}</small>
                   </template>
                 </DropDown>
               </div>
-
-              <!-- Border Selection -->
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Border Appearance</p>
                 <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3 shadow-inner">
@@ -65,7 +57,6 @@
         </transition>
       </div>
 
-      <!-- 2. Resolution Button (The "3x3" option) -->
       <DropDown :options="['200', '400']" @clicked="cellSize = $event">
         <template v-slot:selected>
           <span>{{size}}x{{size}} ({{size*cellSize}}px)</span>
@@ -75,7 +66,6 @@
         </template>
       </DropDown>
       
-      <!-- 3. Download Button -->
       <DropDown :options="downloadFormats" @clicked="download($event)">
         <template v-slot:selected>
           <span v-if='downloading'>Processing...</span>
@@ -89,7 +79,6 @@
         </template>
       </DropDown>
 
-      <!-- 4. GitHub Button -->
       <a
         href="https://github.com/gqgs/3x3-generator"
         target="_blank"
@@ -110,7 +99,7 @@ import { ref, defineComponent, watch, onMounted, onBeforeUnmount } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { scaleImage } from "../image"
+import { scaleImage, releasePool } from "../image"
 import DropDown from "./DropDown.vue"
 
 export default defineComponent({
@@ -124,7 +113,12 @@ export default defineComponent({
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
-    const updateModel = (model: '6B' | 'Swin2SR') => store.commit("setUpscaleModel", model)
+    
+    const updateModel = async (model: '6B' | 'Swin2SR') => {
+      await releasePool()
+      store.commit("setUpscaleModel", model)
+    }
+
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
     const formatMimeLabel = (mimeType: string) => {
       switch (mimeType) {
@@ -157,26 +151,42 @@ export default defineComponent({
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.getters.color
 
-      let processedCount = 0
-      const totalCount = Object.keys(images).length
+      const queue = Object.keys(images)
+        .filter(id => images[id]?.bitmap)
+        .sort((a, b) => {
+          const aNeedsUpscale = images[a].bitmap.width < imageSize || images[a].bitmap.height < imageSize
+          const bNeedsUpscale = images[b].bitmap.width < imageSize || images[b].bitmap.height < imageSize
+          if (aNeedsUpscale === bNeedsUpscale) return 0
+          return aNeedsUpscale ? 1 : -1
+        })
+
+      const totalCount = queue.length
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       
-      // Parallel processing works great for WASM as it scales across CPU cores.
-      const CONCURRENCY_LIMIT = Math.min(navigator.hardwareConcurrency || 4, 4)
-      const queue = Object.keys(images).filter(id => images[id]?.bitmap)
-      
+      const imageProgress = new Map<string, number>()
+      const updateGlobalProgress = () => {
+        let total = 0
+        imageProgress.forEach(p => total += p)
+        store.commit("setProgress", total / totalCount)
+      }
+
+      const CONCURRENCY_LIMIT = 3
       const processQueue = async () => {
         while (queue.length > 0) {
           const id = queue.shift()
           if (!id) break
-          const job = (async () => {
-            const result = await scaleImage(images[id].bitmap, imageSize, upscaleModel)
-            processedCount++
-            store.commit("setProgress", (processedCount / totalCount) * 100)
+          
+          const job = scaleImage(images[id].bitmap, imageSize, upscaleModel, (percent) => {
+            imageProgress.set(id, percent)
+            updateGlobalProgress()
+          }).then(result => {
+            imageProgress.set(id, 100)
+            updateGlobalProgress()
             return result
-          })()
+          })
+          
           upscale_jobs.set(id, job)
-          await job
+          await job // Wait for this image to finish before taking next from queue
         }
       }
 
@@ -197,6 +207,7 @@ export default defineComponent({
     }
 
     const download = async (mimeType: string) => {
+      if (store.state.downloading) return
       if (!store.state.cached_source) {
         store.commit("setProgress", 0)
         store.commit("setDownloading", true)
