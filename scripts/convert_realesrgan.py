@@ -93,6 +93,20 @@ def convert_6b():
     )
     if os.path.exists(raw_onnx): os.remove(raw_onnx)
 
+    print("Converting to ORT format...")
+    import onnxruntime.tools.convert_onnx_models_to_ort as ort_convert
+    ort_model_path = uint8_onnx.replace(".onnx", ".ort")
+    ort_convert.convert_onnx_models_to_ort(
+        uint8_onnx,
+        output_dir=os.path.dirname(uint8_onnx),
+        optimization_level=ort_convert.OptimizationLevel.ORT_ENABLE_ALL
+    )
+    # The convert tool might name it slightly differently or put it in a subdir if multiple models
+    # but for single file it usually just replaces extension.
+    if os.path.exists(uint8_onnx):
+        # We keep the onnx for now just in case, or we can remove it if we only want .ort
+        pass
+
 if __name__ == "__main__":
     os.makedirs("public/models/RealESRGAN", exist_ok=True)
     convert_6b()

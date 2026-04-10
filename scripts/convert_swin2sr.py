@@ -23,6 +23,14 @@ def convert_swin2sr():
         per_channel=False,
         reduce_range=False
     )
+
+    print("Converting to ORT format...")
+    import onnxruntime.tools.convert_onnx_models_to_ort as ort_convert
+    ort_convert.convert_onnx_models_to_ort(
+        uint8_onnx,
+        output_dir=os.path.dirname(uint8_onnx),
+        optimization_level=ort_convert.OptimizationLevel.ORT_ENABLE_ALL
+    )
     
     print("Done Swin2SR!")
 

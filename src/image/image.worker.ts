@@ -24,15 +24,15 @@ interface ReleaseMessage {
 type WorkerMessage = ScaleMessage | ReleaseMessage;
 
 // POOL CONFIGURATION
-const POOL_SIZE = 3;
+const POOL_SIZE = 1;
 const sessions: Record<string, (ort.InferenceSession | null)[]> = {
   '6B': Array(POOL_SIZE).fill(null),
   'Swin2SR': Array(POOL_SIZE).fill(null)
 };
 
 const availableIndices: Record<string, number[]> = {
-  '6B': [0, 1, 2],
-  'Swin2SR': [0, 1, 2]
+  '6B': [0],
+  'Swin2SR': [0]
 };
 
 const waitingResolvers: Record<string, ((index: number) => void)[]> = {
@@ -43,13 +43,13 @@ const waitingResolvers: Record<string, ((index: number) => void)[]> = {
 const getModelConfig = (modelType: ModelType, baseUrl: string) => {
   if (modelType === 'Swin2SR') {
     return {
-      path: `${baseUrl}models/Swin2SR/swin2SR_uint8.onnx`,
+      path: `${baseUrl}models/Swin2SR/swin2SR_uint8.ort`,
       tileSize: 64,
       upscaleFactor: 2
     };
   }
   return {
-    path: `${baseUrl}models/RealESRGAN/RealESRGAN_x4plus_anime_6B_uint8.onnx`,
+    path: `${baseUrl}models/RealESRGAN/RealESRGAN_x4plus_anime_6B_uint8.ort`,
     tileSize: 256,
     upscaleFactor: 4
   };
@@ -185,7 +185,7 @@ const releasePool = async () => {
         sessions[modelType][i] = null;
       }
     }
-    availableIndices[modelType] = [0, 1, 2];
+    availableIndices[modelType] = Array.from({ length: POOL_SIZE }, (_, i) => i);
     waitingResolvers[modelType] = [];
   }
 };
