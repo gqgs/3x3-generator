@@ -3,52 +3,83 @@
     <div v-if="downloading" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
-    <div class="grid gap-3 md:grid-cols-5 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto_auto]">
+    <!-- Responsive Grid: 4x1 (default/small), 2x2 (sm), 1x4 (lg) -->
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      
+      <!-- 1. Advanced Button -->
       <div class="relative">
         <button
           type="button"
-          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90 xl:min-w-[150px]"
-          @click.stop="select_color = !select_color"
+          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
+          @click.stop="advancedOpen = !advancedOpen"
         >
-          <span>Border</span>
-          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-            <ion-icon :name="select_color ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          <span>Advanced</span>
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+            <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </span>
         </button>
-        <div
-          v-if="select_color"
-          class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/75 bg-white/92 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
-          @click.stop
-        >
-          <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3">
-            <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
-            <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
+        
+        <transition name="fade">
+          <div
+            v-if="advancedOpen"
+            class="absolute bottom-[calc(100%+0.75rem)] left-0 z-30 w-full min-w-[280px] rounded-[1.5rem] border border-white/75 bg-white/95 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
+            @click.stop
+          >
+            <div class="space-y-5">
+              <!-- Grid Size Selection -->
+              <div>
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Grid Size</p>
+                <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
+                  <template v-slot:selected>
+                    <span>{{size}}x{{size}} Grid</span>
+                  </template>
+                  <template v-slot:option="slotProps">
+                    {{slotProps.option}}x{{slotProps.option}}
+                  </template>
+                </DropDown>
+              </div>
+
+              <!-- Model Selection -->
+              <div>
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
+                <DropDown :options="['Swin2SR', 'Real-ESRGAN']" @clicked="updateModel($event)">
+                  <template v-slot:selected>
+                    <span>{{ upscaleModel === 'Real-ESRGAN' ? 'High Quality' : 'Balanced' }}</span>
+                  </template>
+                  <template v-slot:option="slotProps">
+                    {{ slotProps.option === 'Real-ESRGAN' ? 'High Quality (Real-ESRGAN)' : 'Balanced (Swin2SR)' }}
+                  </template>
+                </DropDown>
+              </div>
+
+              <!-- Border Selection -->
+              <div>
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Border Appearance</p>
+                <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3 shadow-inner">
+                  <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
+                  <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </transition>
       </div>
+
+      <!-- 2. Resolution Button (The "3x3" option) -->
       <DropDown :options="['200', '400']" @clicked="cellSize = $event">
         <template v-slot:selected>
-          <span>{{size*cellSize}}x{{size*cellSize}}</span>
+          <span>{{size}}x{{size}} ({{size*cellSize}}px)</span>
         </template>
         <template v-slot:option="slotProps">
-          <span v-if="slotProps.option === '200'">{{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}}</span>
-          <span v-else>{{size*parseInt(slotProps.option)}}x{{size*parseInt(slotProps.option)}} <small>(upscaled)</small></span>
+          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'">(upscaled)</small>
         </template>
       </DropDown>
-      <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
-        <template v-slot:selected>
-            <span >{{size}}x{{size}}</span>
-        </template>
-        <template v-slot:option="slotProps">
-          {{slotProps.option}}x{{slotProps.option}}
-        </template>
-      </DropDown>
+      
+      <!-- 3. Download Button -->
       <DropDown :options="downloadFormats" @clicked="download($event)">
         <template v-slot:selected>
-          <span v-if='downloading'>{{progress_msg}}</span>
-          <span v-else class="inline-flex items-center gap-2">
-            <span>Download</span>
-          </span>
+          <span v-if='downloading'>Processing...</span>
+          <span v-else>Download</span>
         </template>
         <template v-slot:option="slotProps">
           <span class="inline-flex items-center gap-2">
@@ -57,16 +88,19 @@
           </span>
         </template>
       </DropDown>
-      <div class="flex items-center justify-center rounded-2xl border border-white/70 bg-slate-100/70 p-2 xl:min-w-[72px]">
-        <a
-          href="https://github.com/gqgs/3x3-generator"
-          target="_blank"
-          aria-label="Open GitHub repository"
-          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-xl text-slate-600 shadow-sm hover:bg-white"
-        >
-          <ion-icon id="github" name="logo-octocat"></ion-icon>
-        </a>
-      </div>
+
+      <!-- 4. GitHub Button -->
+      <a
+        href="https://github.com/gqgs/3x3-generator"
+        target="_blank"
+        aria-label="Open GitHub repository"
+        class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
+      >
+        <span>GitHub</span>
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+          <ion-icon name="logo-octocat"></ion-icon>
+        </span>
+      </a>
     </div>
   </div>
 </template>
@@ -85,26 +119,22 @@ export default defineComponent({
   },
   setup () {
     const store = useStore()
+    const advancedOpen = ref(false)
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
-    const progress_msg = "Creating image..."
-    const select_color = ref(false)
+    const updateModel = (model: '6B' | 'Swin2SR') => store.commit("setUpscaleModel", model)
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
-    const selectedDownloadFormatLabel = "JPG"
     const formatMimeLabel = (mimeType: string) => {
       switch (mimeType) {
-        case "image/png":
-          return "PNG"
-        case "image/webp":
-          return "WEBP"
-        default:
-          return "JPG"
+        case "image/png": return "PNG"
+        case "image/webp": return "WEBP"
+        default: return "JPG"
       }
     }
     const handleWindowClick = () => {
-      select_color.value = false
+      advancedOpen.value = false
     }
 
     onMounted(() => window.addEventListener("click", handleWindowClick))
@@ -119,6 +149,7 @@ export default defineComponent({
       const imageSize = cellSize.value
       const size = store.state.size
       const images = store.state.images
+      const upscaleModel = store.state.upscaleModel
       const canvas = document.createElement("canvas")
       canvas.width = size * imageSize
       canvas.height = size * imageSize
@@ -128,10 +159,8 @@ export default defineComponent({
 
       let processedCount = 0
       const totalCount = Object.keys(images).length
-      
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
       
-      // Limit concurrency to not saturate the CPU (since each worker uses threads internally)
       const CONCURRENCY_LIMIT = Math.min(navigator.hardwareConcurrency || 4, 4)
       const queue = Object.keys(images).filter(id => images[id]?.bitmap)
       
@@ -139,20 +168,17 @@ export default defineComponent({
         while (queue.length > 0) {
           const id = queue.shift()
           if (!id) break
-          
           const job = (async () => {
-            const result = await scaleImage(images[id].bitmap, imageSize)
+            const result = await scaleImage(images[id].bitmap, imageSize, upscaleModel)
             processedCount++
             store.commit("setProgress", (processedCount / totalCount) * 100)
             return result
           })()
-          
           upscale_jobs.set(id, job)
           await job
         }
       }
 
-      // Start workers
       const workers = Array(CONCURRENCY_LIMIT).fill(null).map(() => processQueue())
       await Promise.all(workers)
 
@@ -181,14 +207,9 @@ export default defineComponent({
         if (blob == null) return
         let filename = `${size}x${size}`
         switch (mimeType) {
-          case "image/png":
-            filename = `${filename}.png`
-            break
-          case "image/webp":
-            filename = `${filename}.webp`
-            break
-          default:
-            filename = `${filename}.jpg`
+          case "image/png": filename = `${filename}.png`; break
+          case "image/webp": filename = `${filename}.webp`; break
+          default: filename = `${filename}.jpg`
         }
         fileDownload(blob, filename)
       }, mimeType)
@@ -197,14 +218,13 @@ export default defineComponent({
     return {
       download,
       cellSize,
-      progress_msg,
       updateSize,
       updateColor,
       updateAlpha,
+      updateModel,
       downloadFormats,
-      selectedDownloadFormatLabel,
       formatMimeLabel,
-      select_color
+      advancedOpen
     }
   },
   computed: {
@@ -214,7 +234,8 @@ export default defineComponent({
       "color",
       "alpha",
       "downloading",
-      "progress"
+      "progress",
+      "upscaleModel"
     ])
   }
 })

@@ -3,6 +3,8 @@ import { Update } from "../types"
 import { InjectionKey } from "vue"
 import Color from "color"
 
+export type ModelType = '6B' | 'Swin2SR';
+
 export interface State {
   show_search: boolean
   selected_id: number
@@ -20,6 +22,7 @@ export interface State {
   draggedImage: { id: number, bitmap: ImageBitmap } | null
   downloading: boolean
   progress: number
+  upscaleModel: ModelType
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -40,9 +43,15 @@ export default createStore<State>({
     alpha: parseInt(localStorage.getItem("alpha") || "50"),
     draggedImage: null,
     downloading: false,
-    progress: 0
+    progress: 0,
+    upscaleModel: (localStorage.getItem("upscaleModel") as ModelType) || 'Swin2SR'
   },
   mutations: {
+    setUpscaleModel(state, model: ModelType) {
+      state.upscaleModel = model;
+      localStorage.setItem("upscaleModel", model);
+      state.cached_source = null;
+    },
     setDownloading (state, downloading) {
       state.downloading = downloading
     },
@@ -59,17 +68,13 @@ export default createStore<State>({
       if (state.images[fromId]) {
         const fromImage = state.images[fromId];
         const toImage = state.images[toId];
-        
-        // If destination has an image, swap them
         if (toImage) {
           state.images[fromId] = toImage;
           state.images[toId] = fromImage;
         } else {
-          // Otherwise just move the image
           state.images[toId] = fromImage;
           delete state.images[fromId];
         }
-        
         state.cached_source = null;
       }
     },
@@ -88,7 +93,6 @@ export default createStore<State>({
     },
     updateSize (state, size) {
       state.cached_source = null
-      // remove outdated images
       const images: { [key: string]: { bitmap: ImageBitmap, url: string } } = {}
       Object.keys(state.images).forEach(id => {
         if (parseInt(id) <= size * size) {
