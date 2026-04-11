@@ -2,9 +2,8 @@ import * as ort from "onnxruntime-web";
 
 // Configure ONNX Runtime inside the worker
 ort.env.wasm.proxy = false;
-// When using a worker pool, it's safer to keep each worker single-threaded
-// to avoid oversubscribing the CPU and potential WASM memory contention.
-ort.env.wasm.numThreads = 1;
+// Enable multi-threading if possible
+ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 3, 3);
 
 const ctx: DedicatedWorkerGlobalScope = self as any;
 
