@@ -5,7 +5,19 @@ ort.env.wasm.proxy = false;
 
 // Use a pool of workers for scaling to utilize multiple CPU cores
 const BASE_URL = process.env.NODE_ENV === "production" ? "/3x3-generator/" : "/";
-export const MAX_WORKERS = Math.min(navigator.hardwareConcurrency || 4, 4);
+let workerCount = parseInt(localStorage.getItem("workerCount") || (navigator.hardwareConcurrency || 4).toString());
+
+export const setWorkerCount = (count: number) => {
+  if (workerCount !== count) {
+    workerCount = count;
+    // Terminate existing workers to re-initialize with new count if needed
+    workers.forEach(w => w.terminate());
+    workers = [];
+    nextWorkerIndex = 0;
+  }
+};
+
+export const getWorkerCount = () => workerCount;
 
 let workers: Worker[] = [];
 let nextWorkerIndex = 0;
@@ -20,8 +32,8 @@ let nextJobId = 0;
 
 const getWorkers = () => {
   if (workers.length === 0) {
-    console.log(`Creating ${MAX_WORKERS} image workers`);
-    for (let i = 0; i < MAX_WORKERS; i++) {
+    console.log(`Creating ${workerCount} image workers`);
+    for (let i = 0; i < workerCount; i++) {
       const w = new Worker(new URL('./image.worker.ts', import.meta.url));
       
       w.onmessage = (e) => {

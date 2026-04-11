@@ -23,6 +23,7 @@ export interface State {
   downloading: boolean
   progress: number
   upscaleModel: ModelType
+  workerCount: number
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -48,9 +49,14 @@ export default createStore<State>({
       const stored = localStorage.getItem("upscaleModel");
       if (stored === 'Real-ESRGAN') return '6B';
       return (stored as ModelType) || 'Swin2SR';
-    })()
+    })(),
+    workerCount: parseInt(localStorage.getItem("workerCount") || "3")
   },
   mutations: {
+    setWorkerCount(state, count: number) {
+      state.workerCount = count;
+      localStorage.setItem("workerCount", count.toString());
+    },
     setUpscaleModel(state, model: ModelType) {
       state.upscaleModel = model;
       localStorage.setItem("upscaleModel", model);

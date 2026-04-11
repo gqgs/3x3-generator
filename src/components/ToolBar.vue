@@ -46,6 +46,17 @@
                 </DropDown>
               </div>
               <div>
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Worker Pool Size</p>
+                <DropDown :options="['1', '3', '6', '9']" :disabled="downloading" @clicked="updateWorkers($event)">
+                  <template v-slot:selected>
+                    <span>{{ workerCount }} Workers</span>
+                  </template>
+                  <template v-slot:option="slotProps">
+                    {{ slotProps.option }} Workers
+                  </template>
+                </DropDown>
+              </div>
+              <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Border Appearance</p>
                 <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3 shadow-inner">
                   <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
@@ -99,7 +110,7 @@ import { ref, defineComponent, watch, onMounted, onBeforeUnmount } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { scaleImage, releasePool, MAX_WORKERS } from "../image"
+import { scaleImage, releasePool, setWorkerCount, getWorkerCount } from "../image"
 import DropDown from "./DropDown.vue"
 
 export default defineComponent({
@@ -118,6 +129,12 @@ export default defineComponent({
       if (store.state.downloading) return
       await releasePool()
       store.commit("setUpscaleModel", model)
+    }
+
+    const updateWorkers = (count: string) => {
+      const n = parseInt(count)
+      setWorkerCount(n)
+      store.commit("setWorkerCount", n)
     }
 
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
@@ -163,7 +180,6 @@ export default defineComponent({
 
       const totalCount = queue.length
       const upscale_jobs = new Map<string, Promise<ImageBitmap>>()
-      
       const imageProgress = new Map<string, number>()
       const updateGlobalProgress = () => {
         let total = 0
@@ -171,7 +187,7 @@ export default defineComponent({
         store.commit("setProgress", total / totalCount)
       }
 
-      const CONCURRENCY_LIMIT = MAX_WORKERS
+      const CONCURRENCY_LIMIT = getWorkerCount()
       const processQueue = async () => {
         while (queue.length > 0) {
           const id = queue.shift()
@@ -242,6 +258,7 @@ export default defineComponent({
       updateColor,
       updateAlpha,
       updateModel,
+      updateWorkers,
       downloadFormats,
       formatMimeLabel,
       advancedOpen
@@ -255,7 +272,8 @@ export default defineComponent({
       "alpha",
       "downloading",
       "progress",
-      "upscaleModel"
+      "upscaleModel",
+      "workerCount"
     ])
   }
 })
