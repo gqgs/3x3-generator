@@ -2,6 +2,8 @@ import * as ort from "onnxruntime-web";
 
 // Configure ONNX Runtime inside the worker
 ort.env.wasm.proxy = false;
+// Enable multi-threading if possible
+ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 3, 9);
 
 const ctx: DedicatedWorkerGlobalScope = self as any;
 
@@ -24,7 +26,7 @@ interface ReleaseMessage {
 type WorkerMessage = ScaleMessage | ReleaseMessage;
 
 // POOL CONFIGURATION
-const POOL_SIZE = 1;
+const POOL_SIZE = 3;
 const sessions: Record<string, (ort.InferenceSession | null)[]> = {
   '6B': Array(POOL_SIZE).fill(null),
   'Swin2SR': Array(POOL_SIZE).fill(null)

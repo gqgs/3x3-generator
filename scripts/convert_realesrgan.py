@@ -67,12 +67,9 @@ class RRDBNet(nn.Module):
         return out
 
 def convert_6b():
-    model_url = "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth"
-    model_path = "RealESRGAN_x4plus_anime_6B.pth"
+    model_path = "scripts/models/RealESRGAN_x4plus_anime_6B.pth"
     raw_onnx = "public/models/RealESRGAN/RealESRGAN_x4plus_anime_6B_raw.onnx"
     uint8_onnx = "public/models/RealESRGAN/RealESRGAN_x4plus_anime_6B_uint8.onnx"
-    
-    if not os.path.exists(model_path): urllib.request.urlretrieve(model_url, model_path)
     
     model = RRDBNet(in_nc=3, out_nc=3, nf=64, nb=6, gc=32, upscale=4)
     loadnet = torch.load(model_path, map_location='cpu')
@@ -81,7 +78,7 @@ def convert_6b():
     model.eval()
 
     dummy_input = torch.randn(1, 3, 256, 256)
-    torch.onnx.export(model, dummy_input, raw_onnx, opset_version=14, input_names=['input'], output_names=['output'])
+    torch.onnx.export(model, dummy_input, raw_onnx, opset_version=18, input_names=['input'], output_names=['output'])
     
     print("Generating UINT8 version for Real-ESRGAN...")
     quantize_dynamic(
@@ -94,12 +91,12 @@ def convert_6b():
     if os.path.exists(raw_onnx): os.remove(raw_onnx)
 
     print("Converting to ORT format...")
+    from pathlib import Path
     import onnxruntime.tools.convert_onnx_models_to_ort as ort_convert
-    ort_model_path = uint8_onnx.replace(".onnx", ".ort")
     ort_convert.convert_onnx_models_to_ort(
-        uint8_onnx,
-        output_dir=os.path.dirname(uint8_onnx),
-        optimization_level=ort_convert.OptimizationLevel.ORT_ENABLE_ALL
+        Path(uint8_onnx),
+        output_dir=Path(os.path.dirname(uint8_onnx)),
+        optimization_styles=[ort_convert.OptimizationStyle.Fixed]
     )
     # The convert tool might name it slightly differently or put it in a subdir if multiple models
     # but for single file it usually just replaces extension.

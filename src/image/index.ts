@@ -3,10 +3,13 @@ import * as ort from "onnxruntime-web";
 // Configure ONNX Runtime on main thread to NOT use proxy
 ort.env.wasm.proxy = false;
 
-// Use the worker for scaling
+// Use a pool of workers for scaling to utilize multiple CPU cores
 const BASE_URL = process.env.NODE_ENV === "production" ? "/3x3-generator/" : "/";
+const MAX_WORKERS = Math.min(navigator.hardwareConcurrency || 4, 4);
 
-let worker: Worker | null = null;
+let workers: Worker[] = [];
+let nextWorkerIndex = 0;
+
 const pendingJobs = new Map<string, {
   resolve: (bitmap: ImageBitmap) => void;
   reject: (error: Error) => void;
@@ -15,43 +18,46 @@ const pendingJobs = new Map<string, {
 
 let nextJobId = 0;
 
-const getWorker = () => {
-  if (!worker) {
-    console.log("Creating new image worker");
-    worker = new Worker(new URL('./image.worker.ts', import.meta.url));
-    
-    worker.onmessage = (e) => {
-      // Ignore messages that don't match our protocol (e.g. internal ORT messages)
-      if (!e.data || typeof e.data !== 'object' || Array.isArray(e.data)) {
-        return;
-      }
-
-      const { id, type, bitmap, percent, error } = e.data;
-      if (!id) return;
-
-      const job = pendingJobs.get(id);
-      if (!job) return;
-
-      try {
-        if (type === 'progress') {
-          if (job.onProgress) job.onProgress(percent);
-        } else if (type === 'done') {
-          pendingJobs.delete(id);
-          job.resolve(bitmap);
-        } else if (type === 'error') {
-          pendingJobs.delete(id);
-          job.reject(new Error(error || "Unknown worker error"));
+const getWorkers = () => {
+  if (workers.length === 0) {
+    console.log(`Creating ${MAX_WORKERS} image workers`);
+    for (let i = 0; i < MAX_WORKERS; i++) {
+      const w = new Worker(new URL('./image.worker.ts', import.meta.url));
+      
+      w.onmessage = (e) => {
+        if (!e.data || typeof e.data !== 'object' || Array.isArray(e.data)) {
+          return;
         }
-      } catch (err) {
-        console.error("Error handling worker message:", err);
-      }
-    };
 
-    worker.onerror = (e) => {
-      console.error("Worker error event:", e);
-    };
+        const { id, type, bitmap, percent, error } = e.data;
+        if (!id) return;
+
+        const job = pendingJobs.get(id);
+        if (!job) return;
+
+        try {
+          if (type === 'progress') {
+            if (job.onProgress) job.onProgress(percent);
+          } else if (type === 'done') {
+            pendingJobs.delete(id);
+            job.resolve(bitmap);
+          } else if (type === 'error') {
+            pendingJobs.delete(id);
+            job.reject(new Error(error || "Unknown worker error"));
+          }
+        } catch (err) {
+          console.error("Error handling worker message:", err);
+        }
+      };
+
+      w.onerror = (e) => {
+        console.error("Worker error event:", e);
+      };
+
+      workers.push(w);
+    }
   }
-  return worker;
+  return workers;
 };
 
 export const scaleImage = async (
@@ -60,7 +66,10 @@ export const scaleImage = async (
   modelType: '6B' | 'Swin2SR' = '6B',
   onProgress?: (percent: number) => void
 ): Promise<ImageBitmap> => {
-  const w = getWorker();
+  const pool = getWorkers();
+  const w = pool[nextWorkerIndex];
+  nextWorkerIndex = (nextWorkerIndex + 1) % pool.length;
+
   const id = (nextJobId++).toString();
   // Create a copy to transfer so the original in the store stays valid
   const bitmapToTransfer = await createImageBitmap(bitmap);
@@ -80,10 +89,8 @@ export const scaleImage = async (
 };
 
 export const releasePool = async () => {
-  if (worker) {
-    worker.postMessage({ type: 'release' });
-    // We don't necessarily need to wait for it or terminate it here,
-    // but we could if we wanted to fully clean up.
+  if (workers.length > 0) {
+    workers.forEach(w => w.postMessage({ type: 'release' }));
   }
 };
 

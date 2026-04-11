@@ -5,15 +5,10 @@ import urllib.request
 from onnxruntime.quantization import quantize_dynamic, QuantType
 
 def convert_swin2sr():
-    model_url = "https://huggingface.co/Xenova/swin2SR-lightweight-x2-64/resolve/main/onnx/model.onnx"
-    raw_onnx = "public/models/Swin2SR/model.onnx"
+    raw_onnx = "scripts/models/swin2SR.onnx"
     uint8_onnx = "public/models/Swin2SR/swin2SR_uint8.onnx"
     
     os.makedirs("public/models/Swin2SR", exist_ok=True)
-    
-    if not os.path.exists(raw_onnx):
-        print(f"Downloading {model_url}...")
-        urllib.request.urlretrieve(model_url, raw_onnx)
     
     print("Generating UINT8 version for Swin2SR...")
     quantize_dynamic(
@@ -25,11 +20,12 @@ def convert_swin2sr():
     )
 
     print("Converting to ORT format...")
+    from pathlib import Path
     import onnxruntime.tools.convert_onnx_models_to_ort as ort_convert
     ort_convert.convert_onnx_models_to_ort(
-        uint8_onnx,
-        output_dir=os.path.dirname(uint8_onnx),
-        optimization_level=ort_convert.OptimizationLevel.ORT_ENABLE_ALL
+        Path(uint8_onnx),
+        output_dir=Path(os.path.dirname(uint8_onnx)),
+        optimization_styles=[ort_convert.OptimizationStyle.Fixed]
     )
     
     print("Done Swin2SR!")
