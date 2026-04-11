@@ -25,7 +25,7 @@
             <div class="space-y-5">
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Grid Size</p>
-                <DropDown :options="['2', '3', '4', '5']" @clicked="updateSize($event)">
+                <DropDown :options="['2', '3', '4', '5']" :disabled="downloading" @clicked="updateSize($event)">
                   <template v-slot:selected>
                     <span>{{size}}x{{size}} Grid</span>
                   </template>
@@ -36,7 +36,7 @@
               </div>
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
-                <DropDown :options="['Swin2SR', '6B']" @clicked="updateModel($event)">
+                <DropDown :options="['Swin2SR', '6B']" :disabled="downloading" @clicked="updateModel($event)">
                   <template v-slot:selected>
                     <span>{{ upscaleModel === '6B' ? 'High Quality' : 'Balanced' }}</span>
                   </template>
@@ -57,7 +57,7 @@
         </transition>
       </div>
 
-      <DropDown :options="['200', '400']" @clicked="cellSize = $event">
+      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = $event">
         <template v-slot:selected>
           <span>{{size}}x{{size}} ({{size*cellSize}}px)</span>
         </template>
@@ -99,7 +99,7 @@ import { ref, defineComponent, watch, onMounted, onBeforeUnmount } from "vue"
 import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
-import { scaleImage, releasePool } from "../image"
+import { scaleImage, releasePool, MAX_WORKERS } from "../image"
 import DropDown from "./DropDown.vue"
 
 export default defineComponent({
@@ -115,6 +115,7 @@ export default defineComponent({
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
     
     const updateModel = async (model: '6B' | 'Swin2SR') => {
+      if (store.state.downloading) return
       await releasePool()
       store.commit("setUpscaleModel", model)
     }
@@ -170,7 +171,7 @@ export default defineComponent({
         store.commit("setProgress", total / totalCount)
       }
 
-      const CONCURRENCY_LIMIT = 3
+      const CONCURRENCY_LIMIT = MAX_WORKERS
       const processQueue = async () => {
         while (queue.length > 0) {
           const id = queue.shift()
@@ -200,6 +201,8 @@ export default defineComponent({
             const upscaled = await upscaledPromise
             ctx.drawImage(upscaled, 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
             ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
+            // Close the upscaled bitmap to free memory
+            upscaled.close()
           }
         }
       }
@@ -208,23 +211,28 @@ export default defineComponent({
 
     const download = async (mimeType: string) => {
       if (store.state.downloading) return
-      if (!store.state.cached_source) {
-        store.commit("setProgress", 0)
-        store.commit("setDownloading", true)
-        store.state.cached_source = await drawImages()
+      try {
+        if (!store.state.cached_source) {
+          store.commit("setProgress", 0)
+          store.commit("setDownloading", true)
+          store.state.cached_source = await drawImages()
+        }
+        const size = store.state.size
+        store.state.cached_source.toBlob(blob => {
+          if (blob == null) return
+          let filename = `${size}x${size}`
+          switch (mimeType) {
+            case "image/png": filename = `${filename}.png`; break
+            case "image/webp": filename = `${filename}.webp`; break
+            default: filename = `${filename}.jpg`
+          }
+          fileDownload(blob, filename)
+        }, mimeType)
+      } catch (err) {
+        console.error("Download failed:", err)
+      } finally {
         store.commit("setDownloading", false)
       }
-      const size = store.state.size
-      store.state.cached_source.toBlob(blob => {
-        if (blob == null) return
-        let filename = `${size}x${size}`
-        switch (mimeType) {
-          case "image/png": filename = `${filename}.png`; break
-          case "image/webp": filename = `${filename}.webp`; break
-          default: filename = `${filename}.jpg`
-        }
-        fileDownload(blob, filename)
-      }, mimeType)
     }
 
     return {

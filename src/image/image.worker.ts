@@ -42,6 +42,16 @@ const waitingResolvers: Record<string, ((index: number) => void)[]> = {
   'Swin2SR': []
 };
 
+const sessionPromises: Record<string, (Promise<ort.InferenceSession> | null)[]> = {
+  '6B': Array(POOL_SIZE).fill(null),
+  'Swin2SR': Array(POOL_SIZE).fill(null)
+};
+
+const acquiredIndices: Record<string, Set<number>> = {
+  '6B': new Set(),
+  'Swin2SR': new Set()
+};
+
 const getModelConfig = (modelType: ModelType, baseUrl: string) => {
   if (modelType === 'Swin2SR') {
     return {
@@ -71,12 +81,20 @@ const acquireSession = async (modelType: ModelType, baseUrl: string): Promise<{ 
     });
   }
   
+  acquiredIndices[effectiveModelType].add(index);
+  
   const config = getModelConfig(effectiveModelType, baseUrl);
   if (!sessions[effectiveModelType][index]) {
-    sessions[effectiveModelType][index] = await ort.InferenceSession.create(config.path, {
-      executionProviders: ["wasm"],
-      graphOptimizationLevel: "all",
-    });
+    if (!sessionPromises[effectiveModelType][index]) {
+      sessionPromises[effectiveModelType][index] = ort.InferenceSession.create(config.path, {
+        executionProviders: ["wasm"],
+        graphOptimizationLevel: "all",
+      }).then(s => {
+        sessions[effectiveModelType][index] = s;
+        return s;
+      });
+    }
+    await sessionPromises[effectiveModelType][index];
   }
   
   return { session: sessions[effectiveModelType][index]!, index };
@@ -84,12 +102,20 @@ const acquireSession = async (modelType: ModelType, baseUrl: string): Promise<{ 
 
 const releaseSession = (modelType: ModelType, index: number) => {
   const effectiveModelType = availableIndices[modelType] ? modelType : '6B';
+  acquiredIndices[effectiveModelType].delete(index);
   if (waitingResolvers[effectiveModelType].length > 0) {
     const nextResolver = waitingResolvers[effectiveModelType].shift()!;
     nextResolver(index);
   } else {
     availableIndices[effectiveModelType].push(index);
   }
+};
+
+const isAllZero = (array: Float32Array): boolean => {
+  for (let i = 0; i < array.length; i++) {
+    if (array[i] !== 0) return false;
+  }
+  return true;
 };
 
 const upscaleTiled = async (
@@ -143,6 +169,10 @@ const upscaleTiled = async (
         const results = await sess.run({ [sess.inputNames[0]]: tensor });
         const output = results[sess.outputNames[0]].data as Float32Array;
 
+        if (isAllZero(output)) {
+          console.warn(`Worker: Model ${modelType} returned all-zero output for a tile. This may cause black squares.`);
+        }
+
         const outImageData = new Uint8ClampedArray(OUT_TILE_SIZE * OUT_TILE_SIZE * 4);
         for (let i = 0; i < OUT_TILE_SIZE * OUT_TILE_SIZE; i++) {
           outImageData[i * 4] = Math.max(0, Math.min(255, output[i] * 255));
@@ -182,12 +212,14 @@ const downscaleImage = async (source: ImageBitmap, targetSize: number): Promise<
 const releasePool = async () => {
   for (const modelType of Object.keys(sessions)) {
     for (let i = 0; i < POOL_SIZE; i++) {
-      if (sessions[modelType][i]) {
+      // Only release if not currently in use
+      if (sessions[modelType][i] && !acquiredIndices[modelType].has(i)) {
         await sessions[modelType][i]!.release();
         sessions[modelType][i] = null;
+        sessionPromises[modelType][i] = null;
       }
     }
-    availableIndices[modelType] = Array.from({ length: POOL_SIZE }, (_, i) => i);
+    availableIndices[modelType] = Array.from({ length: POOL_SIZE }, (_, i) => i).filter(i => !acquiredIndices[modelType].has(i));
     waitingResolvers[modelType] = [];
   }
 };

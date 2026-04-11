@@ -5,7 +5,7 @@ ort.env.wasm.proxy = false;
 
 // Use a pool of workers for scaling to utilize multiple CPU cores
 const BASE_URL = process.env.NODE_ENV === "production" ? "/3x3-generator/" : "/";
-const MAX_WORKERS = Math.min(navigator.hardwareConcurrency || 4, 4);
+export const MAX_WORKERS = Math.min(navigator.hardwareConcurrency || 4, 4);
 
 let workers: Worker[] = [];
 let nextWorkerIndex = 0;
