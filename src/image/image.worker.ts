@@ -2,8 +2,9 @@ import * as ort from "onnxruntime-web";
 
 // Configure ONNX Runtime inside the worker
 ort.env.wasm.proxy = false;
-// Enable multi-threading if possible
-ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 3, 9);
+// When using a worker pool, it's safer to keep each worker single-threaded
+// to avoid oversubscribing the CPU and potential WASM memory contention.
+ort.env.wasm.numThreads = 1;
 
 const ctx: DedicatedWorkerGlobalScope = self as any;
 
@@ -17,6 +18,7 @@ interface ScaleMessage {
   targetSize: number;
   modelType: ModelType;
   baseUrl: string;
+  forceUpscale: boolean;
 }
 
 interface ReleaseMessage {
@@ -92,9 +94,18 @@ const acquireSession = async (modelType: ModelType, baseUrl: string): Promise<{ 
       }).then(s => {
         sessions[effectiveModelType][index] = s;
         return s;
+      }).catch(err => {
+        sessionPromises[effectiveModelType][index] = null;
+        throw err;
       });
     }
-    await sessionPromises[effectiveModelType][index];
+    try {
+      await sessionPromises[effectiveModelType][index];
+    } catch (err) {
+      // release index back since it failed to load
+      releaseSession(modelType, index);
+      throw err;
+    }
   }
   
   return { session: sessions[effectiveModelType][index]!, index };
@@ -118,12 +129,23 @@ const isAllZero = (array: Float32Array): boolean => {
   return true;
 };
 
+const isInvalid = (array: Float32Array): boolean => {
+  for (let i = 0; i < array.length; i++) {
+    if (isNaN(array[i]) || !isFinite(array[i])) return true;
+  }
+  return false;
+};
+
 const upscaleTiled = async (
   bitmap: ImageBitmap, 
   modelType: ModelType,
   baseUrl: string,
   onProgress?: (percent: number) => void
 ): Promise<ImageBitmap> => {
+  if (bitmap.width === 0 || bitmap.height === 0) {
+    throw new Error(`Invalid bitmap dimensions: ${bitmap.width}x${bitmap.height}`);
+  }
+
   const { session: sess, index } = await acquireSession(modelType, baseUrl);
   const config = getModelConfig(modelType, baseUrl);
   
@@ -165,12 +187,18 @@ const upscaleTiled = async (
           inputBuffer[i + 2 * TILE_SIZE * TILE_SIZE] = data[i * 4 + 2] / 255;
         }
 
+        if (isAllZero(inputBuffer)) {
+          console.warn(`Worker: Tile at ${x},${y} has all-zero input.`);
+        }
+
         const tensor = new ort.Tensor("float32", inputBuffer, [1, 3, TILE_SIZE, TILE_SIZE]);
         const results = await sess.run({ [sess.inputNames[0]]: tensor });
         const output = results[sess.outputNames[0]].data as Float32Array;
 
-        if (isAllZero(output)) {
-          console.warn(`Worker: Model ${modelType} returned all-zero output for a tile. This may cause black squares.`);
+        if (isInvalid(output)) {
+          console.error(`Worker: Model returned NaN or Infinity for tile at ${x},${y}. This will cause black squares.`);
+        } else if (isAllZero(output)) {
+          console.warn(`Worker: Model returned all-zero output for tile at ${x},${y}.`);
         }
 
         const outImageData = new Uint8ClampedArray(OUT_TILE_SIZE * OUT_TILE_SIZE * 4);
@@ -234,14 +262,14 @@ ctx.addEventListener('message', async (e: MessageEvent<WorkerMessage>) => {
   }
 
   if (data.type === 'scale') {
-    const { id, bitmap, targetSize, modelType, baseUrl } = data;
+    const { id, bitmap, targetSize, modelType, baseUrl, forceUpscale } = data;
     
     // Configure ONNX Runtime
     ort.env.wasm.wasmPaths = `${baseUrl}js/`;
 
     try {
       let resultBitmap: ImageBitmap;
-      if (bitmap.width >= targetSize && bitmap.height >= targetSize) {
+      if (!forceUpscale && bitmap.width >= targetSize && bitmap.height >= targetSize) {
         ctx.postMessage({ id, type: 'progress', percent: 100 });
         resultBitmap = await downscaleImage(bitmap, targetSize);
       } else {

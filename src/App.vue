@@ -20,7 +20,7 @@
           <ion-icon class="animate-pulse text-4xl" name="download-outline" />
         </div>
         <h2 class="mb-2 text-2xl font-bold text-white">Downloading...</h2>
-        <p class="text-slate-300">Processing high-quality images.</p>
+        <p class="text-slate-300">Processing images.</p>
         <p class="mb-8 text-slate-300">This may take a minute.</p>
         
         <div class="relative h-4 overflow-hidden rounded-full bg-slate-800/50 p-1 shadow-inner ring-1 ring-white/10">

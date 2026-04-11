@@ -80,6 +80,16 @@ describe("Vuex Store", () => {
         expect(store.state.workerCount).toBe(2)
         expect(localStorage.getItem("workerCount")).toBe("2")
     })
+
+    it("setForceUpscale updates forceUpscale and localStorage", () => {
+        store.commit("setForceUpscale", true)
+        expect(store.state.forceUpscale).toBe(true)
+        expect(localStorage.getItem("forceUpscale")).toBe("true")
+        
+        store.commit("setForceUpscale", false)
+        expect(store.state.forceUpscale).toBe(false)
+        expect(localStorage.getItem("forceUpscale")).toBe("false")
+    })
   })
 
   describe("getters", () => {

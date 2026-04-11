@@ -76,6 +76,7 @@ export const scaleImage = async (
   bitmap: ImageBitmap, 
   targetSize: number, 
   modelType: '6B' | 'Swin2SR' = '6B',
+  forceUpscale: boolean = false,
   onProgress?: (percent: number) => void
 ): Promise<ImageBitmap> => {
   const pool = getWorkers();
@@ -95,7 +96,8 @@ export const scaleImage = async (
       bitmap: bitmapToTransfer,
       targetSize,
       modelType,
-      baseUrl: window.location.origin + BASE_URL
+      baseUrl: window.location.origin + BASE_URL,
+      forceUpscale
     }, [bitmapToTransfer]);
   });
 };

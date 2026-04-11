@@ -57,6 +57,26 @@
                 </DropDown>
               </div>
               <div>
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Visual Consistency</p>
+                <button 
+                  type="button"
+                  @click="updateForceUpscale(!forceUpscale)"
+                  :disabled="downloading"
+                  class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
+                >
+                  <span>Force Upscale</span>
+                  <div 
+                    class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
+                    :class="forceUpscale ? 'bg-sky-400' : 'bg-slate-300'"
+                  >
+                    <div 
+                      class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
+                      :class="forceUpscale ? 'translate-x-5' : 'translate-x-0'"
+                    ></div>
+                  </div>
+                </button>
+              </div>
+              <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Border Appearance</p>
                 <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3 shadow-inner">
                   <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
@@ -137,6 +157,10 @@ export default defineComponent({
       store.commit("setWorkerCount", n)
     }
 
+    const updateForceUpscale = (force: boolean) => {
+      store.commit("setForceUpscale", force)
+    }
+
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
     const formatMimeLabel = (mimeType: string) => {
       switch (mimeType) {
@@ -162,6 +186,7 @@ export default defineComponent({
       const size = store.state.size
       const images = store.state.images
       const upscaleModel = store.state.upscaleModel
+      const forceUpscale = store.state.forceUpscale
       const canvas = document.createElement("canvas")
       canvas.width = size * imageSize
       canvas.height = size * imageSize
@@ -172,6 +197,7 @@ export default defineComponent({
       const queue = Object.keys(images)
         .filter(id => images[id]?.bitmap)
         .sort((a, b) => {
+          if (forceUpscale) return 0
           const aNeedsUpscale = images[a].bitmap.width < imageSize || images[a].bitmap.height < imageSize
           const bNeedsUpscale = images[b].bitmap.width < imageSize || images[b].bitmap.height < imageSize
           if (aNeedsUpscale === bNeedsUpscale) return 0
@@ -193,7 +219,7 @@ export default defineComponent({
           const id = queue.shift()
           if (!id) break
           
-          const job = scaleImage(images[id].bitmap, imageSize, upscaleModel, (percent) => {
+          const job = scaleImage(images[id].bitmap, imageSize, upscaleModel, forceUpscale, (percent) => {
             imageProgress.set(id, percent)
             updateGlobalProgress()
           }).then(result => {
@@ -259,6 +285,7 @@ export default defineComponent({
       updateAlpha,
       updateModel,
       updateWorkers,
+      updateForceUpscale,
       downloadFormats,
       formatMimeLabel,
       advancedOpen
@@ -273,7 +300,8 @@ export default defineComponent({
       "downloading",
       "progress",
       "upscaleModel",
-      "workerCount"
+      "workerCount",
+      "forceUpscale"
     ])
   }
 })
