@@ -272,15 +272,33 @@ ctx.addEventListener('message', async (e: MessageEvent<WorkerMessage>) => {
         ctx.postMessage({ id, type: 'progress', percent: 100 });
         resultBitmap = await downscaleImage(bitmap, targetSize);
       } else {
-        const upscaled = await upscaleTiled(bitmap, modelType, baseUrl, (percent) => {
-          ctx.postMessage({ id, type: 'progress', percent });
-        });
-        
-        if (upscaled.width !== targetSize || upscaled.height !== targetSize) {
-          resultBitmap = await downscaleImage(upscaled, targetSize);
-          upscaled.close();
-        } else {
-          resultBitmap = upscaled;
+        let inputBitmap = bitmap;
+        let inputWasDownscaled = false;
+
+        try {
+          // Optimization: if forceUpscale is true and the image is large, 
+          // downscale it first to a reasonable size (e.g. 200x200) to speed up AI upscaling.
+          // This ensures consistent performance even with very large source images.
+          const DOWNSCALE_THRESHOLD = 200;
+          if (forceUpscale && (bitmap.width > DOWNSCALE_THRESHOLD || bitmap.height > DOWNSCALE_THRESHOLD)) {
+            inputBitmap = await downscaleImage(bitmap, DOWNSCALE_THRESHOLD);
+            inputWasDownscaled = true;
+          }
+
+          const upscaled = await upscaleTiled(inputBitmap, modelType, baseUrl, (percent) => {
+            ctx.postMessage({ id, type: 'progress', percent });
+          });
+          
+          if (upscaled.width !== targetSize || upscaled.height !== targetSize) {
+            resultBitmap = await downscaleImage(upscaled, targetSize);
+            upscaled.close();
+          } else {
+            resultBitmap = upscaled;
+          }
+        } finally {
+          if (inputWasDownscaled) {
+            inputBitmap.close();
+          }
         }
       }
       
