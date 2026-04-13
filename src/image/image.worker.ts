@@ -3,7 +3,7 @@ import * as ort from "onnxruntime-web";
 // Configure ONNX Runtime inside the worker
 ort.env.wasm.proxy = false;
 // Enable multi-threading if possible
-ort.env.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 3, 3);
+ort.env.wasm.numThreads = 1;
 
 const ctx: DedicatedWorkerGlobalScope = self as any;
 
