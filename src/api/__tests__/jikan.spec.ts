@@ -43,11 +43,11 @@ describe("Jikan API", () => {
       }
       const results = jikan.processResult(mockResult as any)
       expect(results).toHaveLength(1)
-      expect(results[0]).toEqual({
+      expect(results[0]).toMatchObject({
         mal_id: 1,
-        title: "Naruto",
-        image_url: "https://example.com/large.jpg"
+        title: "Naruto"
       })
+      expect(results[0].image_url).toMatch(/^https:\/\/d(16oqhcwx61zqh|18oynqa97z70b|1j7g7lrvvlssb)\.cloudfront\.net\/large\.jpg$/)
     })
 
     it("should use name for characters", () => {

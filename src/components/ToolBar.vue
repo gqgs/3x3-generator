@@ -96,31 +96,51 @@
           {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'">(upscaled)</small>
         </template>
       </DropDown>
-      
-      <DropDown :options="downloadFormats" @clicked="download($event)">
+
+      <DropDown :options="projectOptions" :disabled="downloading" @clicked="handleProjectAction($event)">
         <template v-slot:selected>
-          <span v-if='downloading'>Processing...</span>
-          <span v-else>Download</span>
+          <span>Import/Export</span>
         </template>
         <template v-slot:option="slotProps">
           <span class="inline-flex items-center gap-2">
-            <ion-icon name="download-outline"></ion-icon>
-            <span>{{ formatMimeLabel(slotProps.option) }}</span>
+            <ion-icon :name="slotProps.option === 'import' ? 'folder-open-outline' : 'save-outline'"></ion-icon>
+            <span>{{ slotProps.option === 'import' ? 'Import' : 'Export' }}</span>
           </span>
         </template>
       </DropDown>
 
-      <a
-        href="https://github.com/gqgs/3x3-generator"
-        target="_blank"
-        aria-label="Open GitHub repository"
-        class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
+      <input
+        ref="projectInput"
+        class="hidden"
+        type="file"
+        accept=".json,.3x3.json,application/json"
+        @change="handleProjectFile"
       >
-        <span>GitHub</span>
-        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+
+      <div class="flex gap-2">
+        <div class="min-w-0 flex-1">
+          <DropDown :options="downloadFormats" @clicked="download($event)">
+            <template v-slot:selected>
+              <span v-if='downloading'>Processing...</span>
+              <span v-else>Download</span>
+            </template>
+            <template v-slot:option="slotProps">
+              <span class="inline-flex items-center gap-2">
+                <ion-icon name="download-outline"></ion-icon>
+                <span>{{ formatMimeLabel(slotProps.option) }}</span>
+              </span>
+            </template>
+          </DropDown>
+        </div>
+        <a
+          href="https://github.com/gqgs/3x3-generator"
+          target="_blank"
+          aria-label="Open GitHub repository"
+          class="flex min-h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-slate-100/75 text-xl text-slate-700 shadow-sm hover:bg-white/90 hover:text-slate-900"
+        >
           <ion-icon name="logo-octocat"></ion-icon>
-        </span>
-      </a>
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -132,6 +152,8 @@ import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImage, releasePool, setWorkerCount, getWorkerCount } from "../image"
 import DropDown from "./DropDown.vue"
+import Api from "../api"
+import { createProject, hydrateProject, parseProject } from "../project"
 
 export default defineComponent({
   components: {
@@ -141,6 +163,7 @@ export default defineComponent({
     const store = useStore()
     const advancedOpen = ref(false)
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
+    const projectInput = ref<HTMLInputElement | null>(null)
     const updateSize = (size: number) => store.dispatch("updateSize", size)
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
@@ -162,6 +185,7 @@ export default defineComponent({
     }
 
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
+    const projectOptions = ["import", "export"]
     const formatMimeLabel = (mimeType: string) => {
       switch (mimeType) {
         case "image/png": return "PNG"
@@ -180,6 +204,60 @@ export default defineComponent({
       store.state.cached_source = null
       localStorage.setItem("cellSize", JSON.stringify(cellSize))
     })
+
+    const exportProject = () => {
+      const project = createProject(store.state, {
+        cellSize: parseInt(cellSize.value.toString()),
+        search: Api.getSearchState()
+      })
+      fileDownload(JSON.stringify(project, null, 2), "3x3-project.3x3.json", "application/json")
+    }
+
+    const importProject = async (file: File) => {
+      const project = parseProject(await file.text())
+      if (Object.keys(store.state.images).length > 0) {
+        const shouldReplace = window.confirm("Importing this project will replace your current grid.")
+        if (!shouldReplace) return
+      }
+
+      const hydrated = await hydrateProject(project)
+      await releasePool()
+      setWorkerCount(hydrated.settings.workerCount)
+      cellSize.value = hydrated.settings.cellSize
+      store.commit("restoreProject", {
+        size: hydrated.settings.size,
+        images: hydrated.images,
+        color: hydrated.settings.color,
+        alpha: hydrated.settings.alpha,
+        upscaleModel: hydrated.settings.upscaleModel,
+        workerCount: hydrated.settings.workerCount,
+        forceUpscale: hydrated.settings.forceUpscale,
+        selectedId: hydrated.settings.selectedId
+      })
+      Api.restoreSearchState(hydrated.search)
+    }
+
+    const handleProjectAction = (action: string) => {
+      if (action === "import") {
+        projectInput.value?.click()
+        return
+      }
+      exportProject()
+    }
+
+    const handleProjectFile = async (event: Event) => {
+      const input = event.target as HTMLInputElement
+      const file = input.files?.[0]
+      if (!file) return
+      try {
+        await importProject(file)
+      } catch (err) {
+        console.error("Project import failed:", err)
+        window.alert(err instanceof Error ? err.message : "Project import failed.")
+      } finally {
+        input.value = ""
+      }
+    }
 
     const drawImages = async (): Promise<HTMLCanvasElement> => {
       const imageSize = cellSize.value
@@ -287,6 +365,10 @@ export default defineComponent({
       updateWorkers,
       updateForceUpscale,
       downloadFormats,
+      projectOptions,
+      projectInput,
+      handleProjectAction,
+      handleProjectFile,
       formatMimeLabel,
       advancedOpen
     }

@@ -8,6 +8,7 @@ import LastFM from "./lastfm"
 import VNDB from "./vndb"
 import RAWG from "./rawg"
 import { API, APIWithShowMore } from "./api"
+import { fileToDataUrl } from "../image/data-url"
 
 const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new RAWG(), new VNDB()]
 const apisMap = new Map<string, API<unknown>>()
@@ -30,6 +31,7 @@ const used_api = api_exists ? storage_api : apis[0].name
 
 let api: API<unknown> = apiFromString(used_api)
 let lastQuery = ""
+let skipNextQuerySearch = false
 
 const apiNames = apis.map(api => api.name)
 const currentApi = ref(used_api)
@@ -60,6 +62,11 @@ watch(currentApi, (api) => {
 })
 
 watch(query, async (query) => {
+  if (skipNextQuerySearch) {
+    skipNextQuerySearch = false
+    lastQuery = query
+    return
+  }
   lastQuery = query
   await search(query, currentTab.value)
 })
@@ -86,22 +93,68 @@ const goBack = async (): Promise<void> => {
   await search(lastQuery, currentTab.value)
 }
 
-const handleDrop = (event: DragEvent) => {
-  const files = event.dataTransfer?.files
+const handleFiles = async (files: FileList | File[] | null | undefined) => {
   if (!files) return
+  search.cancel()
   const dropped: SearchResult[] = []
   for (let i = 0; i < files.length; i++) {
-    const file = files.item(i) as File
+    const file = Array.isArray(files) ? files[i] : files.item(i)
+    if (!file) continue
+    const imageUrl = await fileToDataUrl(file)
     dropped.push({
-      mal_id: Math.random(),
+      mal_id: Date.now() + i,
       title: file.name,
-      image_url: URL.createObjectURL(file),
+      image_url: imageUrl,
+      sourceDataUrl: imageUrl,
     })
   }
+  if (query.value !== "") {
+    skipNextQuerySearch = true
+    query.value = ""
+  }
+  lastQuery = ""
   results.value = dropped
   has_show_more.value = false
   showing_more.value = false
   selected_title.value = ""
+}
+
+const handleDrop = async (event: DragEvent) => {
+  await handleFiles(event.dataTransfer?.files)
+}
+
+const handleFileInput = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  await handleFiles(input.files)
+  input.value = ""
+}
+
+const getSearchState = () => {
+  return {
+    api: currentApi.value,
+    tab: currentTab.value,
+    query: query.value
+  }
+}
+
+const restoreSearchState = ({ api: apiName, tab, query: restoredQuery }: { api: string, tab: string, query: string }) => {
+  const nextApi = apisMap.has(apiName) ? apiName : apis[0].name
+  currentApi.value = nextApi
+  api = apiFromString(nextApi)
+  tabs.value = api.tabs
+  has_show_more.value = api.has_show_more
+  currentTab.value = api.tabs.includes(tab) ? tab : api.tabs[0]
+  search.cancel()
+  const nextQuery = restoredQuery || ""
+  if (query.value !== nextQuery) {
+    skipNextQuerySearch = true
+    query.value = nextQuery
+  }
+  lastQuery = query.value
+  results.value = []
+  showing_more.value = false
+  selected_title.value = ""
+  localStorage.setItem("api", currentApi.value)
 }
 
 export default {
@@ -120,5 +173,8 @@ export default {
   selected_title,
   showMore,
   goBack,
-  handleDrop
+  handleDrop,
+  handleFileInput,
+  getSearchState,
+  restoreSearchState
 }

@@ -20,19 +20,40 @@
         @click.prevent="changeTab(tab.value)"
       >{{ tab.label }}</a>
     </div>
-    <div class="mt-5 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50/80 p-3 shadow-inner sm:p-4">
-      <input
-        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-        :placeholder="'Search ' + currentTab + ' or drag and drop images here'"
-        autocomplete="off"
-        v-model="query"
-        type="text"
-        id="name"
-        name="name"
-        @dragenter.prevent
-        @dragover.prevent
-        @drop.prevent="handleDrop"
-      >
+    <div
+      class="mt-5 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50/80 p-3 shadow-inner sm:p-4"
+      @dragenter.prevent
+      @dragover.prevent
+      @drop.prevent="handleDrop"
+    >
+      <div class="flex gap-2">
+        <input
+          class="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+          :placeholder="'Search ' + currentTab"
+          autocomplete="off"
+          v-model="query"
+          type="text"
+          id="name"
+          name="name"
+        >
+        <button
+          type="button"
+          class="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm hover:border-blue-300 hover:text-blue-700"
+          @click="openFilePicker"
+        >
+          <ion-icon name="images-outline"></ion-icon>
+          <span class="hidden sm:inline">Upload</span>
+        </button>
+        <input
+          ref="fileInput"
+          class="hidden"
+          type="file"
+          accept="image/*"
+          multiple
+          @change="handleFileInput"
+        >
+      </div>
+      <p class="mt-2 text-xs text-slate-500">Upload images or drag them here.</p>
     </div>
     <div v-if="loading" class="mt-4 overflow-hidden rounded-full bg-slate-200">
       <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
@@ -65,7 +86,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue"
+import { defineComponent, computed, ref } from "vue"
 import Cropper from "./ImgCropper.vue"
 import Api from "../api"
 
@@ -74,6 +95,7 @@ export default defineComponent({
     Cropper
   },
   setup () {
+    const fileInput = ref<HTMLInputElement | null>(null)
     const capitalize = (str: string): string => {
       return str.charAt(0).toUpperCase() + str.slice(1)
     }
@@ -86,7 +108,11 @@ export default defineComponent({
         }
       })
     })
-    return { ...Api, tabs }
+    const openFilePicker = () => {
+      fileInput.value?.click()
+    }
+
+    return { ...Api, tabs, fileInput, openFilePicker }
   }
 })
 </script>

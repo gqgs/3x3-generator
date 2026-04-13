@@ -1,20 +1,17 @@
 import { createStore, useStore as baseUseStore, Store } from "vuex"
-import { Update } from "../types"
+import { GridImage, Update } from "../types"
 import { InjectionKey } from "vue"
 import Color from "color"
 
 export type ModelType = '6B' | 'Swin2SR';
 
+const defaultUpdater = (update: Update) => { console.warn(`unexpected call: ${update}`) }
+
 export interface State {
   show_search: boolean
   selected_id: number
   updater: (update: Update) => void
-  images: { 
-    [key: string]: { 
-      bitmap: ImageBitmap,
-      url: string 
-    } 
-  }
+  images: { [key: string]: GridImage }
   size: number
   cached_source: HTMLCanvasElement | null,
   color: string
@@ -37,7 +34,7 @@ export default createStore<State>({
   state: {
     show_search: false,
     selected_id: 0,
-    updater: (update: Update) => { console.warn(`unexpected call: ${update}`) },
+    updater: defaultUpdater,
     images: {},
     size: 3,
     cached_source: null,
@@ -110,7 +107,7 @@ export default createStore<State>({
     },
     updateSize (state, size) {
       state.cached_source = null
-      const images: { [key: string]: { bitmap: ImageBitmap, url: string } } = {}
+      const images: { [key: string]: GridImage } = {}
       Object.keys(state.images).forEach(id => {
         if (parseInt(id) <= size * size) {
           images[id] = state.images[id]
@@ -119,11 +116,43 @@ export default createStore<State>({
       state.images = images
       state.size = size
     },
-    updateImages(state, { id, bitmap, image }) {
+    updateImages(state, { id, bitmap, image, title, sourceUrl, sourceDataUrl, cropData, cropBoxData, canvasData }) {
       state.images[id] = {
         bitmap,
-        url: image
+        url: image,
+        title,
+        sourceUrl,
+        sourceDataUrl,
+        cropData,
+        cropBoxData,
+        canvasData
       };
+      state.cached_source = null;
+    },
+    restoreImage(state, { id, image }) {
+      state.images[id] = image;
+      state.cached_source = null;
+    },
+    restoreProject(state, { size, images, color, alpha, upscaleModel, workerCount, forceUpscale, selectedId }) {
+      state.size = size;
+      state.images = images;
+      state.color = color;
+      state.alpha = alpha;
+      state.upscaleModel = upscaleModel;
+      state.workerCount = workerCount;
+      state.forceUpscale = forceUpscale;
+      state.selected_id = selectedId;
+      state.show_search = false;
+      state.downloading = false;
+      state.progress = 0;
+      state.draggedImage = null;
+      state.cached_source = null;
+      state.updater = defaultUpdater;
+      localStorage.setItem("color", color);
+      localStorage.setItem("alpha", alpha.toString());
+      localStorage.setItem("upscaleModel", upscaleModel);
+      localStorage.setItem("workerCount", workerCount.toString());
+      localStorage.setItem("forceUpscale", forceUpscale.toString());
     },
     updateColor (state, color) {
       state.cached_source = null
