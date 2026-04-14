@@ -1,34 +1,32 @@
 <template>
-  <div class="rounded-[2rem] border border-white/75 bg-white/78 p-3 text-slate-700 shadow-[0_24px_70px_rgba(148,163,184,0.32)] ring-1 ring-slate-200/70 backdrop-blur-xl" @click.stop>
+  <div class="relative rounded-[2rem] border border-white/75 bg-white/78 p-3 text-slate-700 shadow-[0_24px_70px_rgba(148,163,184,0.32)] ring-1 ring-slate-200/70 backdrop-blur-xl" @click.stop>
     <div v-if="downloading" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="relative">
-        <div class="flex gap-2">
-          <a
-            href="https://github.com/gqgs/3x3-generator"
-            target="_blank"
-            aria-label="Open GitHub repository"
-            class="flex min-h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-slate-100/75 text-xl text-slate-700 shadow-sm hover:bg-white/90 hover:text-slate-900"
-          >
-            <ion-icon name="logo-octocat"></ion-icon>
-          </a>
-          <div class="min-w-0 flex-1">
-            <DropDown :options="downloadFormats" @clicked="download($event)">
-              <template v-slot:selected>
-                <span v-if='downloading'>Processing...</span>
-                <span v-else>Download</span>
-              </template>
-              <template v-slot:option="slotProps">
-                <span class="inline-flex items-center gap-2">
-                  <ion-icon name="download-outline"></ion-icon>
-                  <span>{{ formatMimeLabel(slotProps.option) }}</span>
-                </span>
-              </template>
-            </DropDown>
-          </div>
-      </div>
+      <div class="flex gap-2">
+        <a
+          href="https://github.com/gqgs/3x3-generator"
+          target="_blank"
+          aria-label="Open GitHub repository"
+          class="flex min-h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-slate-100/75 text-xl text-slate-700 shadow-sm hover:bg-white/90 hover:text-slate-900"
+        >
+          <ion-icon name="logo-octocat"></ion-icon>
+        </a>
+        <div class="min-w-0 flex-1">
+          <DropDown :options="downloadFormats" @clicked="download($event)">
+            <template v-slot:selected>
+              <span v-if='downloading'>Processing...</span>
+              <span v-else>Download</span>
+            </template>
+            <template v-slot:option="slotProps">
+              <span class="inline-flex items-center gap-2">
+                <ion-icon name="download-outline"></ion-icon>
+                <span>{{ formatMimeLabel(slotProps.option) }}</span>
+              </span>
+            </template>
+          </DropDown>
+        </div>
       </div>
 
       <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = $event">
@@ -60,10 +58,11 @@
         @change="handleProjectFile"
       >
 
+      <div class="relative">
         <transition name="fade">
           <div
             v-if="advancedOpen"
-            class="absolute bottom-20 right-0 z-30 min-w-[280px] rounded-[1.5rem] border border-white/75 bg-white/95 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
+            class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 max-h-[70vh] w-full min-w-[280px] overflow-y-auto rounded-[1.5rem] border border-white/75 bg-white/95 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl sm:w-auto"
             @click.stop
           >
             <div class="space-y-5">
@@ -151,7 +150,7 @@
           </div>
         </transition>
 
-      <button
+        <button
           type="button"
           class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
           @click.stop="advancedOpen = !advancedOpen"
@@ -161,6 +160,7 @@
             <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </span>
         </button>
+      </div>
     </div>
   </div>
 </template>
