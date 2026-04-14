@@ -22,6 +22,7 @@ export interface State {
   upscaleModel: ModelType
   workerCount: number
   forceUpscale: boolean
+  includeTitles: boolean
 }
 
 export const key: InjectionKey<Store<State>> = Symbol("store")
@@ -49,9 +50,15 @@ export default createStore<State>({
       return (stored as ModelType) || 'Swin2SR';
     })(),
     workerCount: parseInt(localStorage.getItem("workerCount") || "3"),
-    forceUpscale: localStorage.getItem("forceUpscale") === "true"
+    forceUpscale: localStorage.getItem("forceUpscale") === "true",
+    includeTitles: localStorage.getItem("includeTitles") === "true"
   },
   mutations: {
+    setIncludeTitles(state, includeTitles: boolean) {
+      state.includeTitles = includeTitles;
+      localStorage.setItem("includeTitles", includeTitles.toString());
+      state.cached_source = null;
+    },
     setForceUpscale(state, force: boolean) {
       state.forceUpscale = force;
       localStorage.setItem("forceUpscale", force.toString());
@@ -133,7 +140,7 @@ export default createStore<State>({
       state.images[id] = image;
       state.cached_source = null;
     },
-    restoreProject(state, { size, images, color, alpha, upscaleModel, workerCount, forceUpscale, selectedId }) {
+    restoreProject(state, { size, images, color, alpha, upscaleModel, workerCount, forceUpscale, includeTitles, selectedId }) {
       state.size = size;
       state.images = images;
       state.color = color;
@@ -141,6 +148,7 @@ export default createStore<State>({
       state.upscaleModel = upscaleModel;
       state.workerCount = workerCount;
       state.forceUpscale = forceUpscale;
+      state.includeTitles = includeTitles;
       state.selected_id = selectedId;
       state.show_search = false;
       state.downloading = false;
@@ -153,6 +161,7 @@ export default createStore<State>({
       localStorage.setItem("upscaleModel", upscaleModel);
       localStorage.setItem("workerCount", workerCount.toString());
       localStorage.setItem("forceUpscale", forceUpscale.toString());
+      localStorage.setItem("includeTitles", includeTitles.toString());
     },
     updateColor (state, color) {
       state.cached_source = null

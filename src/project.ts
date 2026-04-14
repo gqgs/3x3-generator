@@ -19,6 +19,7 @@ export interface ProjectSettings {
   upscaleModel: ModelType
   workerCount: number
   forceUpscale: boolean
+  includeTitles: boolean
   selectedId: number
 }
 
@@ -126,6 +127,7 @@ const assertProject = (value: unknown): ProjectFile => {
   const upscaleModel = settings.upscaleModel
   const workerCount = parseInteger(settings.workerCount)
   const forceUpscale = settings.forceUpscale
+  const includeTitles = settings.includeTitles
 
   if (size === null || size < 2 || size > 5) {
     throw new Error("Project grid size is invalid")
@@ -147,6 +149,9 @@ const assertProject = (value: unknown): ProjectFile => {
   }
   if (typeof forceUpscale !== "boolean") {
     throw new Error("Project force-upscale setting is invalid")
+  }
+  if (includeTitles !== undefined && typeof includeTitles !== "boolean") {
+    throw new Error("Project title overlay setting is invalid")
   }
 
   const selectedId = parseInteger(settings.selectedId) ?? 0
@@ -175,6 +180,7 @@ const assertProject = (value: unknown): ProjectFile => {
       upscaleModel,
       workerCount,
       forceUpscale,
+      includeTitles: includeTitles === true,
       selectedId: selectedId >= 1 && selectedId <= maxId ? selectedId : 0
     },
     search: {
@@ -215,6 +221,7 @@ export const createProject = (
       upscaleModel: state.upscaleModel,
       workerCount: state.workerCount,
       forceUpscale: state.forceUpscale,
+      includeTitles: state.includeTitles,
       selectedId: state.selected_id
     },
     search,

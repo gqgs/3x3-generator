@@ -29,7 +29,8 @@ const baseState = (): State => ({
   progress: 0,
   upscaleModel: "Swin2SR",
   workerCount: 3,
-  forceUpscale: false
+  forceUpscale: false,
+  includeTitles: false
 })
 
 describe("project files", () => {
@@ -46,6 +47,7 @@ describe("project files", () => {
     expect(project.settings.size).toBe(3)
     expect(project.settings.cellSize).toBe(400)
     expect(project.settings.upscaleModel).toBe("HFA2kShallowESRGAN")
+    expect(project.settings.includeTitles).toBe(false)
     expect(project.search.query).toBe("lain")
     expect(project.images["1"]).toMatchObject({
       title: "One",
@@ -61,6 +63,28 @@ describe("project files", () => {
     })
 
     expect(parseProject(JSON.stringify(project)).settings.cellSize).toBe(200)
+  })
+
+  it("serializes and parses the title overlay setting", () => {
+    const state = baseState()
+    state.includeTitles = true
+    const project = createProject(state, {
+      cellSize: 400,
+      search: { api: "Jikan", tab: "manga", query: "" }
+    })
+
+    expect(project.settings.includeTitles).toBe(true)
+    expect(parseProject(JSON.stringify(project)).settings.includeTitles).toBe(true)
+  })
+
+  it("defaults missing title overlay settings to disabled", () => {
+    const project = createProject(baseState(), {
+      cellSize: 400,
+      search: { api: "Jikan", tab: "manga", query: "" }
+    }) as any
+    delete project.settings.includeTitles
+
+    expect(parseProject(JSON.stringify(project)).settings.includeTitles).toBe(false)
   })
 
   it("accepts numeric strings from earlier project exports", () => {

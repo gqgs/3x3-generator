@@ -9,6 +9,7 @@ describe("Vuex Store", () => {
     store.commit("setSelectedID", 0)
     store.commit("updateColor", "#ffffff")
     store.commit("updateAlpha", 50)
+    store.commit("setIncludeTitles", false)
     // Clear images
     Object.keys(store.state.images).forEach(id => {
         delete store.state.images[id]
@@ -93,6 +94,16 @@ describe("Vuex Store", () => {
         store.commit("setForceUpscale", false)
         expect(store.state.forceUpscale).toBe(false)
         expect(localStorage.getItem("forceUpscale")).toBe("false")
+    })
+
+    it("setIncludeTitles updates includeTitles, localStorage, and cached source", () => {
+        store.state.cached_source = document.createElement("canvas")
+
+        store.commit("setIncludeTitles", true)
+
+        expect(store.state.includeTitles).toBe(true)
+        expect(localStorage.getItem("includeTitles")).toBe("true")
+        expect(store.state.cached_source).toBeNull()
     })
   })
 

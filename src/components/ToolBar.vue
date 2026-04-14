@@ -101,21 +101,41 @@
                 </DropDown>
               </div>
               <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Visual Consistency</p>
-                <button 
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Image Processing</p>
+                <button
                   type="button"
                   @click="updateForceUpscale(!forceUpscale)"
                   :disabled="downloading"
                   class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
                 >
                   <span>Force Upscale</span>
-                  <div 
+                  <div
                     class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
                     :class="forceUpscale ? 'bg-sky-400' : 'bg-slate-300'"
                   >
-                    <div 
+                    <div
                       class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
                       :class="forceUpscale ? 'translate-x-5' : 'translate-x-0'"
+                    ></div>
+                  </div>
+                </button>
+              </div>
+              <div>
+                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Title Overlay</p>
+                <button
+                  type="button"
+                  @click="updateIncludeTitles(!includeTitles)"
+                  :disabled="downloading"
+                  class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
+                >
+                  <span>Include Titles</span>
+                  <div
+                    class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
+                    :class="includeTitles ? 'bg-sky-400' : 'bg-slate-300'"
+                  >
+                    <div
+                      class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
+                      :class="includeTitles ? 'translate-x-5' : 'translate-x-0'"
                     ></div>
                   </div>
                 </button>
@@ -151,6 +171,7 @@ import { mapState } from "vuex"
 import { useStore } from "../store"
 import fileDownload from "js-file-download"
 import { scaleImage, releasePool, setWorkerCount, getWorkerCount } from "../image"
+import { buildCaptionLayout, captionMetrics } from "../image/captions"
 import DropDown from "./DropDown.vue"
 import Api from "../api"
 import { createProject, hydrateProject, parseProject } from "../project"
@@ -182,6 +203,10 @@ export default defineComponent({
 
     const updateForceUpscale = (force: boolean) => {
       store.commit("setForceUpscale", force)
+    }
+
+    const updateIncludeTitles = (includeTitles: boolean) => {
+      store.commit("setIncludeTitles", includeTitles)
     }
 
     const downloadFormats = ["image/jpeg", "image/png", "image/webp"]
@@ -232,6 +257,7 @@ export default defineComponent({
         upscaleModel: hydrated.settings.upscaleModel,
         workerCount: hydrated.settings.workerCount,
         forceUpscale: hydrated.settings.forceUpscale,
+        includeTitles: hydrated.settings.includeTitles,
         selectedId: hydrated.settings.selectedId
       })
       Api.restoreSearchState(hydrated.search)
@@ -271,6 +297,49 @@ export default defineComponent({
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("could not get canvas context")
       ctx.strokeStyle = store.getters.color
+
+      const tilePosition = (id: string) => {
+        const index = parseInt(id) - 1
+        return {
+          left: (index % size) * imageSize,
+          top: Math.floor(index / size) * imageSize
+        }
+      }
+
+      const drawCaption = (title: string | undefined, left: number, top: number) => {
+        const caption = (title || "").trim()
+        if (!store.state.includeTitles || !caption) return
+
+        ctx.save()
+        ctx.translate(left, top)
+        const metrics = captionMetrics(imageSize)
+        ctx.font = `600 ${metrics.fontSize}px Avenir Next, Montserrat, Segoe UI, sans-serif`
+        const measureWithFont = (text: string) => ctx.measureText(text).width
+        const layout = buildCaptionLayout(caption, imageSize, measureWithFont)
+        if (layout.lines.length === 0) {
+          ctx.restore()
+          return
+        }
+
+        const veilTop = imageSize - layout.veilHeight
+        const gradient = ctx.createLinearGradient(0, veilTop, 0, imageSize)
+        gradient.addColorStop(0, "rgba(0, 0, 0, 0)")
+        gradient.addColorStop(0.34, "rgba(0, 0, 0, 0.48)")
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0.78)")
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, veilTop, imageSize, layout.veilHeight)
+
+        const textHeight = layout.lines.length * layout.lineHeight
+        const firstBaseline = imageSize - layout.paddingY - textHeight + layout.fontSize
+        ctx.fillStyle = "#ffffff"
+        ctx.shadowColor = "rgba(0, 0, 0, 0.85)"
+        ctx.shadowBlur = 2
+        ctx.shadowOffsetY = 1
+        layout.lines.forEach((line, index) => {
+          ctx.fillText(line, layout.paddingX, firstBaseline + index * layout.lineHeight)
+        })
+        ctx.restore()
+      }
 
       const queue = Object.keys(images)
         .filter(id => images[id]?.bitmap)
@@ -314,17 +383,25 @@ export default defineComponent({
       const workers = Array(CONCURRENCY_LIMIT).fill(null).map(() => processQueue())
       await Promise.all(workers)
 
-      for (let x = 0, i = 1; x < size; x++) {
-        for (let y = 0; y < size; y++, i++) {
-          const upscaledPromise = upscale_jobs.get(i.toString())
-          if (upscaledPromise) {
-            const upscaled = await upscaledPromise
-            ctx.drawImage(upscaled, 0, 0, imageSize, imageSize, y * imageSize, x * imageSize, imageSize, imageSize)
-            ctx.strokeRect(y * imageSize, x * imageSize, imageSize, imageSize)
-            // Close the upscaled bitmap to free memory
-            upscaled.close()
-          }
+      const drawnTileIds: string[] = []
+      for (let i = 1; i <= size * size; i++) {
+        const id = i.toString()
+        const upscaledPromise = upscale_jobs.get(id)
+        if (upscaledPromise) {
+          const upscaled = await upscaledPromise
+          const { left, top } = tilePosition(id)
+          ctx.drawImage(upscaled, 0, 0, imageSize, imageSize, left, top, imageSize, imageSize)
+          ctx.strokeRect(left, top, imageSize, imageSize)
+          drawnTileIds.push(id)
+          // Close the upscaled bitmap to free memory
+          upscaled.close()
         }
+      }
+
+      for (const id of drawnTileIds) {
+        const { left, top } = tilePosition(id)
+        drawCaption(images[id].title || `Image ${id}`, left, top)
+        ctx.strokeRect(left, top, imageSize, imageSize)
       }
       return canvas
     }
@@ -364,6 +441,7 @@ export default defineComponent({
       updateModel,
       updateWorkers,
       updateForceUpscale,
+      updateIncludeTitles,
       downloadFormats,
       projectOptions,
       projectInput,
@@ -383,7 +461,8 @@ export default defineComponent({
       "progress",
       "upscaleModel",
       "workerCount",
-      "forceUpscale"
+      "forceUpscale",
+      "includeTitles"
     ])
   }
 })

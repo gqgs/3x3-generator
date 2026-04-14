@@ -9,7 +9,15 @@
       @dragover.prevent
       @drop="onDrop"
     >
-      <img v-if="currentImage" :src="currentImage" :title="currentTitle" class="h-full w-full object-cover" />
+      <template v-if="currentImage">
+        <img :src="currentImage" :title="currentTitle" class="h-full w-full object-cover" />
+        <span
+          v-if="showCaption"
+          class="pointer-events-none absolute inset-x-0 bottom-0 flex min-h-[22%] items-end bg-[linear-gradient(to_top,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.42)_62%,rgba(0,0,0,0)_100%)] px-[3.5%] pb-[2.5%] pt-[8%] text-left text-[clamp(0.68rem,2.8vw,0.9rem)] font-semibold leading-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]"
+        >
+          <span class="line-clamp-2">{{ currentTitle }}</span>
+        </span>
+      </template>
       <span
         v-else
         class="icon-img flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.16),_transparent_60%)] text-slate-400 transition group-hover:text-slate-600"
@@ -77,6 +85,10 @@ export default defineComponent({
 
     const canRecrop = computed(() => {
       return Boolean(currentImageRecord.value?.sourceDataUrl)
+    })
+
+    const showCaption = computed(() => {
+      return Boolean(store.state.includeTitles && currentImageRecord.value?.title)
     })
 
     const recropResult = computed<SearchResult | null>(() => {
@@ -151,6 +163,7 @@ export default defineComponent({
       onDragStart,
       onDrop,
       canRecrop,
+      showCaption,
       recropOpen,
       recropResult,
       openRecrop,
