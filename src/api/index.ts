@@ -7,10 +7,11 @@ import Jikan from "./jikan"
 import LastFM from "./lastfm"
 import VNDB from "./vndb"
 import RAWG from "./rawg"
+import IGDB from "./igdb"
 import { API, APIWithShowMore } from "./api"
 import { fileToDataUrl } from "../image/data-url"
 
-const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new RAWG(), new VNDB()]
+const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new RAWG(), new IGDB(), new VNDB()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
