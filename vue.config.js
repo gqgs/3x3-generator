@@ -20,12 +20,14 @@ module.exports = {
         return [{
           patterns: [
             {
-              from: "./node_modules/onnxruntime-web/dist/*.wasm",
+              context: "./node_modules/upscalejs/dist/js",
+              from: "ort-wasm-simd-threaded.*",
               to: "js/[name][ext]",
             },
             {
-              from: "./node_modules/onnxruntime-web/dist/*.mjs",
-              to: "js/[name][ext]",
+              context: "./node_modules/upscalejs/dist/models",
+              from: "**/*",
+              to: "models/[path][name][ext]",
             }
           ],
         }]
