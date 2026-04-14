@@ -67,7 +67,7 @@ const parseInteger = (value: unknown): number | null => {
 }
 
 const validModel = (value: unknown): value is ModelType => {
-  return value === "6B" || value === "Swin2SR"
+  return value === "6B" || value === "Swin2SR" || value === "HFA2kShallowESRGAN"
 }
 
 const validCropData = (value: unknown): value is CropData => {

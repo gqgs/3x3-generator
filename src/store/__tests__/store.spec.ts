@@ -73,6 +73,10 @@ describe("Vuex Store", () => {
         store.commit("setUpscaleModel", "6B")
         expect(store.state.upscaleModel).toBe("6B")
         expect(localStorage.getItem("upscaleModel")).toBe("6B")
+        
+        store.commit("setUpscaleModel", "HFA2kShallowESRGAN")
+        expect(store.state.upscaleModel).toBe("HFA2kShallowESRGAN")
+        expect(localStorage.getItem("upscaleModel")).toBe("HFA2kShallowESRGAN")
     })
 
     it("setWorkerCount updates workerCount and localStorage", () => {

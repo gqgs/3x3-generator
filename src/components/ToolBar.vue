@@ -36,12 +36,12 @@
               </div>
               <div>
                 <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
-                <DropDown :options="['Swin2SR', '6B']" :disabled="downloading" @clicked="updateModel($event)">
+                <DropDown :options="['Swin2SR', '6B', 'HFA2kShallowESRGAN']" :disabled="downloading" @clicked="updateModel($event)">
                   <template v-slot:selected>
-                    <span>{{ upscaleModel === '6B' ? 'High Quality' : 'Balanced' }}</span>
+                    <span>{{ upscaleModel === '6B' ? 'High Quality' : (upscaleModel === 'HFA2kShallowESRGAN' ? 'Fast' : 'Balanced') }}</span>
                   </template>
                   <template v-slot:option="slotProps">
-                    {{ slotProps.option === '6B' ? 'High Quality' : 'Balanced' }} <small>{{ slotProps.option === '6B' ? '(Real-ESRGAN)' : '(Swin2SR)' }}</small>
+                    {{ slotProps.option === '6B' ? 'High Quality' : (slotProps.option === 'HFA2kShallowESRGAN' ? 'Fast' : 'Balanced') }} <small>{{ slotProps.option === '6B' ? '(Real-ESRGAN)' : (slotProps.option === 'HFA2kShallowESRGAN' ? '(HFA2k)' : '(Swin2SR)') }}</small>
                   </template>
                 </DropDown>
               </div>
@@ -168,7 +168,7 @@ export default defineComponent({
     const updateColor = (event: Event) => store.dispatch("updateColor", (event.target as HTMLInputElement).value)
     const updateAlpha = (event: Event) => store.dispatch("updateAlpha", (event.target as HTMLInputElement).value)
     
-    const updateModel = async (model: '6B' | 'Swin2SR') => {
+    const updateModel = async (model: '6B' | 'Swin2SR' | 'HFA2kShallowESRGAN') => {
       if (store.state.downloading) return
       await releasePool()
       store.commit("setUpscaleModel", model)

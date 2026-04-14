@@ -34,7 +34,9 @@ const baseState = (): State => ({
 
 describe("project files", () => {
   it("serializes settings and selected images", () => {
-    const project = createProject(baseState(), {
+    const state = baseState()
+    state.upscaleModel = "HFA2kShallowESRGAN"
+    const project = createProject(state, {
       cellSize: 400,
       search: { api: "Anilist", tab: "anime", query: "lain" }
     })
@@ -43,6 +45,7 @@ describe("project files", () => {
     expect(project.version).toBe(1)
     expect(project.settings.size).toBe(3)
     expect(project.settings.cellSize).toBe(400)
+    expect(project.settings.upscaleModel).toBe("HFA2kShallowESRGAN")
     expect(project.search.query).toBe("lain")
     expect(project.images["1"]).toMatchObject({
       title: "One",

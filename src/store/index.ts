@@ -3,7 +3,7 @@ import { GridImage, Update } from "../types"
 import { InjectionKey } from "vue"
 import Color from "color"
 
-export type ModelType = '6B' | 'Swin2SR';
+export type ModelType = '6B' | 'Swin2SR' | 'HFA2kShallowESRGAN';
 
 const defaultUpdater = (update: Update) => { console.warn(`unexpected call: ${update}`) }
 
