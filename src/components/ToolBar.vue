@@ -5,21 +5,65 @@
     </div>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div class="relative">
-        <button
-          type="button"
-          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
-          @click.stop="advancedOpen = !advancedOpen"
-        >
-          <span>Advanced</span>
-          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-            <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+        <div class="flex gap-2">
+          <a
+            href="https://github.com/gqgs/3x3-generator"
+            target="_blank"
+            aria-label="Open GitHub repository"
+            class="flex min-h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-slate-100/75 text-xl text-slate-700 shadow-sm hover:bg-white/90 hover:text-slate-900"
+          >
+            <ion-icon name="logo-octocat"></ion-icon>
+          </a>
+          <div class="min-w-0 flex-1">
+            <DropDown :options="downloadFormats" @clicked="download($event)">
+              <template v-slot:selected>
+                <span v-if='downloading'>Processing...</span>
+                <span v-else>Download</span>
+              </template>
+              <template v-slot:option="slotProps">
+                <span class="inline-flex items-center gap-2">
+                  <ion-icon name="download-outline"></ion-icon>
+                  <span>{{ formatMimeLabel(slotProps.option) }}</span>
+                </span>
+              </template>
+            </DropDown>
+          </div>
+      </div>
+      </div>
+
+      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = $event">
+        <template v-slot:selected>
+          <span>{{size}}x{{size}} ({{size*cellSize}}px)</span>
+        </template>
+        <template v-slot:option="slotProps">
+          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'">(upscaled)</small>
+        </template>
+      </DropDown>
+
+      <DropDown :options="projectOptions" :disabled="downloading" @clicked="handleProjectAction($event)">
+        <template v-slot:selected>
+          <span>Import/Export</span>
+        </template>
+        <template v-slot:option="slotProps">
+          <span class="inline-flex items-center gap-2">
+            <ion-icon :name="slotProps.option === 'import' ? 'folder-open-outline' : 'save-outline'"></ion-icon>
+            <span>{{ slotProps.option === 'import' ? 'Import' : 'Export' }}</span>
           </span>
-        </button>
-        
+        </template>
+      </DropDown>
+
+      <input
+        ref="projectInput"
+        class="hidden"
+        type="file"
+        accept=".json,.3x3.json,application/json"
+        @change="handleProjectFile"
+      >
+
         <transition name="fade">
           <div
             v-if="advancedOpen"
-            class="absolute bottom-[calc(100%+0.75rem)] left-0 z-30 w-full min-w-[280px] rounded-[1.5rem] border border-white/75 bg-white/95 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
+            class="absolute bottom-20 right-0 z-30 min-w-[280px] rounded-[1.5rem] border border-white/75 bg-white/95 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl"
             @click.stop
           >
             <div class="space-y-5">
@@ -86,61 +130,17 @@
             </div>
           </div>
         </transition>
-      </div>
 
-      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = $event">
-        <template v-slot:selected>
-          <span>{{size}}x{{size}} ({{size*cellSize}}px)</span>
-        </template>
-        <template v-slot:option="slotProps">
-          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'">(upscaled)</small>
-        </template>
-      </DropDown>
-
-      <DropDown :options="projectOptions" :disabled="downloading" @clicked="handleProjectAction($event)">
-        <template v-slot:selected>
-          <span>Import/Export</span>
-        </template>
-        <template v-slot:option="slotProps">
-          <span class="inline-flex items-center gap-2">
-            <ion-icon :name="slotProps.option === 'import' ? 'folder-open-outline' : 'save-outline'"></ion-icon>
-            <span>{{ slotProps.option === 'import' ? 'Import' : 'Export' }}</span>
-          </span>
-        </template>
-      </DropDown>
-
-      <input
-        ref="projectInput"
-        class="hidden"
-        type="file"
-        accept=".json,.3x3.json,application/json"
-        @change="handleProjectFile"
-      >
-
-      <div class="flex gap-2">
-        <div class="min-w-0 flex-1">
-          <DropDown :options="downloadFormats" @clicked="download($event)">
-            <template v-slot:selected>
-              <span v-if='downloading'>Processing...</span>
-              <span v-else>Download</span>
-            </template>
-            <template v-slot:option="slotProps">
-              <span class="inline-flex items-center gap-2">
-                <ion-icon name="download-outline"></ion-icon>
-                <span>{{ formatMimeLabel(slotProps.option) }}</span>
-              </span>
-            </template>
-          </DropDown>
-        </div>
-        <a
-          href="https://github.com/gqgs/3x3-generator"
-          target="_blank"
-          aria-label="Open GitHub repository"
-          class="flex min-h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-slate-100/75 text-xl text-slate-700 shadow-sm hover:bg-white/90 hover:text-slate-900"
+      <button
+          type="button"
+          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
+          @click.stop="advancedOpen = !advancedOpen"
         >
-          <ion-icon name="logo-octocat"></ion-icon>
-        </a>
-      </div>
+          <span>Advanced</span>
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+            <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </span>
+        </button>
     </div>
   </div>
 </template>
