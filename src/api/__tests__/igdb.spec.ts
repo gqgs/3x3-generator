@@ -40,7 +40,7 @@ describe("IGDB API", () => {
       expect(results).toHaveLength(1)
       expect(results[0].mal_id).toBe(123)
       expect(results[0].title).toBe("Halo: Combat Evolved")
-      expect(results[0].image_url).toBe("https://images.igdb.com/igdb/image/upload/t_cover_big/co1r8f.jpg")
+      expect(results[0].image_url).toBe("https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1r8f.jpg")
     })
   })
 })

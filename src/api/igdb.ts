@@ -37,7 +37,7 @@ export default class IGDB extends API<APIGameResult[]> {
       .filter(game => game.cover?.image_id)
       .map(game => {
         const imageId = game.cover!.image_id
-        const imageUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${imageId}.jpg`
+        const imageUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${imageId}.jpg`
         return {
           mal_id: game.id,
           title: game.name,
