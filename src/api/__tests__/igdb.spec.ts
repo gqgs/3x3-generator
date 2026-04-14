@@ -15,7 +15,7 @@ describe("IGDB API", () => {
   describe("fetchURL", () => {
     it("should return correct URL and options for game search using the proxy", () => {
       const { url, options } = igdb.fetchURL("game", "Halo")
-      expect(url).toBe("https://5l145ak96e.execute-api.sa-east-1.amazonaws.com/prod/games")
+      expect(url).toBe("https://pwh1z9812k.execute-api.us-west-2.amazonaws.com/prod/games")
       expect(options.method).toBe("POST")
       expect(options.headers).toMatchObject({
         "Accept": "application/json",
@@ -26,7 +26,7 @@ describe("IGDB API", () => {
 
     it("should return correct URL and options for character search using the proxy", () => {
       const { url, options } = igdb.fetchURL("character", "Link")
-      expect(url).toBe("https://5l145ak96e.execute-api.sa-east-1.amazonaws.com/prod/characters")
+      expect(url).toBe("https://pwh1z9812k.execute-api.us-west-2.amazonaws.com/prod/characters")
       expect(options.body).toBe('search "Link"; fields name, mug_shot.image_id; limit 40;')
     })
   })

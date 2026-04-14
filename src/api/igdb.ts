@@ -24,7 +24,7 @@ type APIResult = APIGameResult[] | APICharacterResult[]
 export default class IGDB extends API<APIResult> {
   readonly name = "IGDB"
   readonly tabs = ["game", "character"]
-  private readonly proxyUrl = "https://5l145ak96e.execute-api.sa-east-1.amazonaws.com/prod"
+  private readonly proxyUrl = "https://pwh1z9812k.execute-api.us-west-2.amazonaws.com/prod"
 
   fetchURL(tab: string, query: string): { url: string, options: RequestInit } {
     const fields = tab === "character" ? "name, mug_shot.image_id" : "name, cover.image_id"
