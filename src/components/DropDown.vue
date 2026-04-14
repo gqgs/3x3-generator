@@ -17,7 +17,8 @@
     </button>
     <div
       v-if="active"
-      class="absolute bottom-[calc(100%+0.75rem)] left-0 z-30 w-full overflow-hidden rounded-2xl border border-white/75 bg-white/92 p-2 shadow-[0_20px_40px_rgba(148,163,184,0.28)] ring-1 ring-slate-200/70 backdrop-blur"
+      class="absolute z-30 w-full overflow-hidden rounded-2xl border border-white/75 bg-white/92 p-2 shadow-[0_20px_40px_rgba(148,163,184,0.28)] ring-1 ring-slate-200/70 backdrop-blur"
+      :class="direction === 'up' ? 'bottom-[calc(100%+0.75rem)]' : 'top-[calc(100%+0.75rem)]'"
       :id="dropdown_menu_id"
       role="menu"
     >
@@ -46,6 +47,10 @@ export default defineComponent({
     disabled: {
       type: Boolean,
       default: false
+    },
+    direction: {
+      type: String as PropType<'up' | 'down'>,
+      default: 'up'
     }
   },
   emits: ["clicked"],

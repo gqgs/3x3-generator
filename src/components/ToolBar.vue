@@ -3,7 +3,107 @@
     <div v-if="downloading" class="mb-3 overflow-hidden rounded-full bg-slate-200/70">
       <div class="h-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-300 transition-all duration-300" :style="{ width: `${progress}%` }"></div>
     </div>
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+    <!-- Advanced Panel - Positioned relative to the entire toolbar -->
+    <transition name="fade">
+      <div
+        v-if="advancedOpen"
+        class="absolute bottom-[calc(100%+0.75rem)] left-0 right-0 z-30 max-h-[60vh] overflow-y-auto rounded-[2rem] border border-white/75 bg-white/95 p-5 pb-20 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,0.18)] ring-1 ring-slate-200/70 backdrop-blur-2xl sm:left-auto sm:right-0 sm:w-[320px]"
+        @click.stop
+      >
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-xs font-black uppercase tracking-[0.25em] text-slate-400">Advanced Settings</h3>
+          <button @click="advancedOpen = false" class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+        
+        <div class="space-y-6">
+          <div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Grid Size</p>
+            <DropDown direction="down" :options="['2', '3', '4', '5']" :disabled="downloading" @clicked="updateSize(parseInt($event))">
+              <template v-slot:selected>
+                <span>{{size}}x{{size}} Grid</span>
+              </template>
+              <template v-slot:option="slotProps">
+                {{slotProps.option}}x{{slotProps.option}}
+              </template>
+            </DropDown>
+          </div>
+          <div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
+            <DropDown direction="down" :options="['Swin2SR', '6B', 'HFA2kShallowESRGAN']" :disabled="downloading" @clicked="updateModel($event)">
+              <template v-slot:selected>
+                <span>{{ upscaleModel === '6B' ? 'High Quality' : (upscaleModel === 'HFA2kShallowESRGAN' ? 'Fast' : 'Balanced') }}</span>
+              </template>
+              <template v-slot:option="slotProps">
+                {{ slotProps.option === '6B' ? 'High Quality' : (slotProps.option === 'HFA2kShallowESRGAN' ? 'Fast' : 'Balanced') }} <small class="opacity-60">{{ slotProps.option === '6B' ? '(Real-ESRGAN)' : (slotProps.option === 'HFA2kShallowESRGAN' ? '(HFA2k)' : '(Swin2SR)') }}</small>
+              </template>
+            </DropDown>
+          </div>
+          <div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Worker Pool Size</p>
+            <DropDown direction="down" :options="['1', '3', '6', '9']" :disabled="downloading" @clicked="updateWorkers($event)">
+              <template v-slot:selected>
+                <span>{{ workerCount }} Workers</span>
+              </template>
+              <template v-slot:option="slotProps">
+                {{ slotProps.option }} Workers
+              </template>
+            </DropDown>
+          </div>
+          <div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Image Processing</p>
+            <button
+              type="button"
+              @click="updateForceUpscale(!forceUpscale)"
+              :disabled="downloading"
+              class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
+            >
+              <span>Force Upscale</span>
+              <div
+                class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
+                :class="forceUpscale ? 'bg-sky-400' : 'bg-slate-300'"
+              >
+                <div
+                  class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
+                  :class="forceUpscale ? 'translate-x-5' : 'translate-x-0'"
+                ></div>
+              </div>
+            </button>
+          </div>
+          <div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Title Overlay</p>
+            <button
+              type="button"
+              @click="updateIncludeTitles(!includeTitles)"
+              :disabled="downloading"
+              class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
+            >
+              <span>Include Titles</span>
+              <div
+                class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
+                :class="includeTitles ? 'bg-sky-400' : 'bg-slate-300'"
+              >
+                <div
+                  class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
+                  :class="includeTitles ? 'translate-x-5' : 'translate-x-0'"
+                ></div>
+              </div>
+            </button>
+          </div>
+          <div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Border Appearance</p>
+            <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3 shadow-inner">
+              <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
+              <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <div class="flex gap-2">
         <a
           href="https://github.com/gqgs/3x3-generator"
@@ -16,8 +116,8 @@
         <div class="min-w-0 flex-1">
           <DropDown :options="downloadFormats" @clicked="download($event)">
             <template v-slot:selected>
-              <span v-if='downloading'>Processing...</span>
-              <span v-else>Download</span>
+              <span v-if='downloading' class="truncate">Processing...</span>
+              <span v-else class="truncate">Download</span>
             </template>
             <template v-slot:option="slotProps">
               <span class="inline-flex items-center gap-2">
@@ -29,18 +129,18 @@
         </div>
       </div>
 
-      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = $event">
+      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = parseInt($event)">
         <template v-slot:selected>
-          <span>{{size}}x{{size}} ({{size*cellSize}}px)</span>
+          <span class="truncate">{{size}}x{{size}} ({{size*cellSize}}px)</span>
         </template>
         <template v-slot:option="slotProps">
-          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'">(upscaled)</small>
+          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'" class="opacity-60">(upscale)</small>
         </template>
       </DropDown>
 
       <DropDown :options="projectOptions" :disabled="downloading" @clicked="handleProjectAction($event)">
         <template v-slot:selected>
-          <span>Import/Export</span>
+          <span class="truncate">Project</span>
         </template>
         <template v-slot:option="slotProps">
           <span class="inline-flex items-center gap-2">
@@ -58,109 +158,16 @@
         @change="handleProjectFile"
       >
 
-      <div class="relative">
-        <transition name="fade">
-          <div
-            v-if="advancedOpen"
-            class="absolute bottom-[calc(100%+0.75rem)] right-0 z-30 max-h-[70vh] w-full min-w-[280px] overflow-y-auto rounded-[1.5rem] border border-white/75 bg-white/95 p-4 text-slate-700 shadow-[0_20px_50px_rgba(148,163,184,0.35)] ring-1 ring-slate-200/70 backdrop-blur-xl sm:w-auto"
-            @click.stop
-          >
-            <div class="space-y-5">
-              <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Grid Size</p>
-                <DropDown :options="['2', '3', '4', '5']" :disabled="downloading" @clicked="updateSize($event)">
-                  <template v-slot:selected>
-                    <span>{{size}}x{{size}} Grid</span>
-                  </template>
-                  <template v-slot:option="slotProps">
-                    {{slotProps.option}}x{{slotProps.option}}
-                  </template>
-                </DropDown>
-              </div>
-              <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Upscale Model</p>
-                <DropDown :options="['Swin2SR', '6B', 'HFA2kShallowESRGAN']" :disabled="downloading" @clicked="updateModel($event)">
-                  <template v-slot:selected>
-                    <span>{{ upscaleModel === '6B' ? 'High Quality' : (upscaleModel === 'HFA2kShallowESRGAN' ? 'Fast' : 'Balanced') }}</span>
-                  </template>
-                  <template v-slot:option="slotProps">
-                    {{ slotProps.option === '6B' ? 'High Quality' : (slotProps.option === 'HFA2kShallowESRGAN' ? 'Fast' : 'Balanced') }} <small>{{ slotProps.option === '6B' ? '(Real-ESRGAN)' : (slotProps.option === 'HFA2kShallowESRGAN' ? '(HFA2k)' : '(Swin2SR)') }}</small>
-                  </template>
-                </DropDown>
-              </div>
-              <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Worker Pool Size</p>
-                <DropDown :options="['1', '3', '6', '9']" :disabled="downloading" @clicked="updateWorkers($event)">
-                  <template v-slot:selected>
-                    <span>{{ workerCount }} Workers</span>
-                  </template>
-                  <template v-slot:option="slotProps">
-                    {{ slotProps.option }} Workers
-                  </template>
-                </DropDown>
-              </div>
-              <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Image Processing</p>
-                <button
-                  type="button"
-                  @click="updateForceUpscale(!forceUpscale)"
-                  :disabled="downloading"
-                  class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
-                >
-                  <span>Force Upscale</span>
-                  <div
-                    class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
-                    :class="forceUpscale ? 'bg-sky-400' : 'bg-slate-300'"
-                  >
-                    <div
-                      class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
-                      :class="forceUpscale ? 'translate-x-5' : 'translate-x-0'"
-                    ></div>
-                  </div>
-                </button>
-              </div>
-              <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Title Overlay</p>
-                <button
-                  type="button"
-                  @click="updateIncludeTitles(!includeTitles)"
-                  :disabled="downloading"
-                  class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-50/90 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-inner hover:bg-white/90 disabled:opacity-50"
-                >
-                  <span>Include Titles</span>
-                  <div
-                    class="relative h-6 w-11 rounded-full transition-colors duration-200 ease-in-out"
-                    :class="includeTitles ? 'bg-sky-400' : 'bg-slate-300'"
-                  >
-                    <div
-                      class="absolute left-1 top-1 h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out"
-                      :class="includeTitles ? 'translate-x-5' : 'translate-x-0'"
-                    ></div>
-                  </div>
-                </button>
-              </div>
-              <div>
-                <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Border Appearance</p>
-                <div class="flex items-center gap-3 rounded-2xl border border-white/70 bg-slate-50/90 p-3 shadow-inner">
-                  <input class="h-11 w-14 cursor-pointer rounded-xl border border-slate-200 bg-transparent p-1" type="color" id="color" :value="color" @input="updateColor($event)">
-                  <input class="w-full accent-sky-400" type="range" :value="alpha" @input="updateAlpha($event)" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </transition>
-
-        <button
-          type="button"
-          class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
-          @click.stop="advancedOpen = !advancedOpen"
-        >
-          <span>Advanced</span>
-          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-            <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </span>
-        </button>
-      </div>
+      <button
+        type="button"
+        class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
+        @click.stop="advancedOpen = !advancedOpen"
+      >
+        <span class="truncate">Advanced</span>
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+          <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+        </span>
+      </button>
     </div>
   </div>
 </template>
