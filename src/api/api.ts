@@ -1,5 +1,31 @@
 import { SearchResult } from "../types"
 
+export class APIServerError extends Error {
+  readonly status: number
+
+  constructor (status: number) {
+    super(`API request failed with status ${status}`)
+    this.name = "APIServerError"
+    this.status = status
+  }
+}
+
+export const isAPIServerError = (error: unknown): error is APIServerError => {
+  return error instanceof APIServerError
+}
+
+export class APIRequestError extends Error {
+  constructor (cause?: unknown) {
+    super("API request failed")
+    this.name = "APIRequestError"
+    this.cause = cause
+  }
+}
+
+export const isAPIRequestError = (error: unknown): error is APIRequestError => {
+  return error instanceof APIRequestError
+}
+
 export abstract class API<APIResult> {
   protected last_id = 0
   readonly has_show_more: boolean = false
@@ -19,11 +45,27 @@ export abstract class API<APIResult> {
     }
     const id = ++this.last_id
     const { url, options } = this.fetchURL(tab, query)
-    const resp = await fetch(url, options)
+    const resp = await this.fetchResponse(url, options)
+    if (this.last_id > id) return []
+    this.throwIfServerError(resp)
     const data = await resp.json()
     if (this.last_id > id) return []
     const results = this.processResult(data, tab)
     return this.filterValidResults(results)
+  }
+
+  protected throwIfServerError(resp: Response): void {
+    if (resp.status >= 500 && resp.status < 600) {
+      throw new APIServerError(resp.status)
+    }
+  }
+
+  protected async fetchResponse(url: string, options?: RequestInit): Promise<Response> {
+    try {
+      return await fetch(url, options)
+    } catch (error) {
+      throw new APIRequestError(error)
+    }
   }
 
   protected async filterValidResults(results: SearchResult[]): Promise<SearchResult[]> {
@@ -40,7 +82,9 @@ export abstract class APIWithShowMore<APIResult, APIShowMoreResult> extends API<
   public async showMore({ tab, selected } : { tab: string, selected: SearchResult}): Promise<SearchResult[]> {
     const id = ++this.last_id
     const { url } = this.showMoreURL({ tab, selected })
-    const resp = await fetch(url)
+    const resp = await this.fetchResponse(url)
+    if (this.last_id > id) return []
+    this.throwIfServerError(resp)
     const result = await resp.json()
     if (this.last_id > id) return []
     const results = this.processShowMoreResult({ result, selected })

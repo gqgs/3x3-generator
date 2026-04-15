@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest"
-import { API } from "../api"
+import { describe, it, expect, vi } from "vitest"
+import { API, APIRequestError, APIServerError } from "../api"
 import { SearchResult } from "../../types"
 
 class MockAPI extends API<any> {
@@ -22,5 +22,22 @@ describe("Base API class", () => {
 
     it("should not denormalize anime", () => {
         expect(api.testDenormalize("anime")).toBe("anime")
+    })
+
+    it("should throw a server error for 5xx search responses", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+            status: 503,
+            json: vi.fn()
+        }))
+
+        await expect(api.search("query", "anime")).rejects.toBeInstanceOf(APIServerError)
+        vi.unstubAllGlobals()
+    })
+
+    it("should throw a request error when fetch fails before returning a response", async () => {
+        vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")))
+
+        await expect(api.search("query", "anime")).rejects.toBeInstanceOf(APIRequestError)
+        vi.unstubAllGlobals()
     })
 })

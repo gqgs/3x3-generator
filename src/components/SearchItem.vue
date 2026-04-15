@@ -58,6 +58,9 @@
     <div v-if="loading" class="mt-4 overflow-hidden rounded-full bg-slate-200">
       <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
     </div>
+    <div v-else-if="warning" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+      {{ warning }}
+    </div>
     <div v-else-if="results.length" id="results" class="mt-5 flex gap-4 overflow-x-auto pb-2">
       <Cropper
         v-for="result in results"

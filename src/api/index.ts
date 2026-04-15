@@ -8,7 +8,7 @@ import LastFM from "./lastfm"
 import VNDB from "./vndb"
 import RAWG from "./rawg"
 import IGDB from "./igdb"
-import { API, APIWithShowMore } from "./api"
+import { API, APIWithShowMore, isAPIRequestError, isAPIServerError } from "./api"
 import { fileToDataUrl } from "../image/data-url"
 
 const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new RAWG(), new IGDB(), new VNDB()]
@@ -44,13 +44,26 @@ const tabs = ref(api.tabs)
 const has_show_more = ref(api.has_show_more)
 const showing_more = ref(false)
 const selected_title = ref("")
+const warning = ref("")
+const serverErrorMessage = "This API is temporarily unavailable. Try again later or open an issue if the error persists."
 const search = debounce(async (query: string, tab: string): Promise<void> => {
   loading.value = true
   showing_more.value = false
   selected_title.value = ""
+  warning.value = ""
   has_show_more.value = api.has_show_more
-  results.value = await api.search(query, tab)
-  loading.value = false
+  try {
+    results.value = await api.search(query, tab)
+  } catch (error) {
+    results.value = []
+    if (isAPIServerError(error) || isAPIRequestError(error)) {
+      warning.value = serverErrorMessage
+    } else {
+      console.error("Search failed:", error)
+    }
+  } finally {
+    loading.value = false
+  }
 }, 500)
 
 const changeTab = async (newtab: string): Promise<void> => {
@@ -85,9 +98,24 @@ const changeApi = async (newApi: string): Promise<void> => {
 }
 
 const showMore = async ({ tab, selected }: { tab: string, selected: SearchResult }): Promise<void> => {
-  results.value = await (api as APIWithShowMore<unknown, unknown>).showMore({ tab, selected })
-  showing_more.value = true
-  selected_title.value = selected.title
+  loading.value = true
+  warning.value = ""
+  try {
+    results.value = await (api as APIWithShowMore<unknown, unknown>).showMore({ tab, selected })
+    showing_more.value = true
+    selected_title.value = selected.title
+  } catch (error) {
+    results.value = []
+    showing_more.value = false
+    selected_title.value = ""
+    if (isAPIServerError(error) || isAPIRequestError(error)) {
+      warning.value = serverErrorMessage
+    } else {
+      console.error("Show more failed:", error)
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
 const goBack = async (): Promise<void> => {
@@ -115,6 +143,7 @@ const handleFiles = async (files: FileList | File[] | null | undefined) => {
   }
   lastQuery = ""
   results.value = dropped
+  warning.value = ""
   has_show_more.value = false
   showing_more.value = false
   selected_title.value = ""
@@ -153,6 +182,7 @@ const restoreSearchState = ({ api: apiName, tab, query: restoredQuery }: { api: 
   }
   lastQuery = query.value
   results.value = []
+  warning.value = ""
   showing_more.value = false
   selected_title.value = ""
   localStorage.setItem("api", currentApi.value)
@@ -169,6 +199,7 @@ export default {
   loading,
   query,
   results,
+  warning,
   has_show_more,
   showing_more,
   selected_title,
