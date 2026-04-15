@@ -103,41 +103,7 @@
       </div>
     </transition>
 
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <div class="flex gap-2">
-        <a
-          href="https://github.com/gqgs/3x3-generator"
-          target="_blank"
-          aria-label="Open GitHub repository"
-          class="flex min-h-11 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-slate-100/75 text-xl text-slate-700 shadow-sm hover:bg-white/90 hover:text-slate-900"
-        >
-          <ion-icon name="logo-octocat"></ion-icon>
-        </a>
-        <div class="min-w-0 flex-1">
-          <DropDown :options="downloadFormats" @clicked="download($event)">
-            <template v-slot:selected>
-              <span v-if='downloading' class="truncate">Processing...</span>
-              <span v-else class="truncate">Download</span>
-            </template>
-            <template v-slot:option="slotProps">
-              <span class="inline-flex items-center gap-2">
-                <ion-icon name="download-outline"></ion-icon>
-                <span>{{ formatMimeLabel(slotProps.option) }}</span>
-              </span>
-            </template>
-          </DropDown>
-        </div>
-      </div>
-
-      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = parseInt($event)">
-        <template v-slot:selected>
-          <span class="truncate">{{size}}x{{size}} ({{size*cellSize}}px)</span>
-        </template>
-        <template v-slot:option="slotProps">
-          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'" class="opacity-60">(upscale)</small>
-        </template>
-      </DropDown>
-
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
       <DropDown :options="projectOptions" :disabled="downloading" @clicked="handleProjectAction($event)">
         <template v-slot:selected>
           <span class="truncate">Project</span>
@@ -150,13 +116,27 @@
         </template>
       </DropDown>
 
-      <input
-        ref="projectInput"
-        class="hidden"
-        type="file"
-        accept=".json,.3x3.json,application/json"
-        @change="handleProjectFile"
-      >
+      <DropDown :options="['200', '400']" :disabled="downloading" @clicked="cellSize = parseInt($event)">
+        <template v-slot:selected>
+          <span class="truncate">{{size}}x{{size}} ({{size*cellSize}}px)</span>
+        </template>
+        <template v-slot:option="slotProps">
+          {{size}}x{{size}} ({{size*parseInt(slotProps.option)}}px) <small v-if="slotProps.option === '400'" class="opacity-60">(upscale)</small>
+        </template>
+      </DropDown>
+
+      <DropDown :options="downloadFormats" @clicked="download($event)">
+        <template v-slot:selected>
+          <span v-if='downloading' class="truncate">Processing...</span>
+          <span v-else class="truncate">Download</span>
+        </template>
+        <template v-slot:option="slotProps">
+          <span class="inline-flex items-center gap-2">
+            <ion-icon name="download-outline"></ion-icon>
+            <span>{{ formatMimeLabel(slotProps.option) }}</span>
+          </span>
+        </template>
+      </DropDown>
 
       <button
         type="button"
@@ -169,6 +149,26 @@
         </span>
       </button>
     </div>
+
+    <div class="mt-3 flex justify-center border-t border-white/70 pt-3">
+      <a
+        href="https://github.com/gqgs/3x3-generator"
+        target="_blank"
+        aria-label="Open GitHub repository"
+        class="inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 hover:bg-white/70 hover:text-slate-800"
+      >
+        <ion-icon class="text-base" name="logo-octocat"></ion-icon>
+        <span>GitHub</span>
+      </a>
+    </div>
+
+    <input
+      ref="projectInput"
+      class="hidden"
+      type="file"
+      accept=".json,.3x3.json,application/json"
+      @change="handleProjectFile"
+    >
   </div>
 </template>
 
