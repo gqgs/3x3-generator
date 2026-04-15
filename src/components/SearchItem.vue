@@ -59,7 +59,16 @@
       <div class="h-2 w-full animate-pulse bg-gradient-to-r from-blue-400 via-sky-500 to-cyan-400"></div>
     </div>
     <div v-else-if="warning" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
-      {{ warning }}
+      <span>This API is temporarily unavailable. Try again later or open an </span>
+      <a
+        v-if="issueUrl"
+        :href="issueUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="font-bold underline decoration-amber-500 underline-offset-2 hover:text-amber-700"
+      >issue</a>
+      <span v-else>issue</span>
+      <span> if the error persists.</span>
     </div>
     <div v-else-if="results.length" id="results" class="mt-5 flex gap-4 overflow-x-auto pb-2">
       <Cropper

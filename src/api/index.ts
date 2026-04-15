@@ -45,19 +45,56 @@ const has_show_more = ref(api.has_show_more)
 const showing_more = ref(false)
 const selected_title = ref("")
 const warning = ref("")
+const issueUrl = ref("")
 const serverErrorMessage = "This API is temporarily unavailable. Try again later or open an issue if the error persists."
+
+const buildIssueUrl = ({ action, tab, query, error }: { action: string, tab: string, query: string, error: unknown }): string => {
+  const errorDetails = error instanceof Error
+    ? `${error.name}: ${error.message}\n\n${error.stack || "No stack trace available."}`
+    : String(error)
+  const params = new URLSearchParams({
+    title: `Search error with ${currentApi.value}`,
+    body: [
+      "## Search Error",
+      "",
+      `API: ${currentApi.value}`,
+      `Action: ${action}`,
+      `Tab: ${tab}`,
+      `Query: ${query || "(empty)"}`,
+      "",
+      "## Error",
+      "",
+      "```",
+      errorDetails,
+      "```"
+    ].join("\n")
+  })
+
+  return `https://github.com/gqgs/3x3-generator/issues/new?${params.toString()}`
+}
+
+const showRequestWarning = ({ action, tab, query, error }: { action: string, tab: string, query: string, error: unknown }): void => {
+  warning.value = serverErrorMessage
+  issueUrl.value = buildIssueUrl({ action, tab, query, error })
+}
+
+const clearWarning = (): void => {
+  warning.value = ""
+  issueUrl.value = ""
+}
+
 const search = debounce(async (query: string, tab: string): Promise<void> => {
   loading.value = true
   showing_more.value = false
   selected_title.value = ""
-  warning.value = ""
+  clearWarning()
   has_show_more.value = api.has_show_more
   try {
     results.value = await api.search(query, tab)
   } catch (error) {
     results.value = []
     if (isAPIServerError(error) || isAPIRequestError(error)) {
-      warning.value = serverErrorMessage
+      showRequestWarning({ action: "search", tab, query, error })
     } else {
       console.error("Search failed:", error)
     }
@@ -99,7 +136,7 @@ const changeApi = async (newApi: string): Promise<void> => {
 
 const showMore = async ({ tab, selected }: { tab: string, selected: SearchResult }): Promise<void> => {
   loading.value = true
-  warning.value = ""
+  clearWarning()
   try {
     results.value = await (api as APIWithShowMore<unknown, unknown>).showMore({ tab, selected })
     showing_more.value = true
@@ -109,7 +146,7 @@ const showMore = async ({ tab, selected }: { tab: string, selected: SearchResult
     showing_more.value = false
     selected_title.value = ""
     if (isAPIServerError(error) || isAPIRequestError(error)) {
-      warning.value = serverErrorMessage
+      showRequestWarning({ action: "show more", tab, query: selected.title, error })
     } else {
       console.error("Show more failed:", error)
     }
@@ -143,7 +180,7 @@ const handleFiles = async (files: FileList | File[] | null | undefined) => {
   }
   lastQuery = ""
   results.value = dropped
-  warning.value = ""
+  clearWarning()
   has_show_more.value = false
   showing_more.value = false
   selected_title.value = ""
@@ -182,7 +219,7 @@ const restoreSearchState = ({ api: apiName, tab, query: restoredQuery }: { api: 
   }
   lastQuery = query.value
   results.value = []
-  warning.value = ""
+  clearWarning()
   showing_more.value = false
   selected_title.value = ""
   localStorage.setItem("api", currentApi.value)
@@ -200,6 +237,7 @@ export default {
   query,
   results,
   warning,
+  issueUrl,
   has_show_more,
   showing_more,
   selected_title,
