@@ -150,18 +150,6 @@
       </button>
     </div>
 
-    <div class="mt-3 flex justify-center border-t border-white/70 pt-3">
-      <a
-        href="https://github.com/gqgs/3x3-generator"
-        target="_blank"
-        aria-label="Open GitHub repository"
-        class="inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 hover:bg-white/70 hover:text-slate-800"
-      >
-        <ion-icon class="text-base" name="logo-octocat"></ion-icon>
-        <span>GitHub</span>
-      </a>
-    </div>
-
     <input
       ref="projectInput"
       class="hidden"

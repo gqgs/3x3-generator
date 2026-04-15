@@ -59,6 +59,7 @@
         <div class="z-20 w-full rounded-[2.5rem] bg-gradient-to-t from-mist-100/95 via-mist-100/75 to-transparent pt-2 md:pt-3">
           <Tools />
         </div>
+        <GitHubFooter />
       </section>
     </main>
   </div>
@@ -70,13 +71,15 @@ import { mapState, mapActions, mapGetters } from "vuex"
 import Cell from "./components/GridCell.vue"
 import Search from "./components/SearchItem.vue"
 import Tools from "./components/ToolBar.vue"
+import GitHubFooter from "./components/GitHubFooter.vue"
 
 export default defineComponent({
   name: "App",
   components: {
     Cell,
     Search,
-    Tools
+    Tools,
+    GitHubFooter
   },
   computed: {
     ...mapState([
