@@ -81,6 +81,7 @@ import { computed, defineComponent, nextTick, onUnmounted, PropType, ref, watch 
 import VueCropper, { VueCropperMethods } from "vue-cropperjs"
 import { SearchResult, Update } from "../types"
 import { blobToDataUrl, isImageDataUrl } from "../image/data-url"
+import { getInitialSquareCrop } from "../image/smart-crop"
 
 export default defineComponent({
   components: {
@@ -104,6 +105,7 @@ export default defineComponent({
     const errorMessage = ref("")
     const cropBlobUrl = ref("")
     const sourceDataUrl = ref("")
+    const cropInitId = ref(0)
 
     const resolvedCropperSrc = computed(() => {
       return cropBlobUrl.value || sourceDataUrl.value || props.result.sourceDataUrl || props.result.image_url
@@ -117,6 +119,7 @@ export default defineComponent({
     }
 
     const resetSource = () => {
+      cropInitId.value += 1
       revokeBlobUrl()
       sourceDataUrl.value = ""
       errorMessage.value = ""
@@ -159,9 +162,39 @@ export default defineComponent({
       }
     }, { immediate: true })
 
-    const restoreCropState = async () => {
+    const hasSavedCropState = () => {
+      return Boolean(props.result.canvasData || props.result.cropBoxData || props.result.cropData)
+    }
+
+    const applySmartInitialCrop = async (initId: number) => {
+      const src = resolvedCropperSrc.value
+      if (!src) return
+
+      try {
+        const crop = await getInitialSquareCrop(src)
+        if (initId !== cropInitId.value || !props.open) return
+        cropper.value?.setData({
+          ...crop,
+          rotate: 0,
+          scaleX: 1,
+          scaleY: 1
+        })
+      } catch (err) {
+        console.warn("Could not apply smart crop:", err)
+      }
+    }
+
+    const initializeCropState = async () => {
       await nextTick()
+      const initId = cropInitId.value
       window.setTimeout(() => {
+        if (initId !== cropInitId.value || !props.open) return
+
+        if (!hasSavedCropState()) {
+          void applySmartInitialCrop(initId)
+          return
+        }
+
         try {
           if (props.result.canvasData) cropper.value?.setCanvasData(props.result.canvasData as any)
           if (props.result.cropBoxData) cropper.value?.setCropBoxData(props.result.cropBoxData as any)
@@ -174,7 +207,7 @@ export default defineComponent({
 
     const ready = () => {
       errorMessage.value = ""
-      void restoreCropState()
+      void initializeCropState()
     }
 
     const close = () => {
