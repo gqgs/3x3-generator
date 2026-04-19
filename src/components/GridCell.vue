@@ -80,7 +80,7 @@ export default defineComponent({
     })
 
     const currentTitle = computed(() => {
-      return currentImageRecord.value?.title || `Image ${props.id}`
+      return currentImageRecord.value?.title || `${props.id}`
     })
 
     const canRecrop = computed(() => {
@@ -96,7 +96,7 @@ export default defineComponent({
       if (!image?.sourceDataUrl) return null
       return {
         mal_id: props.id,
-        title: image.title || title.value || `Image ${props.id}`,
+        title: image.title || title.value || `${props.id}`,
         image_url: image.sourceDataUrl,
         sourceUrl: image.sourceUrl,
         sourceDataUrl: image.sourceDataUrl,
