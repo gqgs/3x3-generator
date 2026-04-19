@@ -1,5 +1,5 @@
 <template>
-  <div class="group relative h-full w-full">
+  <div class="group relative h-full w-full [container-type:inline-size]">
     <a
       href="#"
       class="group flex h-full w-full items-center justify-center bg-slate-50/60 hover:bg-white"
@@ -13,7 +13,7 @@
         <img :src="currentImage" :title="currentTitle" class="h-full w-full object-cover" />
         <span
           v-if="showCaption"
-          class="pointer-events-none absolute inset-x-0 bottom-0 flex min-h-[22%] items-end bg-[linear-gradient(to_top,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.42)_62%,rgba(0,0,0,0)_100%)] px-[3.5%] pb-[2.5%] pt-[8%] text-left text-[clamp(0.68rem,2.8vw,0.9rem)] font-semibold leading-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]"
+          class="pointer-events-none absolute inset-x-0 bottom-0 flex min-h-[22%] items-end bg-[linear-gradient(to_top,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.42)_62%,rgba(0,0,0,0)_100%)] px-[3.5%] pb-[2.5%] pt-[8%] text-left text-[max(11px,5cqw)] font-semibold leading-[1.22] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]"
         >
           <span class="line-clamp-2">{{ currentTitle }}</span>
         </span>
@@ -80,7 +80,7 @@ export default defineComponent({
     })
 
     const currentTitle = computed(() => {
-      return currentImageRecord.value?.title || title.value
+      return currentImageRecord.value?.title || `Image ${props.id}`
     })
 
     const canRecrop = computed(() => {
@@ -88,7 +88,7 @@ export default defineComponent({
     })
 
     const showCaption = computed(() => {
-      return Boolean(store.state.includeTitles && currentImageRecord.value?.title)
+      return Boolean(store.state.includeTitles && currentImage.value)
     })
 
     const recropResult = computed<SearchResult | null>(() => {

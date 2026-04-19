@@ -10,11 +10,11 @@ export interface CaptionLayout {
 const ELLIPSIS = "..."
 
 export const captionMetrics = (cellSize: number): Omit<CaptionLayout, "lines"> => {
-  const fontSize = Math.max(11, Math.round(cellSize * 0.05))
-  const lineHeight = Math.round(fontSize * 1.22)
-  const paddingX = Math.round(cellSize * 0.035)
-  const paddingY = Math.round(cellSize * 0.025)
-  const veilHeight = Math.round(cellSize * 0.22)
+  const fontSize = Math.max(11, cellSize * 0.05)
+  const lineHeight = fontSize * 1.22
+  const paddingX = cellSize * 0.035
+  const paddingY = cellSize * 0.025
+  const veilHeight = cellSize * 0.22
 
   return {
     fontSize,
