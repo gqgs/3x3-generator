@@ -16,18 +16,24 @@ npm install
 npm run serve
 ```
 
-The MyAnimeList search provider expects `mal-crawler` at
-`http://127.0.0.1:8081` by default. Start it from the `mal-crawler` repository:
+The MAL provider reads its Lambda Function URL from `VUE_APP_MAL_API_URL`.
+Set it when starting the development frontend or creating a production build:
 
 ```sh
-go run . --server 127.0.0.1:8081
+VUE_APP_MAL_API_URL=https://example.lambda-url.us-east-1.on.aws npm run serve
+VUE_APP_MAL_API_URL=https://example.lambda-url.us-east-1.on.aws npm run build
 ```
 
-Set `VUE_APP_MAL_API_URL` when the API is hosted elsewhere:
+The Lambda and Function URL are deployed by the CDK app in `infra`:
 
 ```sh
-VUE_APP_MAL_API_URL=https://example.lambda-url.amazonaws.com npm run build
+cd infra
+npm run deploy:mal
 ```
+
+The deployment writes the Function URL to `infra/cdk-outputs.json` under
+`MalCrawlerStack.MalCrawlerUrl`. Pass that value as `VUE_APP_MAL_API_URL` when
+building the frontend.
 
 ### Compiles and minifies for production
 ```
