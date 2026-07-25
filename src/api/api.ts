@@ -32,6 +32,10 @@ export abstract class API<APIResult> {
   readonly abstract name: string
   readonly abstract tabs: string[]
 
+  public supportsShowMore(tab: string): boolean {
+    return this.has_show_more
+  }
+
   protected abstract fetchURL(tab: string, query: string): { url: string, options?: RequestInit }
   protected abstract processResult(result: APIResult, tab: string): SearchResult[]
 

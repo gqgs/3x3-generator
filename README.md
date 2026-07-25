@@ -16,6 +16,19 @@ npm install
 npm run serve
 ```
 
+The MyAnimeList search provider expects `mal-crawler` at
+`http://127.0.0.1:8081` by default. Start it from the `mal-crawler` repository:
+
+```sh
+go run . --server 127.0.0.1:8081
+```
+
+Set `VUE_APP_MAL_API_URL` when the API is hosted elsewhere:
+
+```sh
+VUE_APP_MAL_API_URL=https://example.lambda-url.amazonaws.com npm run build
+```
+
 ### Compiles and minifies for production
 ```
 npm run build

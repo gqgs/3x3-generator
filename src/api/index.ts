@@ -3,7 +3,7 @@ import { SearchResult } from "../types"
 import debounce from "lodash.debounce"
 import Kitsu from "./kitsu"
 import Anilist from "./anilist"
-import Jikan from "./jikan"
+import MyAnimeList from "./myanimelist"
 import LastFM from "./lastfm"
 import VNDB from "./vndb"
 import RAWG from "./rawg"
@@ -11,7 +11,7 @@ import IGDB from "./igdb"
 import { API, APIWithShowMore, isAPIRequestError, isAPIServerError } from "./api"
 import { fileToDataUrl } from "../image/data-url"
 
-const apis = [new Kitsu(), new Jikan(), new Anilist(), new LastFM(), new RAWG(), new IGDB(), new VNDB()]
+const apis = [new Kitsu(), new MyAnimeList(), new Anilist(), new LastFM(), new RAWG(), new IGDB(), new VNDB()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
@@ -26,7 +26,10 @@ const apiFromString = (name: string): API<unknown> => {
   return api
 }
 
-const storage_api = localStorage.getItem("api") || "Anilist"
+const normalizeApiName = (name: string): string => {
+  return name === "Jikan" || name === "MyAnimeList" ? "MAL" : name
+}
+const storage_api = normalizeApiName(localStorage.getItem("api") || "Anilist")
 const api_exists = apis.some(api => {return api.name == storage_api })
 const used_api = api_exists ? storage_api : apis[0].name
 
@@ -41,7 +44,7 @@ const currentTab = ref(api.tabs[0])
 const loading = ref(false)
 const results = ref<SearchResult[]>([])
 const tabs = ref(api.tabs)
-const has_show_more = ref(api.has_show_more)
+const has_show_more = ref(api.supportsShowMore(currentTab.value))
 const showing_more = ref(false)
 const selected_title = ref("")
 const warning = ref("")
@@ -88,7 +91,7 @@ const search = debounce(async (query: string, tab: string): Promise<void> => {
   showing_more.value = false
   selected_title.value = ""
   clearWarning()
-  has_show_more.value = api.has_show_more
+  has_show_more.value = api.supportsShowMore(tab)
   try {
     results.value = await api.search(query, tab)
   } catch (error) {
@@ -105,6 +108,7 @@ const search = debounce(async (query: string, tab: string): Promise<void> => {
 
 const changeTab = async (newtab: string): Promise<void> => {
   currentTab.value = newtab
+  has_show_more.value = api.supportsShowMore(newtab)
   await search(lastQuery, newtab)
 }
 
@@ -126,11 +130,11 @@ const changeApi = async (newApi: string): Promise<void> => {
   currentApi.value = newApi
   api = apiFromString(newApi)
   tabs.value = api.tabs
-  has_show_more.value = api.has_show_more
   selected_title.value = ""
   if (!api.tabs.includes(currentTab.value)) {
     currentTab.value = api.tabs[0]
   }
+  has_show_more.value = api.supportsShowMore(currentTab.value)
   await search(lastQuery, currentTab.value)
 }
 
@@ -205,12 +209,13 @@ const getSearchState = () => {
 }
 
 const restoreSearchState = ({ api: apiName, tab, query: restoredQuery }: { api: string, tab: string, query: string }) => {
-  const nextApi = apisMap.has(apiName) ? apiName : apis[0].name
+  const normalizedApiName = normalizeApiName(apiName)
+  const nextApi = apisMap.has(normalizedApiName) ? normalizedApiName : apis[0].name
   currentApi.value = nextApi
   api = apiFromString(nextApi)
   tabs.value = api.tabs
-  has_show_more.value = api.has_show_more
   currentTab.value = api.tabs.includes(tab) ? tab : api.tabs[0]
+  has_show_more.value = api.supportsShowMore(currentTab.value)
   search.cancel()
   const nextQuery = restoredQuery || ""
   if (query.value !== nextQuery) {
