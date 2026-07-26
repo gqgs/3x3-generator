@@ -8,10 +8,11 @@ import LastFM from "./lastfm"
 import VNDB from "./vndb"
 import RAWG from "./rawg"
 import IGDB from "./igdb"
+import Tenrai from "./tenrai"
 import { API, APIWithShowMore, isAPIRequestError, isAPIServerError } from "./api"
 import { fileToDataUrl } from "../image/data-url"
 
-const apis = [new Kitsu(), new MyAnimeList(), new Anilist(), new LastFM(), new RAWG(), new IGDB(), new VNDB()]
+const apis = [new Kitsu(), new MyAnimeList(), new Tenrai(), new Anilist(), new LastFM(), new RAWG(), new IGDB(), new VNDB()]
 const apisMap = new Map<string, API<unknown>>()
 
 apis.forEach(api => {
