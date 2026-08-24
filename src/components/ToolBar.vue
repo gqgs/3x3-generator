@@ -180,10 +180,17 @@
         </a>
         <button
           type="button"
-          class="shrink-0 rounded-lg bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          class="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold shadow-sm"
+          :class="copyFeedback === 'copied'
+            ? 'bg-emerald-600 text-white'
+            : copyFeedback === 'failed'
+              ? 'bg-red-600 text-white'
+              : 'bg-white text-slate-700 hover:bg-slate-50'"
           @click.stop="copyUploadedUrl"
+          aria-live="polite"
         >
-          Copy link
+          <ion-icon :name="copyFeedback === 'copied' ? 'checkmark-outline' : copyFeedback === 'failed' ? 'close-outline' : 'copy-outline'"></ion-icon>
+          {{ copyFeedback === 'copied' ? 'Copied!' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy link' }}
         </button>
       </div>
     </div>
@@ -221,6 +228,8 @@ export default defineComponent({
     const shareMessage = ref("")
     const shareError = ref(false)
     const shareUrl = ref("")
+    const copyFeedback = ref<'idle' | 'copied' | 'failed'>("idle")
+    let copyFeedbackTimer: ReturnType<typeof setTimeout> | undefined
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const projectInput = ref<HTMLInputElement | null>(null)
     const updateSize = (size: number) => store.dispatch("updateSize", size)
@@ -261,7 +270,10 @@ export default defineComponent({
     }
 
     onMounted(() => window.addEventListener("click", handleWindowClick))
-    onBeforeUnmount(() => window.removeEventListener("click", handleWindowClick))
+    onBeforeUnmount(() => {
+      window.removeEventListener("click", handleWindowClick)
+      if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer)
+    })
 
     watch(cellSize, (cellSize) => {
       store.state.cached_source = null
@@ -481,14 +493,20 @@ export default defineComponent({
 
     const copyUploadedUrl = async () => {
       if (!shareUrl.value) return
+      if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer)
       try {
         await copyShareUrl(shareUrl.value)
+        copyFeedback.value = "copied"
         shareError.value = false
         shareMessage.value = "Share link copied! It expires in 48 hours."
       } catch (err) {
+        copyFeedback.value = "failed"
         shareError.value = true
         shareMessage.value = err instanceof Error ? err.message : "Could not copy the share link."
       }
+      copyFeedbackTimer = setTimeout(() => {
+        copyFeedback.value = "idle"
+      }, 2000)
     }
 
     const share = async () => {
@@ -497,6 +515,7 @@ export default defineComponent({
       shareMessage.value = ""
       shareError.value = false
       shareUrl.value = ""
+      copyFeedback.value = "idle"
 
       try {
         if (!store.state.cached_source) {
@@ -535,6 +554,7 @@ export default defineComponent({
       shareMessage,
       shareError,
       shareUrl,
+      copyFeedback,
       copyUploadedUrl,
       cellSize,
       updateSize,
