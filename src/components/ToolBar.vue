@@ -103,7 +103,7 @@
       </div>
     </transition>
 
-    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
       <DropDown :options="projectOptions" :disabled="downloading" @clicked="handleProjectAction($event)">
         <template v-slot:selected>
           <span class="truncate">Project</span>
@@ -140,6 +140,18 @@
 
       <button
         type="button"
+        :disabled="downloading || sharing"
+        class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-sky-200/80 bg-sky-50/90 px-4 py-3 text-left text-sm font-medium text-sky-700 shadow-sm hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+        @click.stop="share"
+      >
+        <span class="truncate">{{ sharing ? 'Uploading...' : 'Share' }}</span>
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-sky-600 shadow-sm">
+          <ion-icon :name="sharing ? 'cloud-upload-outline' : 'share-social-outline'"></ion-icon>
+        </span>
+      </button>
+
+      <button
+        type="button"
         class="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/70 bg-slate-100/75 px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm hover:bg-white/90"
         @click.stop="advancedOpen = !advancedOpen"
       >
@@ -148,6 +160,32 @@
           <ion-icon :name="advancedOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
         </span>
       </button>
+    </div>
+
+    <div
+      v-if="shareMessage"
+      class="mt-3 rounded-xl px-3 py-2 text-center text-xs font-medium"
+      :class="shareError ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'"
+      role="status"
+    >
+      <p>{{ shareMessage }}</p>
+      <div v-if="shareUrl" class="mt-2 flex flex-col items-center justify-center gap-2 sm:flex-row">
+        <a
+          :href="shareUrl"
+          class="max-w-full truncate underline underline-offset-2"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ shareUrl }}
+        </a>
+        <button
+          type="button"
+          class="shrink-0 rounded-lg bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          @click.stop="copyUploadedUrl"
+        >
+          Copy link
+        </button>
+      </div>
     </div>
 
     <input
@@ -170,6 +208,7 @@ import { buildCaptionLayout, captionMetrics } from "../image/captions"
 import DropDown from "./DropDown.vue"
 import Api from "../api"
 import { createProject, hydrateProject, parseProject } from "../project"
+import { copyShareUrl, uploadImage } from "../share"
 
 export default defineComponent({
   components: {
@@ -178,6 +217,10 @@ export default defineComponent({
   setup () {
     const store = useStore()
     const advancedOpen = ref(false)
+    const sharing = ref(false)
+    const shareMessage = ref("")
+    const shareError = ref(false)
+    const shareUrl = ref("")
     const cellSize = ref<number>(JSON.parse(localStorage.getItem("cellSize") || "400"))
     const projectInput = ref<HTMLInputElement | null>(null)
     const updateSize = (size: number) => store.dispatch("updateSize", size)
@@ -427,8 +470,72 @@ export default defineComponent({
       }
     }
 
+    const canvasToBlob = (canvas: HTMLCanvasElement, mimeType: string, quality?: number): Promise<Blob> => {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob)
+          else reject(new Error("Could not encode the image."))
+        }, mimeType, quality)
+      })
+    }
+
+    const copyUploadedUrl = async () => {
+      if (!shareUrl.value) return
+      try {
+        await copyShareUrl(shareUrl.value)
+        shareError.value = false
+        shareMessage.value = "Share link copied! It expires in 48 hours."
+      } catch (err) {
+        shareError.value = true
+        shareMessage.value = err instanceof Error ? err.message : "Could not copy the share link."
+      }
+    }
+
+    const share = async () => {
+      if (store.state.downloading || sharing.value) return
+      sharing.value = true
+      shareMessage.value = ""
+      shareError.value = false
+      shareUrl.value = ""
+
+      try {
+        if (!store.state.cached_source) {
+          store.commit("setProgress", 0)
+          store.commit("setDownloading", true)
+          try {
+            store.state.cached_source = await drawImages()
+          } finally {
+            store.commit("setDownloading", false)
+          }
+        }
+        const blob = await canvasToBlob(store.state.cached_source, "image/webp", 0.9)
+        const extension = blob.type === "image/webp" ? "webp" : "png"
+        const filename = `${store.state.size}x${store.state.size}.${extension}`
+        const url = await uploadImage(blob, filename)
+        shareUrl.value = url
+        try {
+          await copyShareUrl(url)
+          shareMessage.value = "Share link copied! It expires in 48 hours."
+        } catch {
+          shareMessage.value = "Upload complete. Click Copy link to copy the URL."
+        }
+      } catch (err) {
+        console.error("Share failed:", err)
+        shareError.value = true
+        shareMessage.value = err instanceof Error ? err.message : "Image sharing failed."
+      } finally {
+        sharing.value = false
+      }
+    }
+
     return {
       download,
+      share,
+      sharing,
+      shareMessage,
+      shareError,
+      shareUrl,
+      copyUploadedUrl,
       cellSize,
       updateSize,
       updateColor,
